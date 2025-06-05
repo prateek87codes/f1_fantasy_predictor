@@ -626,8 +626,8 @@ def update_cs_event_dropdown(active_main_tab):
     Output('cs-results-graph', 'figure'),
     Output('cs-driver-standings-graph', 'figure'),
     Output('cs-constructor-standings-graph', 'figure'),
-    Input('cs-active-selection-store', 'data'), # <<< INPUT IS NOW THE STORE
-    State('app-main-tabs', 'active_tab') 
+    Input('cs-active-selection-store', 'data'),
+    Input('app-main-tabs', 'active_tab') # Changed from State
 )
 def update_cs_season_so_far_content(stored_selection, active_main_tab):
     print(f"[CS_SO_FAR_CONTENT_CALLBACK] Triggered by store. Data: {stored_selection}")
