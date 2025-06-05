@@ -1,0 +1,9 @@
+# FastF1 Cache
+cache/
+
+# Python Virtual Environment
+venv/
+__pycache__/
+
+# macOS specific
+.DS_Store

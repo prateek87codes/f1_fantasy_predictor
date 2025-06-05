@@ -1,0 +1,47 @@
+/* assets/custom.css */
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+    background-color: #f4f4f4; 
+}
+
+#page-title { /* This ID is for the H4 inside the historical tab */
+    color: #333; /* Keep session titles more neutral if the main H1 is red */
+}
+
+.page-main-title { /* Class for the main H1 "F1 Insights & Fantasy Predictor" */
+    color: #e10600; /* F1 Red */
+    font-weight: bold;
+}
+
+.card-header {
+    background-color: #e10600 !important; 
+    color: white !important;
+    font-weight: bold;
+}
+
+.nav-tabs .nav-link.active {
+    color: #e10600 !important; 
+    border-bottom: 2px solid #e10600 !important;
+    font-weight: bold;
+}
+
+.nav-tabs .nav-link { color: #333; }
+.nav-tabs .nav-link:hover { border-color: #e10600 #e10600 #e10600; }
+
+td.fastest-lap-driver-cell {
+    background-color: yellow !important; /* Test: Make the cell background yellow */
+    font-weight: bold !important;        /* Test: Make the text bold */
+}
+
+td.fastest-lap-driver-cell::after {
+    content: " (FL TEST)"; /* Test: Just add simple text */
+    color: purple;
+    margin-left: 5px;
+    font-weight: normal; /* Reset font-weight for the pseudo-element */
+}
+
+.placeholder-image-text {
+    font-style: italic;
+    color: #888;
+    font-size: 0.9em;
+}
