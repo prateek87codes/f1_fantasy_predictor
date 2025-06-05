@@ -208,10 +208,21 @@ def get_session_results(year, event_name_or_round, session_type='Q'):
         # It correctly returns: display_df, raw_results_for_graph (which is session.results),
         # actual_session_name, event_round_num, podium_data
         # Your previously working code for Q, R, S is assumed to be here.
-        session = ff1.get_session(year, event_name_or_round, session_type)
-        event_round_num = session.event['RoundNumber']
-        load_laps = True if session_type in ['R', 'S'] else False
-        session.load(laps=load_laps, telemetry=False, weather=False, messages=False)
+        try:
+            session = ff1.get_session(year, event_name_or_round, session_type)
+            event_round_num = session.event['RoundNumber'] # Get this ASAP after session object
+        except Exception as e_get_session:
+            print(f"Error in ff1.get_session for {year} {event_name_or_round} {session_type}: {e_get_session}")
+            return pd.DataFrame(), pd.DataFrame(), f"{session_type} (Error Init Session: {e_get_session})", event_round_num, []
+
+        try:
+            load_laps = True if session_type in ['R', 'S'] else False
+            session.load(laps=load_laps, telemetry=False, weather=False, messages=False)
+        except Exception as e_load_session:
+            print(f"Error in session.load for {year} {event_name_or_round} {session_type}: {e_load_session}")
+            # event_round_num should be set if get_session succeeded
+            return pd.DataFrame(), pd.DataFrame(), f"{session_type} (Error Load Session: {e_load_session})", event_round_num, []
+
         raw_results_for_graph = session.results 
         actual_session_name = session.name
         if raw_results_for_graph is None or raw_results_for_graph.empty: return pd.DataFrame(), pd.DataFrame(), actual_session_name, event_round_num, []
