@@ -651,6 +651,12 @@ def update_cs_season_so_far_content(stored_selection, active_main_tab):
     # Ensure it returns all 9 outputs.
     # ...
     display_df, raw_results_for_graph, actual_session_name, event_round, podium_data_list = get_session_results(cs_year, selected_event, selected_session_type)
+    print(f"[CS_SO_FAR_CONTENT_CALLBACK] After get_session_results: display_df is None: {display_df is None}, raw_results_for_graph is None: {raw_results_for_graph is None}")
+    if display_df is not None:
+        print(f"[CS_SO_FAR_CONTENT_CALLBACK] display_df shape: {display_df.shape}")
+    if raw_results_for_graph is not None:
+        print(f"[CS_SO_FAR_CONTENT_CALLBACK] raw_results_for_graph shape: {raw_results_for_graph.shape}")
+    print(f"[CS_SO_FAR_CONTENT_CALLBACK] actual_session_name: {actual_session_name}, event_round: {event_round}, podium_data_list length: {len(podium_data_list) if podium_data_list is not None else 'N/A'}")
     page_title_text = f"{actual_session_name if actual_session_name else selected_session_type} - {selected_event} ({cs_year})"
     table_data, table_columns, style_data_conditional_cs, ai_highlights_md, podium_display_cs = [], [], [], "AI Highlights.", []
     fig_cs, driver_standings_fig_cs, constructor_standings_fig_cs = {}, {}, {}
