@@ -386,7 +386,7 @@ app.layout = dbc.Container([
         dbc.Tab(tab_predictions_content, label="Predictions", tab_id="tab-predictions"),
         dbc.Tab(tab_fantasy_rules_content, label="Fantasy Rules", tab_id="tab-fantasy-rules"),
         dbc.Tab(tab_fantasy_creator_content, label="Fantasy Team Creator", tab_id="tab-fantasy-creator"),
-    ], id="app-main-tabs", active_tab="tab-historical"),
+    ], id="app-main-tabs", active_tab="tab-current-season"),
     html.Hr(className="my-4"),
     dbc.Row(dbc.Col(html.A("Data sourced using FastF1", href="https://theoehrly.github.io/Fast-F1/", target="_blank"), className="text-center text-muted mb-4"))
 ], fluid=True, id="app-main-container")
@@ -557,11 +557,11 @@ def store_active_cs_selection(selected_event, selected_session_type, active_tab)
     Input('app-main-tabs', 'active_tab') 
 )
 def update_cs_event_dropdown(active_main_tab):
+    # This callback now runs on initial load because its tab is active by default
     triggered_id = dash.callback_context.triggered_id
-    is_initial_load_on_cs_tab = triggered_id is None and active_main_tab == "tab-current-season"
-    is_tab_switch_to_cs = triggered_id == 'app-main-tabs' and active_main_tab == "tab-current-season"
     
-    if not (is_initial_load_on_cs_tab or is_tab_switch_to_cs):
+    # We want this to fire on initial load (triggered_id is None) if CS tab is default
+    if triggered_id is not None and active_main_tab != "tab-current-season":
         return dash.no_update, dash.no_update
 
     cs_year = datetime.now().year 
@@ -573,39 +573,34 @@ def update_cs_event_dropdown(active_main_tab):
             print(f"[Callback cs_event_dropdown] No events found in schedule for {cs_year}.")
             return [], None
         
-        # Ensure EventDate is datetime and localized to UTC for proper comparison
-        # FastF1 event dates are usually naive, representing local time of the event.
-        # For comparing with 'now', it's safer to assume they are event local times.
-        # pd.Timestamp.now() is naive by default (local system time).
-        # For simplicity, if ff1 returns naive dates, we compare with naive now.
         full_schedule['EventDate'] = pd.to_datetime(full_schedule['EventDate'])
-        now_local = pd.Timestamp.now() # Naive local time
+        now_local = pd.Timestamp.now() # Naive local time for comparison
 
-        # Filter for completed events (whose date is in the past)
+        # Filter for completed events
         completed_events_schedule = full_schedule[full_schedule['EventDate'] < now_local].copy()
         
         options_df = pd.DataFrame()
+        default_event = None
+        
         if not completed_events_schedule.empty:
+            # If there are completed events, they are the options
             print(f"[Callback cs_event_dropdown] Found {len(completed_events_schedule)} completed events for {cs_year}.")
             options_df = completed_events_schedule.sort_values(by='RoundNumber').drop_duplicates(subset=['EventName'], keep='first')
-        else: # No events completed yet, show all scheduled events for selection, default to first
+            # Default to the LATEST completed event
+            default_event = completed_events_schedule.sort_values(by='RoundNumber', ascending=False).iloc[0]['EventName']
+        else:
+            # If no events completed yet, show all scheduled events
             print(f"[Callback cs_event_dropdown] No completed events yet for {cs_year}. Showing full schedule.")
             options_df = full_schedule.sort_values(by='RoundNumber').drop_duplicates(subset=['EventName'], keep='first')
+            # Default to the FIRST event of the season
+            if not options_df.empty:
+                default_event = options_df.iloc[0]['EventName']
 
         if options_df.empty:
-            print(f"[Callback cs_event_dropdown] No events available to populate dropdown for {cs_year}.")
             return [], None
             
         cs_event_options = [{'label': f"{row['EventName']} (R{row['RoundNumber']})", 'value': row['EventName']} 
                              for idx, row in options_df.iterrows()]
-        
-        default_event = None
-        if not completed_events_schedule.empty:
-            # Default to the latest completed event (highest round number among completed)
-            default_event = completed_events_schedule.sort_values(by='RoundNumber', ascending=False).iloc[0]['EventName']
-        elif cs_event_options: 
-            # If no events completed, default to the first event of the season (Round 1)
-            default_event = cs_event_options[0]['value'] 
             
         print(f"[Callback cs_event_dropdown] Options generated: {len(cs_event_options)}. Default event: {default_event}")
         return cs_event_options, default_event
