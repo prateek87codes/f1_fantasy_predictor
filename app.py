@@ -538,18 +538,19 @@ def update_hist_main_content(selected_year, selected_event, selected_session_typ
 
 @app.callback(
     Output('cs-active-selection-store', 'data'),
+    Input('app-main-tabs', 'active_tab'), # Changed from State to Input
     Input('cs-event-dropdown', 'value'),
     Input('cs-session-type-dropdown', 'value'),
-    State('app-main-tabs', 'active_tab')
+    # Remove State('app-main-tabs', 'active_tab') if it was duplicated
 )
-def store_active_cs_selection(selected_event, selected_session_type, active_tab):
-    # This callback updates the store ONLY when the tab is active AND both inputs are valid.
-    if active_tab != 'tab-current-season' or not all([selected_event, selected_session_type]):
-        # If inputs are not ready, don't change the store's current state
-        return dash.no_update 
+def store_active_cs_selection(active_tab, selected_event, selected_session_type):
+    # Ensure the function parameters match the order of Inputs
+    if active_tab == 'tab-current-season' and selected_event and selected_session_type:
+        print(f"[store_active_cs_selection] Storing selection on tab activation/input change: Event='{selected_event}', Session='{selected_session_type}'")
+        return {'event': selected_event, 'session': selected_session_type}
     
-    print(f"[store_active_cs_selection] Storing selection: Event='{selected_event}', Session='{selected_session_type}'")
-    return {'event': selected_event, 'session': selected_session_type}
+    print(f"[store_active_cs_selection] Conditions not met for store update. Active Tab: {active_tab}, Event: {selected_event}, Session: {selected_session_type}. No update to store.")
+    return dash.no_update
 
 @app.callback(
     Output('cs-event-dropdown', 'options'),
