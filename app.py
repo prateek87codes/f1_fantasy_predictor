@@ -388,6 +388,7 @@ tab_fantasy_creator_content = dbc.Card(dbc.CardBody([html.P("Content for Fantasy
 # --- Main App Layout ---
 app.layout = dbc.Container([
     dcc.Store(id='cs-active-selection-store'),
+    dcc.Store(id='cs-season-so-far-layout-rendered-trigger'), # New store
     dbc.Row(dbc.Col(html.H1("F1 Insights & Fantasy Predictor", className="page-main-title"), width=12), className="mb-3 mt-3 text-center"),
     dbc.Tabs([
         dbc.Tab(tab_historical_content, label="Past Seasons", tab_id="tab-historical"),
@@ -638,15 +639,21 @@ def update_cs_event_dropdown(active_main_tab):
     Output('cs-driver-standings-graph', 'figure'),
     Output('cs-constructor-standings-graph', 'figure'),
     Input('cs-active-selection-store', 'data'),
-    Input('app-main-tabs', 'active_tab') # Changed from State
+    Input('cs-season-so-far-layout-rendered-trigger', 'data'), # New Input
+    State('app-main-tabs', 'active_tab') # Back to State
 )
-def update_cs_season_so_far_content(stored_selection, active_main_tab):
-    print(f"[CS_SO_FAR_CONTENT_CALLBACK] Triggered by store. Data: {stored_selection}")
+def update_cs_season_so_far_content(stored_selection, layout_trigger_data, active_main_tab): # Parameters updated
+    # Add a check for layout_trigger_data if necessary, though any change should be a valid trigger
+    if not layout_trigger_data: # If the trigger data is None or empty (e.g. initial state before render_cs_sub_tab runs)
+        print(f"[CS_SO_FAR_CONTENT_CALLBACK] No layout trigger data. No update. Trigger: {layout_trigger_data}")
+        return dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update
 
-    # Check if the tab is active and if the store has valid data
-    if active_main_tab != "tab-current-season" or not stored_selection or \
-       not stored_selection.get('event') or not stored_selection.get('session'):
+    print(f"[CS_SO_FAR_CONTENT_CALLBACK] Triggered. Store data: {stored_selection}, Layout Trigger: {layout_trigger_data}, Active Tab: {active_main_tab}")
+
+    # The existing condition for active_main_tab and stored_selection should still be the primary guard:
+    if active_main_tab != "tab-current-season" or not stored_selection or        not stored_selection.get('event') or not stored_selection.get('session'):
         print("[CS_SO_FAR_CONTENT_CALLBACK] Exiting: No valid selection in store or wrong tab active.")
+        # Return the "empty" state for all 9 outputs
         return "Current Season Overview", [], "Select an event and session to begin.", [], [], [], {}, {}, {}
 
     selected_event = stored_selection['event']
@@ -809,7 +816,8 @@ def get_formatted_calendar(year):
     Output('cs-navlink-season-so-far', 'active'),
     Output('cs-navlink-next-race', 'active'),
     Output('cs-navlink-race-calendar', 'active'),
-    Output('cs-filters-card', 'style'),  # NEW OUTPUT to control filter visibility
+    Output('cs-filters-card', 'style'),
+    Output('cs-season-so-far-layout-rendered-trigger', 'data'), # New Output
     Input('cs-navlink-season-so-far', 'n_clicks'),
     Input('cs-navlink-next-race', 'n_clicks'),
     Input('cs-navlink-race-calendar', 'n_clicks'),
@@ -818,7 +826,7 @@ def get_formatted_calendar(year):
 def render_cs_sub_tab(n_clicks_so_far, n_clicks_next_race, n_clicks_calendar, main_tab_active):
     if main_tab_active != "tab-current-season":
         # Default style for filters if this tab is not active (should remain visible if no other logic hides it)
-        return dash.no_update, dash.no_update, dash.no_update, dash.no_update, {'display': 'block'} 
+        return dash.no_update, dash.no_update, dash.no_update, dash.no_update, {'display': 'block'}, dash.no_update
 
     ctx = dash.callback_context
     # Default to "Season So Far" if no clicks yet or on initial load of this tab
@@ -829,17 +837,19 @@ def render_cs_sub_tab(n_clicks_so_far, n_clicks_next_race, n_clicks_calendar, ma
     active_so_far, active_next_race, active_calendar = False, False, False
     content_to_display = html.Div() 
     filter_card_style = {'display': 'block'} # Default to show filters
+    trigger_data = dash.no_update # Initialize new return value
 
     if triggered_id == 'cs-navlink-season-so-far':
         content_to_display = season_so_far_content_layout # Your layout for this sub-tab
         active_so_far = True
         filter_card_style = {'display': 'block'} # Show filters
+        trigger_data = datetime.now().timestamp() # Set trigger for this tab
     elif triggered_id == 'cs-navlink-next-race':
         content_to_display = next_race_content_layout # Your placeholder layout
         active_next_race = True
         filter_card_style = {'display': 'none'} # Hide filters
     elif triggered_id == 'cs-navlink-race-calendar':
-        cs_year = datetime.now().year
+        cs_year = datetime.now().year # cs_year was already used here
         calendar_table_content = get_formatted_calendar(cs_year)
         content_to_display = dbc.Container([
             html.H5(f"{cs_year} Race Calendar", className="mt-3 mb-3 text-center"),
@@ -851,8 +861,9 @@ def render_cs_sub_tab(n_clicks_so_far, n_clicks_next_race, n_clicks_calendar, ma
         content_to_display = season_so_far_content_layout
         active_so_far = True
         filter_card_style = {'display': 'block'} # Show filters for default
+        trigger_data = datetime.now().timestamp() # Set trigger for default tab
         
-    return content_to_display, active_so_far, active_next_race, active_calendar, filter_card_style
+    return content_to_display, active_so_far, active_next_race, active_calendar, filter_card_style, trigger_data
 
 # --- Run the App ---
 if __name__ == '__main__':
