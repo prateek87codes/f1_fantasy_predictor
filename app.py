@@ -863,6 +863,7 @@ def render_cs_sub_tab(n_clicks_so_far, n_clicks_next_race, n_clicks_calendar, ma
         filter_card_style = {'display': 'block'} # Show filters for default
         trigger_data = datetime.now().timestamp() # Set trigger for default tab
         
+    print(f"[render_cs_sub_tab] Returning trigger_data: {trigger_data}, active_so_far: {active_so_far}")
     return content_to_display, active_so_far, active_next_race, active_calendar, filter_card_style, trigger_data
 
 # --- Run the App ---
