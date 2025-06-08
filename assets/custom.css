@@ -45,3 +45,17 @@ td.fastest-lap-driver-cell::after {
     color: #888;
     font-size: 0.9em;
 }
+
+.track-map-style {
+    /* Adjust width to be slightly less than its container */
+    max-width: 90%; 
+    max-height: 40%;
+    
+    /* Adds a subtle, clean border instead of the shadow */
+    border: 0px solid #e0e0e0; 
+    
+    /* Helps with centering if needed */
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}

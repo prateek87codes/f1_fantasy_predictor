@@ -10,6 +10,7 @@ import plotly.express as px
 import numpy as np
 import os
 import google.generativeai as genai # Make sure this is imported
+import requests
 
 # --- API Key and Global Configs ---
 GEMINI_API_KEY = "AIzaSyDCrrKCoOyjjEGdkAwau1hYOSnWV3hxXfM" # <--- REPLACE THIS
@@ -24,6 +25,14 @@ else:
     except Exception as e:
         print(f"Error configuring Gemini AI: {e}. AI features may not work.")
         GEMINI_API_KEY = None
+
+# --- NEW: GOOGLE MAPS PLATFORM API KEY ---
+GOOGLE_API_KEY = "AIzaSyCaSHokQnD-Tib6PEfSXMkWbYdGCvYCZd4" # <--- REPLACE THIS
+
+if GOOGLE_API_KEY == "YOUR_Maps_API_KEY_HERE" or GOOGLE_API_KEY == "":
+    print("Warning: GOOGLE_API_KEY is not set. Weather features will be disabled.")
+    GOOGLE_API_KEY = None
+
 
 ERGAS_CONSTRUCTOR_NAME_TO_KNOWN_TEAM_ID_OR_COLOR = {
     "Red Bull": "#0600EF", "Ferrari": "#E80020", "Mercedes": "#27F4D2",
@@ -40,6 +49,13 @@ except Exception as e:
     print(f"Error enabling FastF1 cache: {e}. Please create a 'cache' folder in your project directory.")
     exit()
 
+try:
+    circuit_data_df = pd.read_csv("circuit_data.csv")
+    print("Successfully loaded circuit_data.csv")
+except FileNotFoundError:
+    print("Warning: circuit_data.csv not found. Circuit specific data will be missing.")
+    circuit_data_df = pd.DataFrame() # Create an empty DataFrame if file is missing
+
 # --- HELPER FUNCTION DEFINITIONS ---
 def format_timedelta(td_object):
     if pd.isna(td_object): return "N/A"
@@ -48,6 +64,74 @@ def format_timedelta(td_object):
         hours = int(total_seconds // 3600); minutes = int((total_seconds % 3600) // 60); seconds = total_seconds % 60
         return f"{sign}{hours:02d}:{minutes:02d}:{seconds:06.3f}" if hours > 0 else f"{sign}{minutes:02d}:{seconds:06.3f}"
     return str(td_object)
+
+# --- REPLACE your existing get_weather_forecast function with this one ---
+def get_weather_forecast(lat, lon, api_key):
+    if not api_key or api_key == "YOUR_Maps_API_KEY_HERE":
+        print("[Weather] Google API key not provided. Skipping forecast fetch.")
+        return []
+    
+    GOOGLE_ICON_TO_FILENAME_MAP = {
+        "clear-day": "clear-day.png", "clear-night": "clear-night.png", "cloudy": "cloudy.png",
+        "partly-cloudy-day": "partly-cloudy-day.png", "partly-cloudy-night": "partly-cloudy-night.png",
+        "rain": "rain.png", "sleet": "sleet.png", "snow": "snow.png", "fog": "fog.png", "wind": "wind.png",
+        "showers-day": "showers-day.png", "showers-night": "showers-night.png",
+        "thunderstorms-day": "thunderstorms-day.png", "thunderstorms-night": "thunderstorms-night.png",
+    }
+    
+    try:
+        url = "https://weather.googleapis.com/v1/forecast"
+        params = {
+            "location.latitude": lat,
+            "location.longitude": lon,
+            "key": api_key,
+            "types": "DAILY_FORECASTS", # Using uppercase as per some documentation examples
+            "languageCode": "en-US",
+            "days": 4, # Use integer instead of string
+            "units": "METRIC"
+        }
+        
+        print(f"[Weather] Fetching forecast from Google Weather API...")
+        response = requests.get(url, params=params, timeout=15) # Increased timeout
+        response.raise_for_status() 
+        
+        weather_data = response.json()
+        forecast_list = []
+        
+        daily_forecasts = weather_data.get('dailyForecasts', [])
+        if not daily_forecasts:
+            print("[Weather] Forecast data not found in Google API response.")
+            return []
+            
+        for day_data in daily_forecasts:
+            date_info = day_data.get('date', {}); temp_high = day_data.get('temperature', {}).get('max', 'N/A')
+            dt = datetime(year=date_info.get('year'), month=date_info.get('month'), day=date_info.get('day'))
+            icon_name = day_data.get('icon', 'cloudy')
+            icon_filename = GOOGLE_ICON_TO_FILENAME_MAP.get(icon_name, "cloudy.png")
+            forecast = {
+                "Date": dt.strftime('%A, %b %d'),
+                "Temp": f"{temp_high:.0f}°C" if isinstance(temp_high, (int, float)) else temp_high,
+                "Description": day_data.get('description', 'No description').title(),
+                "IconPath": f"images/weather/{icon_filename}"
+            }
+            forecast_list.append(forecast)
+            
+        print(f"[Weather] Successfully fetched {len(forecast_list)} days of forecast from Google.")
+        return forecast_list
+
+    except requests.exceptions.HTTPError as http_err:
+        print(f"--- WEATHER API HTTP ERROR ---")
+        print(f"Status Code: {http_err.response.status_code}")
+        print(f"Response Body: {http_err.response.text}")
+        print(f"This is likely an issue with your Google Cloud Project setup. Please verify:")
+        print(f"1. Billing is enabled for your project.")
+        print(f"2. The 'Weather API' is ENABLED in your project's API Library.")
+        print(f"3. Your API Key has no restrictions or is authorized for the Weather API.")
+        print(f"---------------------------------")
+        return []
+    except Exception as e:
+        print(f"[Weather] General error fetching forecast: {e}")
+        return []
 
 def get_championship_standings_progression(year, event_round):
     print(f"[get_championship_standings_progression] Called for Year: {year}, up to Round: {event_round}")
@@ -276,8 +360,124 @@ def get_session_results(year, event_name_or_round, session_type='Q'):
     except ff1.ErgastMissingDataError: return pd.DataFrame(), pd.DataFrame(), f"{session_type} (Data Missing)", event_round_num, []
     except Exception as e: print(f"Error in get_session_results for {session_type}: {e}"); return pd.DataFrame(), pd.DataFrame(), f"{session_type} (Error)", event_round_num, []
 
+# --- REPLACE your existing get_next_race_info function with this one ---
+def get_next_race_info(year):
+    print(f"[get_next_race_info] Finding next race for {year}...")
+    try:
+        schedule = ff1.get_event_schedule(year, include_testing=False)
+        schedule['EventDate'] = pd.to_datetime(schedule['EventDate'])
+        now_local = pd.Timestamp.now()
+        future_races = schedule[schedule['EventDate'] > now_local].sort_values(by='EventDate')
+        
+        if future_races.empty:
+            print("[get_next_race_info] No upcoming races found for the rest of the season.")
+            return None
+
+        next_event_series = future_races.iloc[0]
+        event_name = next_event_series['EventName']
+        print(f"[get_next_race_info] Next event found: {event_name}")
+        
+        # --- Initialize all data points ---
+        data = {
+            "EventName": next_event_series['OfficialEventName'], "Country": next_event_series['Country'],
+            "CircuitName": next_event_series['Location'], "RaceDate": "TBC", "NumberOfLaps": "TBC",
+            "CircuitLength": "TBC", "RaceDistance": "TBC", "LastYearsFastestLap": "N/A",
+            "CircuitImageRelativePath": "images/circuit_default.png",
+            "CountryFlagImageRelativePath": f"images/flags/{next_event_series['Country'].lower().replace(' ', '_')}.png",
+            "SessionSchedule": [], "PastWinners": [], "TyreStrategyData": pd.DataFrame(),
+            "WeatherData": [], "DriverOrder": [] 
+        }
+
+        if pd.notna(next_event_series['EventDate']):
+            data['RaceDate'] = next_event_series['EventDate'].strftime('%d/%m/%y')
+
+        # --- Get Circuit Length from CSV (this part should be working) ---
+        if not circuit_data_df.empty and 'RoundNumber' in circuit_data_df.columns:
+            circuit_details = circuit_data_df[circuit_data_df['RoundNumber'] == next_event_series['RoundNumber']]
+            if not circuit_details.empty and 'CircuitLength_km' in circuit_details.columns:
+                data['CircuitLength'] = f"{circuit_details['CircuitLength_km'].iloc[0]} km"
+            if not circuit_details.empty and 'CircuitImageFile' in circuit_details.columns and pd.notna(circuit_details['CircuitImageFile'].iloc[0]):
+                specific_path = f"images/circuits/{circuit_details['CircuitImageFile'].iloc[0]}"
+                if os.path.exists(os.path.join(assets_folder, specific_path)):
+                    data['CircuitImageRelativePath'] = specific_path
+        
+        # --- 1. Get Session Schedule for this year ---
+        print("\n[DEBUG NEXT RACE] Step 1: Processing Session Schedule...")
+        try:
+            from pytz import timezone
+            utc, pacific = timezone('UTC'), timezone('US/Pacific')
+            for i in range(1, 6):
+                session_name = next_event_series.get(f'Session{i}')
+                session_date_utc = next_event_series.get(f'Session{i}DateUtc')
+                if pd.notna(session_name) and pd.notna(session_date_utc):
+                    utc_time = utc.localize(pd.to_datetime(session_date_utc))
+                    pacific_time = utc_time.astimezone(pacific)
+                    data['SessionSchedule'].append({'Session': session_name, 'Date': pacific_time.strftime('%a, %b %d'), 'Time': pacific_time.strftime('%I:%M %p PT')})
+            print(f"[DEBUG NEXT RACE] SUCCESS: Found {len(data['SessionSchedule'])} sessions in the schedule.")
+        except Exception as e:
+            print(f"[DEBUG NEXT RACE] FAILED to process session schedule. Error: {e}")
+
+        # --- 2. Get data from last year's session (for Laps, Fastest Lap, and Tyre Strategy) ---
+        print("\n[DEBUG NEXT RACE] Step 2: Loading last year's session data...")
+        try:
+            last_year_session = ff1.get_session(year - 1, event_name, 'R'); last_year_session.load()
+            laps_df = last_year_session.laps; results_df = last_year_session.results
+            print("[DEBUG NEXT RACE] SUCCESS: Last year's session loaded.")
+
+            if not results_df.empty and 'Laps' in results_df.columns: data['NumberOfLaps'] = int(results_df.iloc[0]['Laps'])
+            elif not laps_df.empty: data['NumberOfLaps'] = int(laps_df['LapNumber'].max())
+            print(f"[DEBUG NEXT RACE] Number of Laps set to: {data['NumberOfLaps']}")
+
+            if isinstance(data['NumberOfLaps'], int) and 'CircuitLength_km' in circuit_details.columns:
+                data['RaceDistance'] = f"{round(data['NumberOfLaps'] * circuit_details['CircuitLength_km'].iloc[0], 2)} km"
+            
+            if not laps_df.empty:
+                fastest = laps_df.pick_fastest()
+                if fastest is not None and pd.notna(fastest['LapTime']): data['LastYearsFastestLap'] = f"{format_timedelta(fastest['LapTime'])} by {fastest['Driver']} ({year-1})"
+                
+                all_stints_list = []
+                if not results_df.empty:
+                    driver_order_list = results_df.sort_values(by="Position")['Abbreviation'].unique()
+                    data['DriverOrder'] = driver_order_list.tolist()
+                    for driver_abbr in driver_order_list:
+                        stints = laps_df.pick_driver(driver_abbr).get_stints()
+                        for stint in stints: stint['Driver'] = driver_abbr; all_stints_list.append(stint)
+                    if all_stints_list:
+                        stints_df = pd.DataFrame(all_stints_list)
+                        stints_df.rename(columns={'LapStart':'StintStart', 'LapEnd':'StintEnd'}, inplace=True)
+                        data['TyreStrategyData'] = stints_df
+            print("[DEBUG NEXT RACE] Processed Laps, Fastest Lap, and Tyre Strategy.")
+        except Exception as e:
+            print(f"[DEBUG NEXT RACE] FAILED to load or process last year's session data. Error: {e}")
+
+        # --- 3. Get Past 3 Winners ---
+        print("\n[DEBUG NEXT RACE] Step 3: Fetching past winners...")
+        for i in range(1, 4):
+            past_year = year - i
+            try:
+                past_session = ff1.get_session(past_year, event_name, 'R'); past_session.load(laps=True)
+                winner_row = past_session.results.loc[past_session.results['Position'] == 1.0].iloc[0]
+                winner_abbr = winner_row['Abbreviation']
+                winner_laps = past_session.laps.pick_driver(winner_abbr)
+                winner_best_lap = "N/A"
+                if not winner_laps.empty: winner_best_lap = format_timedelta(winner_laps['LapTime'].min())
+                data['PastWinners'].append({'Year': past_year, 'Winner': winner_row['BroadcastName'], 'Team': winner_row['TeamName'], 'BestLap': winner_best_lap, 'Abbreviation': winner_abbr})
+            except Exception as e: print(f"Could not get winner for {past_year} {event_name}: {e}")
+        print(f"[DEBUG NEXT RACE] SUCCESS: Found {len(data['PastWinners'])} past winners.")
+        
+        return data
+
+    except Exception as e:
+        import traceback
+        print(f"Major error in get_next_race_info: {e}"); traceback.print_exc()
+        return None
+
 # --- Initialize the Dash App ---
-app = dash.Dash(__name__, external_stylesheets=[dbc.themes.LUX], suppress_callback_exceptions=True)
+app = dash.Dash(__name__, 
+                external_stylesheets=[dbc.themes.LUX], 
+                suppress_callback_exceptions=True,
+                assets_folder='assets' # Explicitly define the assets folder
+               )
 server = app.server
 assets_folder = os.path.join(os.path.dirname(__file__), "assets")
 
@@ -339,10 +539,43 @@ season_so_far_content_layout = dbc.Container([ # This is the content for the "Se
 ], fluid=True)
 
 next_race_content_layout = dbc.Container([
-    html.H5("Next Race Details", className="mt-3 mb-3 text-center"),
-    dbc.Alert("Information about the next upcoming race will be displayed here.", color="info")
-    # We will add components like event details, circuit map, session times later
-], fluid=True, id="next-race-container") # Add ID for clarity
+    dbc.Row(dbc.Col(html.H4(id="cs-next-race-title", className="text-center fw-bold"))),
+    html.Hr(),
+    dbc.Row([
+        # Left Column: Track Map
+        dbc.Col(
+            html.Div(
+                html.Img(id="cs-circuit-map-img", className="img-fluid") # The track layout image will go here
+            ), 
+            lg=7, md=12, className="mb-3"
+        ),
+        # Right Column: Key Stats
+        dbc.Col(
+            html.Div([
+                dbc.Row([
+                    dbc.Col(html.Div([html.P("First Grand Prix", className="text-muted small mb-0"), html.H4(id="cs-first-gp", className="fw-bold")])),
+                    dbc.Col(html.Div([html.P("Number of Laps", className="text-muted small mb-0"), html.H4(id="cs-laps", className="fw-bold")])),
+                ], className="mb-4"),
+                dbc.Row([
+                    dbc.Col(html.Div([html.P("Circuit Length", className="text-muted small mb-0"), html.H4(id="cs-circuit-length", className="fw-bold")])),
+                    dbc.Col(html.Div([html.P("Race Distance", className="text-muted small mb-0"), html.H4(id="cs-race-distance", className="fw-bold")])),
+                ], className="mb-4"),
+                dbc.Row([
+                    dbc.Col(
+                        html.Div([
+                            html.P("Lap Record", className="text-muted small mb-0"), 
+                            html.H4(id="cs-lap-record-time", className="fw-bold d-inline-block"),
+                            html.Span(id="cs-lap-record-holder", className="ms-2 text-muted")
+                        ]),
+                        width=12
+                    )
+                ], className="mb-4")
+                # We can add the other links (Onboard Lap, etc.) later if you wish
+            ]), 
+            lg=5, md=12
+        ),
+    ], align="center")
+], fluid=True, id="next-race-container")
 
 race_calendar_content_layout = dbc.Container([
     html.H5("2025 Race Calendar", className="mt-3 mb-3 text-center"),
@@ -781,12 +1014,13 @@ def get_formatted_calendar(year):
         print(f"Error fetching calendar: {e}")
         return dbc.Alert(f"Error loading race calendar: {e}", color="danger")
 
+# --- REPLACE your existing render_cs_sub_tab callback with this one ---
 @app.callback(
     Output('cs-sub-tab-content-area', 'children'),
     Output('cs-navlink-season-so-far', 'active'),
     Output('cs-navlink-next-race', 'active'),
     Output('cs-navlink-race-calendar', 'active'),
-    Output('cs-filters-card', 'style'),  # NEW OUTPUT to control filter visibility
+    Output('cs-filters-card', 'style'),
     Input('cs-navlink-season-so-far', 'n_clicks'),
     Input('cs-navlink-next-race', 'n_clicks'),
     Input('cs-navlink-race-calendar', 'n_clicks'),
@@ -794,40 +1028,99 @@ def get_formatted_calendar(year):
 )
 def render_cs_sub_tab(n_clicks_so_far, n_clicks_next_race, n_clicks_calendar, main_tab_active):
     if main_tab_active != "tab-current-season":
-        # Default style for filters if this tab is not active (should remain visible if no other logic hides it)
         return dash.no_update, dash.no_update, dash.no_update, dash.no_update, {'display': 'block'} 
 
     ctx = dash.callback_context
-    # Default to "Season So Far" if no clicks yet or on initial load of this tab
-    triggered_id = 'cs-navlink-season-so-far' 
-    if ctx.triggered:
-        triggered_id = ctx.triggered[0]['prop_id'].split('.')[0]
+    triggered_id = 'cs-navlink-season-so-far' if not ctx.triggered else ctx.triggered[0]['prop_id'].split('.')[0]
         
     active_so_far, active_next_race, active_calendar = False, False, False
-    content_to_display = html.Div() 
-    filter_card_style = {'display': 'block'} # Default to show filters
+    content_to_display, filter_card_style = html.Div(), {'display': 'block'} 
 
     if triggered_id == 'cs-navlink-season-so-far':
-        content_to_display = season_so_far_content_layout # Your layout for this sub-tab
-        active_so_far = True
-        filter_card_style = {'display': 'block'} # Show filters
+        content_to_display, active_so_far = season_so_far_content_layout, True
+    
     elif triggered_id == 'cs-navlink-next-race':
-        content_to_display = next_race_content_layout # Your placeholder layout
+        cs_year = datetime.now().year
+        next_race_data = get_next_race_info(cs_year)
+        
+        if next_race_data:
+            # --- Build all sections for the Next Race tab ---
+            # 1. Header Section
+            header_section = dbc.Container([
+                dbc.Row(dbc.Col(html.H4(f"{next_race_data['EventName']}", className="text-center fw-bold"))), html.Hr(),
+                dbc.Row([
+                    dbc.Col(html.Div(html.Img(src=app.get_asset_url(next_race_data['CircuitImageRelativePath']), className="img-fluid rounded track-map-style")), lg=7, md=12, className="mb-3"),
+                    dbc.Col(html.Div([
+                        dbc.Row([dbc.Col(html.Div([html.Img(src=app.get_asset_url(next_race_data['CountryFlagImageRelativePath']), style={'height': '24px', 'marginRight': '10px'}), html.Span(next_race_data['CircuitName'], className="h5")]), width=12, className="mb-4")]),
+                        dbc.Row([dbc.Col(html.Div([html.P("Race Date", className="text-muted small mb-0"), html.H4(next_race_data['RaceDate'])])), dbc.Col(html.Div([html.P("Number of Laps", className="text-muted small mb-0"), html.H4(next_race_data['NumberOfLaps'])]))], className="mb-4"),
+                        dbc.Row([dbc.Col(html.Div([html.P("Circuit Length", className="text-muted small mb-0"), html.H4(next_race_data['CircuitLength'])])), dbc.Col(html.Div([html.P("Race Distance", className="text-muted small mb-0"), html.H4(next_race_data['RaceDistance'])]))], className="mb-4"),
+                        dbc.Row([dbc.Col(html.Div([
+                            html.P("Last Year's Fastest Lap", className="text-muted large mb-0"), 
+                            html.H6(next_race_data['LastYearsFastestLap'], className="fw-bold d-inline-block")
+                        ]))])
+                    ]), lg=5, md=12)
+                ], align="center")
+            ], fluid=True, className="mb-4")
+
+            # 2. Weather Section (Placeholder)
+            weather_section = dbc.Row([dbc.Col(dbc.Card([dbc.CardHeader("Expected Weather Conditions"), dbc.CardBody(dbc.Alert("Weather API integration pending.", color="secondary"))]))], className="mb-4")
+
+            # 3. Schedule Section
+            schedule_items = [dbc.ListGroupItem(f"{s['Session']}: {s['Date']} - {s['Time']}") for s in next_race_data.get('SessionSchedule', [])]
+            schedule_section = dbc.Row([dbc.Col(dbc.Card([dbc.CardHeader("Race Weekend Schedule (Pacific Time)"), dbc.ListGroup(schedule_items, flush=True)]))], className="mb-4")
+
+            # 4. Past Winners Section (Tweak #2: new styled layout)
+            winner_cards = []
+            if next_race_data.get('PastWinners'):
+                for winner in next_race_data['PastWinners']:
+                    winner_abbr = winner.get('Abbreviation', '').lower()
+                    driver_image_src = app.get_asset_url(f"images/drivers/{winner_abbr}.png") if winner_abbr else app.get_asset_url("images/driver_default.png")
+                    winner_cards.append(dbc.Col(dbc.Card([
+                        dbc.CardBody([
+                            html.H5(f"{winner['Year']} Winner", className="card-title"),
+                            html.Img(src=driver_image_src, style={'width':'60px', 'height':'60px', 'borderRadius':'50%', 'objectFit':'cover', 'float':'left', 'marginRight':'15px'}),
+                            html.H6(winner['Winner'], className="card-subtitle"),
+                            html.P(f"Team: {winner['Team']}", className="card-text text-muted"),
+                            html.P(f"Best Lap: {winner['BestLap']}", className="card-text small")
+                        ])
+                    ]), md=4))
+            past_winners_section = dbc.Row([dbc.Col(dbc.Card([dbc.CardHeader("Recent Winners at this Event"), dbc.CardBody(dbc.Row(winner_cards))]))], className="mb-4")
+
+            # 5. Tyre Strategy Section (Tweak #3: new plot logic)
+            tyre_fig = {'layout': {'title': "Last Year's Tyre Strategy Data Unavailable"}}
+            stints_df = next_race_data.get('TyreStrategyData')
+            driver_order = next_race_data.get('DriverOrder', [])
+            if stints_df is not None and not stints_df.empty:
+                tyre_fig = px.timeline(stints_df, x_start="LapStart", x_end="LapEnd", y="Driver", color="Compound",
+                                       title="Last Year's Tyre Strategies", labels={'Driver': 'Driver', 'Compound': 'Tyre'},
+                                       color_discrete_map=ff1_plt.COMPOUND_COLORS)
+                tyre_fig.update_layout(xaxis_title="Lap Number", yaxis_title="Driver", 
+                                       yaxis={'categoryorder':'array', 'categoryarray':driver_order[::-1]}) # Reverse order for P1 at top
+            
+            tyre_strategy_section = dbc.Row([
+                dbc.Col([
+                    dbc.Card([dbc.CardHeader("Tyre Strategy Analysis"), dbc.CardBody(dcc.Graph(figure=tyre_fig))]),
+                    dbc.Card([dbc.CardHeader("AI Tyre Strategy Insights"), dbc.CardBody(dbc.Alert("AI Insights for tyre strategies will be generated here.", color="info"))], className="mt-3")
+                ])
+            ], className="mb-4")
+            
+            content_to_display = dbc.Container([header_section, weather_section, schedule_section, past_winners_section, tyre_strategy_section], fluid=True)
+        else:
+            content_to_display = dbc.Alert("Could not load data for the next race. The season may be over.", color="warning")
+
         active_next_race = True
-        filter_card_style = {'display': 'none'} # Hide filters
+        filter_card_style = {'display': 'none'}
+    
     elif triggered_id == 'cs-navlink-race-calendar':
         cs_year = datetime.now().year
         calendar_table_content = get_formatted_calendar(cs_year)
-        content_to_display = dbc.Container([
-            html.H5(f"{cs_year} Race Calendar", className="mt-3 mb-3 text-center"),
-            calendar_table_content
-        ], fluid=True, id="race-calendar-container-content")
+        content_to_display = dbc.Container([html.H5(f"{cs_year} Race Calendar",className="mt-3 mb-3 text-center"), calendar_table_content], fluid=True)
         active_calendar = True
-        filter_card_style = {'display': 'none'} # Hide filters
-    else: # Default case
+        filter_card_style = {'display': 'none'}
+    
+    else: 
         content_to_display = season_so_far_content_layout
         active_so_far = True
-        filter_card_style = {'display': 'block'} # Show filters for default
         
     return content_to_display, active_so_far, active_next_race, active_calendar, filter_card_style
 
