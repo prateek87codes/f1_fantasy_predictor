@@ -344,24 +344,26 @@ def get_session_results(year, event_name_or_round, session_type='Q'):
     except ff1.ErgastMissingDataError: return pd.DataFrame(), pd.DataFrame(), f"{session_type} (Data Missing)", event_round_num, []
     except Exception as e: print(f"Error in get_session_results for {session_type}: {e}"); return pd.DataFrame(), pd.DataFrame(), f"{session_type} (Error)", event_round_num, []
 
-# --- REPLACE your existing get_next_race_info function ---
+# --- REPLACE your existing get_next_race_info function with this one ---
 def get_next_race_info(year):
     print(f"[get_next_race_info] Finding next race for {year}...")
     try:
         schedule = ff1.get_event_schedule(year, include_testing=False)
+        if schedule.empty: return None
+
         schedule['EventDate'] = pd.to_datetime(schedule['EventDate'])
         now_local = pd.Timestamp.now()
         future_races = schedule[schedule['EventDate'] > now_local].sort_values(by='EventDate')
         
         if future_races.empty:
-            print("[get_next_race_info] No upcoming races found for this season.")
+            print("[get_next_race_info] No upcoming races found for the rest of the season.")
             return None
 
         next_event_series = future_races.iloc[0]
         event_name = next_event_series['EventName']
         print(f"[get_next_race_info] Next event found: {event_name}")
         
-        # --- Initialize data dictionary ---
+        # --- Initialize data dictionary with all keys ---
         data = {
             "EventName": next_event_series['OfficialEventName'], "Country": next_event_series['Country'],
             "CircuitName": next_event_series['Location'], "RaceDate": "TBC", "NumberOfLaps": "TBC",
@@ -372,70 +374,84 @@ def get_next_race_info(year):
             "WeatherData": [], "DriverOrder": [] 
         }
 
-        if pd.notna(next_event_series['EventDate']):
-            data['RaceDate'] = next_event_series['EventDate'].strftime('%d/%m/%y')
+        # --- Get Race Date and create the datetime object needed for the weather function ---
+        race_date_obj = pd.to_datetime(next_event_series['EventDate'])
+        if pd.notna(race_date_obj):
+            data['RaceDate'] = race_date_obj.strftime('%d/%m/%y')
 
-        # --- Get Data from CSV ---
+        # --- Get Circuit-Specific Data from our CSV file ---
         lat, lon, circuit_length_km = None, None, "TBC"
         if not circuit_data_df.empty:
             circuit_details = circuit_data_df[circuit_data_df['RoundNumber'] == next_event_series['RoundNumber']]
             if not circuit_details.empty:
-                circuit_length_km = circuit_details['CircuitLength_km'].iloc[0]
-                data['CircuitLength'] = f"{circuit_length_km} km"
+                if 'CircuitLength_km' in circuit_details.columns:
+                    circuit_length_km = circuit_details['CircuitLength_km'].iloc[0]
+                    data['CircuitLength'] = f"{circuit_length_km} km"
                 if 'CircuitImageFile' in circuit_details.columns and pd.notna(circuit_details.iloc[0]['CircuitImageFile']):
                     specific_path = f"images/circuits/{circuit_details.iloc[0]['CircuitImageFile']}"
-                    if os.path.exists(os.path.join(assets_folder, specific_path)): data['CircuitImageRelativePath'] = specific_path
-                lat, lon = circuit_details['Latitude'].iloc[0], circuit_details['Longitude'].iloc[0]
+                    if os.path.exists(os.path.join(assets_folder, specific_path)):
+                        data['CircuitImageRelativePath'] = specific_path
+                if 'Latitude' in circuit_details.columns and 'Longitude' in circuit_details.columns:
+                    lat, lon = circuit_details['Latitude'].iloc[0], circuit_details['Longitude'].iloc[0]
         
-        # --- Call Weather API ---
-        race_date_obj = pd.to_datetime(next_event_series['EventDate'])
-        data['RaceDate'] = race_date_obj.strftime('%d/%m/%y')
+        # --- Call weather API if we have coordinates and the date object ---
+        if lat and lon and pd.notna(race_date_obj):
+            data['WeatherData'] = get_weather_forecast(lat, lon, OPENWEATHER_API_KEY, race_date_obj)
 
-        if lat and lon:
-            # Pass the datetime object to the weather function
-            data['WeatherData'] = get_weather_forecast(lat, lon, OPENWEATHER_API_KEY, race_date_obj) 
-
-        # --- Get Data from Last Year's Session ---
+        # --- Get data from last year's session ---
         try:
             last_year_session = ff1.get_session(year - 1, event_name, 'R'); last_year_session.load()
-            laps_df, results_df = last_year_session.laps, last_year_session.results
-            if not results_df.empty and 'Laps' in results_df.columns and pd.notna(results_df.iloc[0]['Laps']): data['NumberOfLaps'] = int(results_df.iloc[0]['Laps'])
-            elif not laps_df.empty: data['NumberOfLaps'] = int(laps_df['LapNumber'].max())
-            if isinstance(data['NumberOfLaps'], int) and isinstance(circuit_length_km, (int, float)): data['RaceDistance'] = f"{round(data['NumberOfLaps'] * circuit_length_km, 2)} km"
+            laps_df = last_year_session.laps; results_df = last_year_session.results
+            if not results_df.empty and 'Laps' in results_df.columns and pd.notna(results_df.iloc[0]['Laps']):
+                data['NumberOfLaps'] = int(results_df.iloc[0]['Laps'])
+            elif not laps_df.empty:
+                data['NumberOfLaps'] = int(laps_df['LapNumber'].max())
+            if isinstance(data['NumberOfLaps'], int) and isinstance(circuit_length_km, (int, float)):
+                data['RaceDistance'] = f"{round(data['NumberOfLaps'] * circuit_length_km, 2)} km"
             if not laps_df.empty:
-                fastest = laps_df.pick_fastest(); 
+                fastest = laps_df.pick_fastest()
                 if fastest is not None and pd.notna(fastest['LapTime']): data['LastYearsFastestLap'] = f"{format_timedelta(fastest['LapTime'])} by {fastest['Driver']} ({year-1})"
-                stints = laps_df.loc[:, ['Driver', 'Stint', 'Compound', 'LapNumber']].groupby(['Driver', 'Stint', 'Compound']).agg(LapStart=('LapNumber', 'min'), LapEnd=('LapNumber', 'max')).reset_index()
+                
+                # --- NEW, MORE ROBUST TYRE STRATEGY LOGIC ---
+                all_stints_list = []
                 if not results_df.empty:
-                    driver_order = results_df.sort_values(by="Position")['Abbreviation'].unique().tolist()
-                    data['DriverOrder'] = driver_order; stints['Driver'] = pd.Categorical(stints['Driver'], categories=driver_order, ordered=True)
-                stints.sort_values(by=['Driver', 'Stint'], inplace=True); data['TyreStrategyData'] = stints
+                    driver_order_list = results_df.sort_values(by="Position")['Abbreviation'].unique().tolist()
+                    data['DriverOrder'] = driver_order_list
+                    for driver_abbr in driver_order_list:
+                        stints = laps_df.pick_driver(driver_abbr).get_stints()
+                        for stint in stints:
+                            stint['Driver'] = driver_abbr
+                            all_stints_list.append(stint)
+                    if all_stints_list:
+                        stints_df = pd.DataFrame(all_stints_list)
+                        data['TyreStrategyData'] = stints_df
         except Exception as e: print(f"Could not load last year's session data. Error: {e}")
 
         # --- Get Session Schedule for This Year ---
-        from pytz import timezone
-        utc, pacific = timezone('UTC'), timezone('US/Pacific')
-        for i in range(1, 6):
-            session_name, session_date_utc = next_event_series.get(f'Session{i}'), next_event_series.get(f'Session{i}DateUtc')
-            if pd.notna(session_name) and pd.notna(session_date_utc):
-                utc_time = utc.localize(pd.to_datetime(session_date_utc)); pacific_time = utc_time.astimezone(pacific)
-                data['SessionSchedule'].append({'Session': session_name, 'Date': pacific_time.strftime('%a, %b %d'), 'Time': pacific_time.strftime('%I:%M %p PT')})
-        print(f"[DEBUG NEXT RACE] Session Schedule: Found {len(data['SessionSchedule'])} sessions.")
+        try:
+            from pytz import timezone
+            utc, pacific = timezone('UTC'), timezone('US/Pacific')
+            for i in range(1, 6):
+                session_name, session_date_utc = next_event_series.get(f'Session{i}'), next_event_series.get(f'Session{i}DateUtc')
+                if pd.notna(session_name) and pd.notna(session_date_utc):
+                    utc_time = utc.localize(pd.to_datetime(session_date_utc)); pacific_time = utc_time.astimezone(pacific)
+                    data['SessionSchedule'].append({'Session': session_name, 'Date': pacific_time.strftime('%a, %b %d'), 'Time': pacific_time.strftime('%I:%M %p PT')})
+        except Exception as e: print(f"ERROR processing session schedule: {e}")
 
         # --- Get Past 3 Winners ---
-        for i in range(1, 4):
-            past_year = year - i
-            try:
-                past_session = ff1.get_session(past_year, event_name, 'R'); past_session.load(laps=True)
-                winner_row = past_session.results.loc[past_session.results['Position'] == 1.0].iloc[0]
-                winner_abbr = winner_row['Abbreviation']
-                winner_laps = past_session.laps.pick_driver(winner_abbr)
-                winner_best_lap = "N/A"
-                if not winner_laps.empty:
-                    winner_best_lap = format_timedelta(winner_laps['LapTime'].min())
-                data['PastWinners'].append({'Year': past_year, 'Winner': winner_row['BroadcastName'], 'Team': winner_row['TeamName'], 'BestLap': winner_best_lap, 'Abbreviation': winner_abbr})
-            except Exception as e:
-                print(f"Could not get winner for {past_year} {event_name}: {e}")
+        try:
+            for i in range(1, 4):
+                past_year = year - i
+                try:
+                    past_session = ff1.get_session(past_year, event_name, 'R'); past_session.load(laps=True)
+                    winner_row = past_session.results.loc[past_session.results['Position'] == 1.0].iloc[0]
+                    winner_abbr = winner_row['Abbreviation']
+                    winner_laps = past_session.laps.pick_driver(winner_abbr)
+                    winner_best_lap = "N/A"
+                    if not winner_laps.empty: winner_best_lap = format_timedelta(winner_laps['LapTime'].min())
+                    data['PastWinners'].append({'Year': past_year, 'Winner': winner_row['BroadcastName'], 'Team': winner_row['TeamName'], 'BestLap': winner_best_lap, 'Abbreviation': winner_abbr})
+                except Exception as e: print(f"Could not get winner for {past_year} {event_name}: {e}")
+        except Exception as e: print(f"ERROR fetching past winners: {e}")
         
         return data
 
@@ -1076,25 +1092,57 @@ def render_cs_sub_tab(n_clicks_so_far, n_clicks_next_race, n_clicks_calendar, ma
                     ]), md=4))
             past_winners_section = dbc.Row([dbc.Col(dbc.Card([dbc.CardHeader("Recent Winners at this Event"), dbc.CardBody(dbc.Row(winner_cards))]))], className="mb-4")
 
-            # 5. Tyre Strategy Section (Tweak #3: new plot logic)
+            # 5. Tyre Strategy Section 
             tyre_fig = {'layout': {'title': "Last Year's Tyre Strategy Data Unavailable"}}
             stints_df = next_race_data.get('TyreStrategyData')
             driver_order = next_race_data.get('DriverOrder', [])
+            ai_tyre_insights = "AI Insights will be generated if weather and strategy data are available."
+            
             if stints_df is not None and not stints_df.empty:
+                # Plotting using LapStart and LapEnd
                 tyre_fig = px.timeline(stints_df, x_start="LapStart", x_end="LapEnd", y="Driver", color="Compound",
                                        title="Last Year's Tyre Strategies", labels={'Driver': 'Driver', 'Compound': 'Tyre'},
                                        color_discrete_map=ff1_plt.COMPOUND_COLORS)
-                tyre_fig.update_layout(xaxis_title="Lap Number", yaxis_title="Driver", 
-                                       yaxis={'categoryorder':'array', 'categoryarray':driver_order[::-1]}) # Reverse order for P1 at top
+                if driver_order:
+                    tyre_fig.update_layout(xaxis_title="Lap Number", yaxis_title="Driver", 
+                                           yaxis={'categoryorder':'array', 'categoryarray':driver_order[::-1]})
+                
+                # --- AI Tyre Strategy Insights Logic ---
+                weather_data = next_race_data.get('WeatherData')
+                if weather_data:
+                    # Create a summary of last year's strategy and this year's weather
+                    strategy_summary_list = ["Last Year's Strategy Highlights:"]
+                    for driver in stints_df['Driver'].unique()[:5]: # Summarize for top 5 finishers
+                        driver_stints = stints_df[stints_df['Driver'] == driver]
+                        stint_summary = f"  - {driver}: " + " -> ".join([f"{row['Compound']}({row['LapEnd'] - row['LapStart'] + 1} laps)" for _, row in driver_stints.iterrows()])
+                        strategy_summary_list.append(stint_summary)
+                    
+                    weather_summary_list = ["This Year's Weather Forecast:"]
+                    for day in weather_data:
+                        weather_summary_list.append(f"  - {day['Date']}: {day['Temp']}, {day['Description']}")
+
+                    ai_prompt_data = "\n".join(strategy_summary_list) + "\n\n" + "\n".join(weather_summary_list)
+                    
+                    # Create the prompt for Gemini
+                    ai_prompt = (
+                        f"You are an expert F1 strategist analyzing the upcoming {next_race_data['EventName']}.\n"
+                        f"{ai_prompt_data}\n\n"
+                        "Based on last year's strategies and this year's weather forecast, provide 2-3 bullet points on "
+                        "potential tyre strategy changes or key considerations for this year's race. Consider if the weather "
+                        "(e.g., hotter, cooler, rain) would favor harder or softer compounds, or change the number of pit stops."
+                    )
+                    
+                    ai_tyre_insights = get_race_highlights_from_gemini(ai_prompt) # Re-using our Gemini function
             
             tyre_strategy_section = dbc.Row([
                 dbc.Col([
                     dbc.Card([dbc.CardHeader("Tyre Strategy Analysis"), dbc.CardBody(dcc.Graph(figure=tyre_fig))]),
-                    dbc.Card([dbc.CardHeader("AI Tyre Strategy Insights"), dbc.CardBody(dbc.Alert("AI Insights for tyre strategies will be generated here.", color="info"))], className="mt-3")
+                    dbc.Card([dbc.CardHeader("AI Tyre Strategy Insights"), dbc.CardBody(dcc.Loading(dcc.Markdown(ai_tyre_insights)))], className="mt-3")
                 ])
             ], className="mb-4")
             
             content_to_display = dbc.Container([header_section, weather_section, schedule_section, past_winners_section, tyre_strategy_section], fluid=True)
+            # ...
         else:
             content_to_display = dbc.Alert("Could not load data for the next race. The season may be over.", color="warning")
 
