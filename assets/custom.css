@@ -59,3 +59,10 @@ td.fastest-lap-driver-cell::after {
     margin-left: auto;
     margin-right: auto;
 }
+
+.stat-data {
+  font-weight: 500; /* A normal, non-bold weight */
+  color: #343a40;  /* A standard dark text color */
+  margin-top: 0;
+  font-size: 1.1rem; /* Adjust size as you like */
+}

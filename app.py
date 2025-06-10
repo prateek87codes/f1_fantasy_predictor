@@ -26,12 +26,12 @@ else:
         print(f"Error configuring Gemini AI: {e}. AI features may not work.")
         GEMINI_API_KEY = None
 
-# --- NEW: GOOGLE MAPS PLATFORM API KEY ---
-GOOGLE_API_KEY = "AIzaSyCaSHokQnD-Tib6PEfSXMkWbYdGCvYCZd4" # <--- REPLACE THIS
+# --- NEW: OPENWEATHERMAP API KEY ---
+OPENWEATHER_API_KEY = "498cab1bf71ff100104058cbfada4d45" # <--- PASTE YOUR KEY
 
-if GOOGLE_API_KEY == "YOUR_Maps_API_KEY_HERE" or GOOGLE_API_KEY == "":
-    print("Warning: GOOGLE_API_KEY is not set. Weather features will be disabled.")
-    GOOGLE_API_KEY = None
+if OPENWEATHER_API_KEY == "YOUR_NEW_OPENWEATHERMAP_API_KEY_HERE" or OPENWEATHER_API_KEY == "":
+    print("Warning: OPENWEATHER_API_KEY is not set. Weather features will be disabled.")
+    OPENWEATHER_API_KEY = None
 
 
 ERGAS_CONSTRUCTOR_NAME_TO_KNOWN_TEAM_ID_OR_COLOR = {
@@ -65,69 +65,53 @@ def format_timedelta(td_object):
         return f"{sign}{hours:02d}:{minutes:02d}:{seconds:06.3f}" if hours > 0 else f"{sign}{minutes:02d}:{seconds:06.3f}"
     return str(td_object)
 
-# --- REPLACE your existing get_weather_forecast function with this one ---
-def get_weather_forecast(lat, lon, api_key):
-    if not api_key or api_key == "YOUR_Maps_API_KEY_HERE":
-        print("[Weather] Google API key not provided. Skipping forecast fetch.")
+# REPLACE your get_weather_forecast function with this OpenWeatherMap version
+def get_weather_forecast(lat, lon, api_key, race_date_obj):
+    if not api_key or api_key == "YOUR_OPENWEATHER_API_KEY_HERE":
+        print("[Weather] OpenWeather API key not provided. Skipping forecast fetch.")
         return []
     
-    GOOGLE_ICON_TO_FILENAME_MAP = {
-        "clear-day": "clear-day.png", "clear-night": "clear-night.png", "cloudy": "cloudy.png",
-        "partly-cloudy-day": "partly-cloudy-day.png", "partly-cloudy-night": "partly-cloudy-night.png",
-        "rain": "rain.png", "sleet": "sleet.png", "snow": "snow.png", "fog": "fog.png", "wind": "wind.png",
-        "showers-day": "showers-day.png", "showers-night": "showers-night.png",
-        "thunderstorms-day": "thunderstorms-day.png", "thunderstorms-night": "thunderstorms-night.png",
-    }
-    
     try:
-        url = "https://weather.googleapis.com/v1/forecast"
-        params = {
-            "location.latitude": lat,
-            "location.longitude": lon,
-            "key": api_key,
-            "types": "DAILY_FORECASTS", # Using uppercase as per some documentation examples
-            "languageCode": "en-US",
-            "days": 4, # Use integer instead of string
-            "units": "METRIC"
-        }
+        # OpenWeatherMap One Call API provides an 8-day daily forecast, which is perfect
+        url = f"https://api.openweathermap.org/data/3.0/onecall?lat={lat}&lon={lon}&exclude=current,minutely,hourly,alerts&appid={api_key}&units=metric"
         
-        print(f"[Weather] Fetching forecast from Google Weather API...")
-        response = requests.get(url, params=params, timeout=15) # Increased timeout
+        print(f"[Weather] Fetching forecast from OpenWeatherMap...")
+        response = requests.get(url, timeout=10)
         response.raise_for_status() 
         
         weather_data = response.json()
         forecast_list = []
         
-        daily_forecasts = weather_data.get('dailyForecasts', [])
-        if not daily_forecasts:
-            print("[Weather] Forecast data not found in Google API response.")
-            return []
+        # Determine the dates for Friday, Saturday, and Sunday of the race weekend
+        race_sunday = race_date_obj
+        race_saturday = race_sunday - pd.Timedelta(days=1)
+        race_friday = race_sunday - pd.Timedelta(days=2)
+        race_weekend_dates = [race_friday.date(), race_saturday.date(), race_sunday.date()]
+        
+        # Go through the daily forecast and find the matching days
+        for day_data in weather_data.get('daily', []):
+            forecast_date = datetime.fromtimestamp(day_data['dt']).date()
             
-        for day_data in daily_forecasts:
-            date_info = day_data.get('date', {}); temp_high = day_data.get('temperature', {}).get('max', 'N/A')
-            dt = datetime(year=date_info.get('year'), month=date_info.get('month'), day=date_info.get('day'))
-            icon_name = day_data.get('icon', 'cloudy')
-            icon_filename = GOOGLE_ICON_TO_FILENAME_MAP.get(icon_name, "cloudy.png")
-            forecast = {
-                "Date": dt.strftime('%A, %b %d'),
-                "Temp": f"{temp_high:.0f}°C" if isinstance(temp_high, (int, float)) else temp_high,
-                "Description": day_data.get('description', 'No description').title(),
-                "IconPath": f"images/weather/{icon_filename}"
-            }
-            forecast_list.append(forecast)
-            
-        print(f"[Weather] Successfully fetched {len(forecast_list)} days of forecast from Google.")
+            if forecast_date in race_weekend_dates:
+                # Format the date to show the day of the week (e.g., "Friday")
+                day_name = datetime.fromtimestamp(day_data['dt']).strftime('%A')
+                
+                forecast = {
+                    "Date": day_name, # Show "Friday", "Saturday", "Sunday"
+                    "Temp": f"{day_data.get('temp', {}).get('day', 'N/A'):.0f}°C",
+                    "Description": day_data.get('weather', [{}])[0].get('description', 'No description').title(),
+                    "Icon": f"http://openweathermap.org/img/wn/{day_data.get('weather', [{}])[0].get('icon', '01d')}@2x.png"
+                }
+                forecast_list.append(forecast)
+        
+        print(f"[Weather] Successfully extracted {len(forecast_list)} days of forecast for the race weekend.")
         return forecast_list
 
     except requests.exceptions.HTTPError as http_err:
-        print(f"--- WEATHER API HTTP ERROR ---")
-        print(f"Status Code: {http_err.response.status_code}")
-        print(f"Response Body: {http_err.response.text}")
-        print(f"This is likely an issue with your Google Cloud Project setup. Please verify:")
-        print(f"1. Billing is enabled for your project.")
-        print(f"2. The 'Weather API' is ENABLED in your project's API Library.")
-        print(f"3. Your API Key has no restrictions or is authorized for the Weather API.")
-        print(f"---------------------------------")
+        print(f"--- WEATHER API HTTP ERROR --- (Status: {http_err.response.status_code})")
+        if http_err.response.status_code == 401:
+            print("-> This is an Authentication error. Please check that your OpenWeatherMap API key is correct and active.")
+        else: print(f"-> Response Body: {http_err.response.text}")
         return []
     except Exception as e:
         print(f"[Weather] General error fetching forecast: {e}")
@@ -360,7 +344,7 @@ def get_session_results(year, event_name_or_round, session_type='Q'):
     except ff1.ErgastMissingDataError: return pd.DataFrame(), pd.DataFrame(), f"{session_type} (Data Missing)", event_round_num, []
     except Exception as e: print(f"Error in get_session_results for {session_type}: {e}"); return pd.DataFrame(), pd.DataFrame(), f"{session_type} (Error)", event_round_num, []
 
-# --- REPLACE your existing get_next_race_info function with this one ---
+# --- REPLACE your existing get_next_race_info function ---
 def get_next_race_info(year):
     print(f"[get_next_race_info] Finding next race for {year}...")
     try:
@@ -370,14 +354,14 @@ def get_next_race_info(year):
         future_races = schedule[schedule['EventDate'] > now_local].sort_values(by='EventDate')
         
         if future_races.empty:
-            print("[get_next_race_info] No upcoming races found for the rest of the season.")
+            print("[get_next_race_info] No upcoming races found for this season.")
             return None
 
         next_event_series = future_races.iloc[0]
         event_name = next_event_series['EventName']
         print(f"[get_next_race_info] Next event found: {event_name}")
         
-        # --- Initialize all data points ---
+        # --- Initialize data dictionary ---
         data = {
             "EventName": next_event_series['OfficialEventName'], "Country": next_event_series['Country'],
             "CircuitName": next_event_series['Location'], "RaceDate": "TBC", "NumberOfLaps": "TBC",
@@ -391,67 +375,54 @@ def get_next_race_info(year):
         if pd.notna(next_event_series['EventDate']):
             data['RaceDate'] = next_event_series['EventDate'].strftime('%d/%m/%y')
 
-        # --- Get Circuit Length from CSV (this part should be working) ---
-        if not circuit_data_df.empty and 'RoundNumber' in circuit_data_df.columns:
+        # --- Get Data from CSV ---
+        lat, lon, circuit_length_km = None, None, "TBC"
+        if not circuit_data_df.empty:
             circuit_details = circuit_data_df[circuit_data_df['RoundNumber'] == next_event_series['RoundNumber']]
-            if not circuit_details.empty and 'CircuitLength_km' in circuit_details.columns:
-                data['CircuitLength'] = f"{circuit_details['CircuitLength_km'].iloc[0]} km"
-            if not circuit_details.empty and 'CircuitImageFile' in circuit_details.columns and pd.notna(circuit_details['CircuitImageFile'].iloc[0]):
-                specific_path = f"images/circuits/{circuit_details['CircuitImageFile'].iloc[0]}"
-                if os.path.exists(os.path.join(assets_folder, specific_path)):
-                    data['CircuitImageRelativePath'] = specific_path
+            if not circuit_details.empty:
+                circuit_length_km = circuit_details['CircuitLength_km'].iloc[0]
+                data['CircuitLength'] = f"{circuit_length_km} km"
+                if 'CircuitImageFile' in circuit_details.columns and pd.notna(circuit_details.iloc[0]['CircuitImageFile']):
+                    specific_path = f"images/circuits/{circuit_details.iloc[0]['CircuitImageFile']}"
+                    if os.path.exists(os.path.join(assets_folder, specific_path)): data['CircuitImageRelativePath'] = specific_path
+                lat, lon = circuit_details['Latitude'].iloc[0], circuit_details['Longitude'].iloc[0]
         
-        # --- 1. Get Session Schedule for this year ---
-        print("\n[DEBUG NEXT RACE] Step 1: Processing Session Schedule...")
-        try:
-            from pytz import timezone
-            utc, pacific = timezone('UTC'), timezone('US/Pacific')
-            for i in range(1, 6):
-                session_name = next_event_series.get(f'Session{i}')
-                session_date_utc = next_event_series.get(f'Session{i}DateUtc')
-                if pd.notna(session_name) and pd.notna(session_date_utc):
-                    utc_time = utc.localize(pd.to_datetime(session_date_utc))
-                    pacific_time = utc_time.astimezone(pacific)
-                    data['SessionSchedule'].append({'Session': session_name, 'Date': pacific_time.strftime('%a, %b %d'), 'Time': pacific_time.strftime('%I:%M %p PT')})
-            print(f"[DEBUG NEXT RACE] SUCCESS: Found {len(data['SessionSchedule'])} sessions in the schedule.")
-        except Exception as e:
-            print(f"[DEBUG NEXT RACE] FAILED to process session schedule. Error: {e}")
+        # --- Call Weather API ---
+        race_date_obj = pd.to_datetime(next_event_series['EventDate'])
+        data['RaceDate'] = race_date_obj.strftime('%d/%m/%y')
 
-        # --- 2. Get data from last year's session (for Laps, Fastest Lap, and Tyre Strategy) ---
-        print("\n[DEBUG NEXT RACE] Step 2: Loading last year's session data...")
+        if lat and lon:
+            # Pass the datetime object to the weather function
+            data['WeatherData'] = get_weather_forecast(lat, lon, OPENWEATHER_API_KEY, race_date_obj) 
+
+        # --- Get Data from Last Year's Session ---
         try:
             last_year_session = ff1.get_session(year - 1, event_name, 'R'); last_year_session.load()
-            laps_df = last_year_session.laps; results_df = last_year_session.results
-            print("[DEBUG NEXT RACE] SUCCESS: Last year's session loaded.")
-
-            if not results_df.empty and 'Laps' in results_df.columns: data['NumberOfLaps'] = int(results_df.iloc[0]['Laps'])
+            laps_df, results_df = last_year_session.laps, last_year_session.results
+            if not results_df.empty and 'Laps' in results_df.columns and pd.notna(results_df.iloc[0]['Laps']): data['NumberOfLaps'] = int(results_df.iloc[0]['Laps'])
             elif not laps_df.empty: data['NumberOfLaps'] = int(laps_df['LapNumber'].max())
-            print(f"[DEBUG NEXT RACE] Number of Laps set to: {data['NumberOfLaps']}")
-
-            if isinstance(data['NumberOfLaps'], int) and 'CircuitLength_km' in circuit_details.columns:
-                data['RaceDistance'] = f"{round(data['NumberOfLaps'] * circuit_details['CircuitLength_km'].iloc[0], 2)} km"
-            
+            if isinstance(data['NumberOfLaps'], int) and isinstance(circuit_length_km, (int, float)): data['RaceDistance'] = f"{round(data['NumberOfLaps'] * circuit_length_km, 2)} km"
             if not laps_df.empty:
-                fastest = laps_df.pick_fastest()
+                fastest = laps_df.pick_fastest(); 
                 if fastest is not None and pd.notna(fastest['LapTime']): data['LastYearsFastestLap'] = f"{format_timedelta(fastest['LapTime'])} by {fastest['Driver']} ({year-1})"
-                
-                all_stints_list = []
+                stints = laps_df.loc[:, ['Driver', 'Stint', 'Compound', 'LapNumber']].groupby(['Driver', 'Stint', 'Compound']).agg(LapStart=('LapNumber', 'min'), LapEnd=('LapNumber', 'max')).reset_index()
                 if not results_df.empty:
-                    driver_order_list = results_df.sort_values(by="Position")['Abbreviation'].unique()
-                    data['DriverOrder'] = driver_order_list.tolist()
-                    for driver_abbr in driver_order_list:
-                        stints = laps_df.pick_driver(driver_abbr).get_stints()
-                        for stint in stints: stint['Driver'] = driver_abbr; all_stints_list.append(stint)
-                    if all_stints_list:
-                        stints_df = pd.DataFrame(all_stints_list)
-                        stints_df.rename(columns={'LapStart':'StintStart', 'LapEnd':'StintEnd'}, inplace=True)
-                        data['TyreStrategyData'] = stints_df
-            print("[DEBUG NEXT RACE] Processed Laps, Fastest Lap, and Tyre Strategy.")
-        except Exception as e:
-            print(f"[DEBUG NEXT RACE] FAILED to load or process last year's session data. Error: {e}")
+                    driver_order = results_df.sort_values(by="Position")['Abbreviation'].unique().tolist()
+                    data['DriverOrder'] = driver_order; stints['Driver'] = pd.Categorical(stints['Driver'], categories=driver_order, ordered=True)
+                stints.sort_values(by=['Driver', 'Stint'], inplace=True); data['TyreStrategyData'] = stints
+        except Exception as e: print(f"Could not load last year's session data. Error: {e}")
 
-        # --- 3. Get Past 3 Winners ---
-        print("\n[DEBUG NEXT RACE] Step 3: Fetching past winners...")
+        # --- Get Session Schedule for This Year ---
+        from pytz import timezone
+        utc, pacific = timezone('UTC'), timezone('US/Pacific')
+        for i in range(1, 6):
+            session_name, session_date_utc = next_event_series.get(f'Session{i}'), next_event_series.get(f'Session{i}DateUtc')
+            if pd.notna(session_name) and pd.notna(session_date_utc):
+                utc_time = utc.localize(pd.to_datetime(session_date_utc)); pacific_time = utc_time.astimezone(pacific)
+                data['SessionSchedule'].append({'Session': session_name, 'Date': pacific_time.strftime('%a, %b %d'), 'Time': pacific_time.strftime('%I:%M %p PT')})
+        print(f"[DEBUG NEXT RACE] Session Schedule: Found {len(data['SessionSchedule'])} sessions.")
+
+        # --- Get Past 3 Winners ---
         for i in range(1, 4):
             past_year = year - i
             try:
@@ -460,10 +431,11 @@ def get_next_race_info(year):
                 winner_abbr = winner_row['Abbreviation']
                 winner_laps = past_session.laps.pick_driver(winner_abbr)
                 winner_best_lap = "N/A"
-                if not winner_laps.empty: winner_best_lap = format_timedelta(winner_laps['LapTime'].min())
+                if not winner_laps.empty:
+                    winner_best_lap = format_timedelta(winner_laps['LapTime'].min())
                 data['PastWinners'].append({'Year': past_year, 'Winner': winner_row['BroadcastName'], 'Team': winner_row['TeamName'], 'BestLap': winner_best_lap, 'Abbreviation': winner_abbr})
-            except Exception as e: print(f"Could not get winner for {past_year} {event_name}: {e}")
-        print(f"[DEBUG NEXT RACE] SUCCESS: Found {len(data['PastWinners'])} past winners.")
+            except Exception as e:
+                print(f"Could not get winner for {past_year} {event_name}: {e}")
         
         return data
 
@@ -1052,18 +1024,36 @@ def render_cs_sub_tab(n_clicks_so_far, n_clicks_next_race, n_clicks_calendar, ma
                     dbc.Col(html.Div(html.Img(src=app.get_asset_url(next_race_data['CircuitImageRelativePath']), className="img-fluid rounded track-map-style")), lg=7, md=12, className="mb-3"),
                     dbc.Col(html.Div([
                         dbc.Row([dbc.Col(html.Div([html.Img(src=app.get_asset_url(next_race_data['CountryFlagImageRelativePath']), style={'height': '24px', 'marginRight': '10px'}), html.Span(next_race_data['CircuitName'], className="h5")]), width=12, className="mb-4")]),
-                        dbc.Row([dbc.Col(html.Div([html.P("Race Date", className="text-muted small mb-0"), html.H4(next_race_data['RaceDate'])])), dbc.Col(html.Div([html.P("Number of Laps", className="text-muted small mb-0"), html.H4(next_race_data['NumberOfLaps'])]))], className="mb-4"),
-                        dbc.Row([dbc.Col(html.Div([html.P("Circuit Length", className="text-muted small mb-0"), html.H4(next_race_data['CircuitLength'])])), dbc.Col(html.Div([html.P("Race Distance", className="text-muted small mb-0"), html.H4(next_race_data['RaceDistance'])]))], className="mb-4"),
-                        dbc.Row([dbc.Col(html.Div([
-                            html.P("Last Year's Fastest Lap", className="text-muted large mb-0"), 
-                            html.H6(next_race_data['LastYearsFastestLap'], className="fw-bold d-inline-block")
-                        ]))])
+                        
+                        # --- MODIFIED SECTION FOR CONSISTENT STYLING ---
+                        dbc.Row([
+                            dbc.Col(html.Div([html.P("Race Date", className="text-muted small mb-0"), html.H5(next_race_data['RaceDate'], className="stat-data")])),
+                            dbc.Col(html.Div([html.P("Number of Laps", className="text-muted small mb-0"), html.H5(next_race_data['NumberOfLaps'], className="stat-data")]))
+                        ], className="mb-4"),
+                        dbc.Row([
+                            dbc.Col(html.Div([html.P("Circuit Length", className="text-muted small mb-0"), html.H5(next_race_data['CircuitLength'], className="stat-data")])),
+                            dbc.Col(html.Div([html.P("Race Distance", className="text-muted small mb-0"), html.H5(next_race_data['RaceDistance'], className="stat-data")]))
+                        ], className="mb-4"),
+                        dbc.Row([
+                            dbc.Col(html.Div([
+                                html.P("Last Year's Fastest Lap", className="text-muted small mb-0"), 
+                                html.H5(next_race_data['LastYearsFastestLap'], className="stat-data d-inline-block")
+                            ]))
+                        ])
+                        # --- END MODIFIED SECTION ---
+
                     ]), lg=5, md=12)
                 ], align="center")
             ], fluid=True, className="mb-4")
 
-            # 2. Weather Section (Placeholder)
-            weather_section = dbc.Row([dbc.Col(dbc.Card([dbc.CardHeader("Expected Weather Conditions"), dbc.CardBody(dbc.Alert("Weather API integration pending.", color="secondary"))]))], className="mb-4")
+            # 2. Weather Section (with OpenWeatherMap data)
+            weather_cards = []
+            if next_race_data.get('WeatherData'):
+                for day_forecast in next_race_data['WeatherData']:
+                    weather_cards.append(dbc.Col(dbc.Card([dbc.CardHeader(day_forecast['Date']),dbc.CardBody([html.Img(src=day_forecast['Icon'], style={'width': '50px'}),html.H5(day_forecast['Temp']),html.P(day_forecast['Description'])],className="text-center")])))
+                weather_section = dbc.Row([dbc.Col([html.H5("Weather Forecast", className="mb-2"), dbc.Row(weather_cards, className="g-2")])], className="mb-4")
+            else:
+                weather_section = dbc.Row([dbc.Col(dbc.Card([dbc.CardHeader("Expected Weather Conditions"), dbc.CardBody(dbc.Alert("Weather forecast currently unavailable.", color="secondary"))]))], className="mb-4")
 
             # 3. Schedule Section
             schedule_items = [dbc.ListGroupItem(f"{s['Session']}: {s['Date']} - {s['Time']}") for s in next_race_data.get('SessionSchedule', [])]
