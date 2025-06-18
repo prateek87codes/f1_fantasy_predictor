@@ -11,6 +11,7 @@ import numpy as np
 import os
 import google.generativeai as genai # Make sure this is imported
 import requests
+from flask_caching import Cache
 
 # --- API Key and Global Configs ---
 GEMINI_API_KEY = "AIzaSyDCrrKCoOyjjEGdkAwau1hYOSnWV3hxXfM" # <--- REPLACE THIS
@@ -56,8 +57,27 @@ except FileNotFoundError:
     print("Warning: circuit_data.csv not found. Circuit specific data will be missing.")
     circuit_data_df = pd.DataFrame() # Create an empty DataFrame if file is missing
 
+# --- Initialize the Dash App (Needed for Cache Initialization) ---
+app = dash.Dash(__name__,
+                external_stylesheets=[dbc.themes.LUX],
+                suppress_callback_exceptions=True,
+                assets_folder='assets' # Explicitly define the assets folder
+               )
+server = app.server # Expose Flask server for Gunicorn or other WSGI servers
+assets_folder = os.path.join(os.path.dirname(__file__), "assets") # Define assets_folder path
+
+# --- Configure Caching ---
+# Configure Cache: Using a simple filesystem cache here.
+# For production, consider Redis or Memcached for better performance and scalability.
+CACHE_CONFIG = {
+    'CACHE_TYPE': 'filesystem', # Simple filesystem cache
+    'CACHE_DIR': 'flask_cache',    # Directory to store cache files
+    'CACHE_DEFAULT_TIMEOUT': 3600  # Default timeout in seconds (1 hour)
+}
+cache = Cache(app.server, config=CACHE_CONFIG) # Initialize cache with app.server
+
 # --- HELPER FUNCTION DEFINITIONS ---
-def format_timedelta(td_object):
+def format_timedelta(td_object): # Removed cache.memoize from here
     if pd.isna(td_object): return "N/A"
     if isinstance(td_object, pd.Timedelta):
         total_seconds = td_object.total_seconds(); sign = "-" if total_seconds < 0 else ""; total_seconds = abs(total_seconds)
@@ -66,6 +86,7 @@ def format_timedelta(td_object):
     return str(td_object)
 
 # REPLACE your get_weather_forecast function with this OpenWeatherMap version
+@cache.memoize()
 def get_weather_forecast(lat, lon, api_key, race_date_obj):
     if not api_key or api_key == "YOUR_OPENWEATHER_API_KEY_HERE":
         print("[Weather] OpenWeather API key not provided. Skipping forecast fetch.")
@@ -117,8 +138,9 @@ def get_weather_forecast(lat, lon, api_key, race_date_obj):
         print(f"[Weather] General error fetching forecast: {e}")
         return []
 
+@cache.memoize()
 def get_championship_standings_progression(year, event_round):
-    print(f"[get_championship_standings_progression] Called for Year: {year}, up to Round: {event_round}")
+    print(f"[get_championship_standings_progression] CACHE MISS. Called for Year: {year}, up to Round: {event_round}") # Added CACHE MISS
     ergast_api = ergast.Ergast(); print(f"[get_championship_standings_progression] Ergast client initialized.")
     all_driver_standings, all_constructor_standings = [], []
     # Robust check for event_round type and value
@@ -153,8 +175,9 @@ def get_championship_standings_progression(year, event_round):
     print(f"[get_championship_standings_progression] Completed. Drivers: {len(driver_df)} pts, Constructors: {len(constructor_df)} pts.")
     return driver_df, constructor_df
 
+@cache.memoize()
 def get_race_highlights_from_gemini(race_summary_data_str):
-    print(f"[Gemini] Attempting to generate highlights. Data string length: {len(race_summary_data_str) if race_summary_data_str else 0}")
+    print(f"[Gemini] CACHE MISS. Attempting to generate highlights. Data string length: {len(race_summary_data_str) if race_summary_data_str else 0}") # Added CACHE MISS
     if not GEMINI_API_KEY: return "AI highlights unavailable (API key not configured/valid)."
     if not race_summary_data_str: return "Not enough race data for AI highlights."
     try:
@@ -184,7 +207,9 @@ def get_race_highlights_from_gemini(race_summary_data_str):
         return f"Error generating AI highlights: {str(e)[:200]}"
 
 # --- MAIN DATA FETCHING FUNCTION (get_session_results) --- (MODIFIED for P_OVERVIEW table)
+@cache.memoize()
 def get_session_results(year, event_name_or_round, session_type='Q'):
+    print(f"[get_session_results] CACHE MISS. Args: Year={year}, Event='{event_name_or_round}', Session='{session_type}'") # Added CACHE MISS
     event_round_num = None; podium_data = []; fastest_lap_driver_name_for_table = None
     # Initialize with empty DataFrames
     display_df = pd.DataFrame()
@@ -345,8 +370,9 @@ def get_session_results(year, event_name_or_round, session_type='Q'):
     except Exception as e: print(f"Error in get_session_results for {session_type}: {e}"); return pd.DataFrame(), pd.DataFrame(), f"{session_type} (Error)", event_round_num, []
 
 # --- REPLACE your existing get_next_race_info function with this one ---
+@cache.memoize()
 def get_next_race_info(year):
-    print(f"[get_next_race_info] Finding next race for {year}...")
+    print(f"[get_next_race_info] CACHE MISS. Finding next race for {year}...") # Added CACHE MISS
     try:
         schedule = ff1.get_event_schedule(year, include_testing=False)
         if schedule.empty: return None
@@ -399,20 +425,30 @@ def get_next_race_info(year):
             data['WeatherData'] = get_weather_forecast(lat, lon, OPENWEATHER_API_KEY, race_date_obj)
 
         # --- Get data from last year's session ---
+        last_year_session_obj = None # To store the loaded session for reuse
         try:
-            last_year_session = ff1.get_session(year - 1, event_name, 'R'); last_year_session.load()
-            laps_df = last_year_session.laps; results_df = last_year_session.results
+            # Load last year's session (R) once
+            print(f"[get_next_race_info] Loading last year's session data for {year-1} {event_name}")
+            last_year_session = ff1.get_session(year - 1, event_name, 'R')
+            last_year_session.load(laps=True, telemetry=False, weather=False, messages=False) # Ensure laps=True
+            last_year_session_obj = last_year_session # Store for reuse
+
+            laps_df = last_year_session.laps
+            results_df = last_year_session.results
+
             if not results_df.empty and 'Laps' in results_df.columns and pd.notna(results_df.iloc[0]['Laps']):
                 data['NumberOfLaps'] = int(results_df.iloc[0]['Laps'])
             elif not laps_df.empty:
                 data['NumberOfLaps'] = int(laps_df['LapNumber'].max())
+
             if isinstance(data['NumberOfLaps'], int) and isinstance(circuit_length_km, (int, float)):
                 data['RaceDistance'] = f"{round(data['NumberOfLaps'] * circuit_length_km, 2)} km"
+
             if not laps_df.empty:
                 fastest = laps_df.pick_fastest()
-                if fastest is not None and pd.notna(fastest['LapTime']): data['LastYearsFastestLap'] = f"{format_timedelta(fastest['LapTime'])} by {fastest['Driver']} ({year-1})"
+                if fastest is not None and pd.notna(fastest['LapTime']):
+                    data['LastYearsFastestLap'] = f"{format_timedelta(fastest['LapTime'])} by {fastest['Driver']} ({year-1})"
                 
-                # --- NEW, MORE ROBUST TYRE STRATEGY LOGIC ---
                 all_stints_list = []
                 if not results_df.empty:
                     driver_order_list = results_df.sort_values(by="Position")['Abbreviation'].unique().tolist()
@@ -425,34 +461,71 @@ def get_next_race_info(year):
                     if all_stints_list:
                         stints_df = pd.DataFrame(all_stints_list)
                         data['TyreStrategyData'] = stints_df
-        except Exception as e: print(f"Could not load last year's session data. Error: {e}")
+        except Exception as e:
+            print(f"Could not load or process last year's ({year-1}) session data for {event_name}. Error: {e}")
 
         # --- Get Session Schedule for This Year ---
         try:
             from pytz import timezone
-            utc, pacific = timezone('UTC'), timezone('US/Pacific')
-            for i in range(1, 6):
-                session_name, session_date_utc = next_event_series.get(f'Session{i}'), next_event_series.get(f'Session{i}DateUtc')
+            utc, pacific = timezone('UTC'), timezone('US/Pacific') # Consider moving timezone imports to top if used elsewhere
+            for i in range(1, 6): # Check up to 5 sessions
+                session_name = next_event_series.get(f'Session{i}')
+                session_date_utc = next_event_series.get(f'Session{i}DateUtc')
                 if pd.notna(session_name) and pd.notna(session_date_utc):
-                    utc_time = utc.localize(pd.to_datetime(session_date_utc)); pacific_time = utc_time.astimezone(pacific)
-                    data['SessionSchedule'].append({'Session': session_name, 'Date': pacific_time.strftime('%a, %b %d'), 'Time': pacific_time.strftime('%I:%M %p PT')})
-        except Exception as e: print(f"ERROR processing session schedule: {e}")
+                    utc_time = utc.localize(pd.to_datetime(session_date_utc))
+                    pacific_time = utc_time.astimezone(pacific)
+                    data['SessionSchedule'].append({
+                        'Session': session_name,
+                        'Date': pacific_time.strftime('%a, %b %d'),
+                        'Time': pacific_time.strftime('%I:%M %p PT')
+                    })
+        except Exception as e:
+            print(f"ERROR processing session schedule for {event_name}: {e}")
 
-        # --- Get Past 3 Winners ---
+        # --- Get Past 3 Winners (Optimized) ---
         try:
-            for i in range(1, 4):
-                past_year = year - i
+            print(f"[get_next_race_info] Fetching past winners for {event_name}")
+            for i in range(1, 4): # year-1, year-2, year-3
+                past_year_to_fetch = year - i
+                current_past_session = None
+
                 try:
-                    past_session = ff1.get_session(past_year, event_name, 'R'); past_session.load(laps=True)
-                    winner_row = past_session.results.loc[past_session.results['Position'] == 1.0].iloc[0]
-                    winner_abbr = winner_row['Abbreviation']
-                    winner_laps = past_session.laps.pick_driver(winner_abbr)
-                    winner_best_lap = "N/A"
-                    if not winner_laps.empty: winner_best_lap = format_timedelta(winner_laps['LapTime'].min())
-                    data['PastWinners'].append({'Year': past_year, 'Winner': winner_row['BroadcastName'], 'Team': winner_row['TeamName'], 'BestLap': winner_best_lap, 'Abbreviation': winner_abbr})
-                except Exception as e: print(f"Could not get winner for {past_year} {event_name}: {e}")
-        except Exception as e: print(f"ERROR fetching past winners: {e}")
-        
+                    if past_year_to_fetch == (year - 1) and last_year_session_obj is not None:
+                        print(f"Reusing loaded session for {past_year_to_fetch} {event_name}")
+                        current_past_session = last_year_session_obj
+                    else:
+                        print(f"Loading session for {past_year_to_fetch} {event_name}")
+                        current_past_session = ff1.get_session(past_year_to_fetch, event_name, 'R')
+                        current_past_session.load(laps=True, telemetry=False, weather=False, messages=False) # ensure laps=True for best lap
+
+                    if current_past_session and current_past_session.results is not None and not current_past_session.results.empty:
+                        winner_row = current_past_session.results.loc[current_past_session.results['Position'] == 1.0]
+                        if not winner_row.empty:
+                            winner_row = winner_row.iloc[0]
+                            winner_abbr = winner_row['Abbreviation']
+                            winner_laps = current_past_session.laps.pick_driver(winner_abbr) # Laps needed for best lap
+                            winner_best_lap = "N/A"
+                            if not winner_laps.empty and pd.notna(winner_laps['LapTime'].min()):
+                                winner_best_lap = format_timedelta(winner_laps['LapTime'].min())
+
+                            data['PastWinners'].append({
+                                'Year': past_year_to_fetch,
+                                'Winner': winner_row['BroadcastName'],
+                                'Team': winner_row['TeamName'],
+                                'BestLap': winner_best_lap,
+                                'Abbreviation': winner_abbr
+                            })
+                        else:
+                            print(f"No winner found (Position 1.0) in results for {past_year_to_fetch} {event_name}")
+                    else:
+                        print(f"No results data for {past_year_to_fetch} {event_name}")
+                except ff1.ErgastMissingDataError:
+                    print(f"ErgastMissingDataError: Data not available for {past_year_to_fetch} {event_name}")
+                except Exception as e_winner:
+                    print(f"Could not get winner for {past_year_to_fetch} {event_name}: {e_winner}")
+        except Exception as e_past_winners_main:
+            print(f"Major error in fetching past winners for {event_name}: {e_past_winners_main}")
+
         return data
 
     except Exception as e:
