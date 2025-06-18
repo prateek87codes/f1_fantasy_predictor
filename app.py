@@ -1092,52 +1092,26 @@ def render_cs_sub_tab(n_clicks_so_far, n_clicks_next_race, n_clicks_calendar, ma
                     ]), md=4))
             past_winners_section = dbc.Row([dbc.Col(dbc.Card([dbc.CardHeader("Recent Winners at this Event"), dbc.CardBody(dbc.Row(winner_cards))]))], className="mb-4")
 
-            # 5. Tyre Strategy Section 
+            # 5. Tyre Strategy Section (Tweak #3: new plot logic)
             tyre_fig = {'layout': {'title': "Last Year's Tyre Strategy Data Unavailable"}}
             stints_df = next_race_data.get('TyreStrategyData')
             driver_order = next_race_data.get('DriverOrder', [])
-            ai_tyre_insights = "AI Insights will be generated if weather and strategy data are available."
             
             if stints_df is not None and not stints_df.empty:
-                # Plotting using LapStart and LapEnd
+                # Use LapStart and LapEnd, which come directly from get_stints()
                 tyre_fig = px.timeline(stints_df, x_start="LapStart", x_end="LapEnd", y="Driver", color="Compound",
-                                       title="Last Year's Tyre Strategies", labels={'Driver': 'Driver', 'Compound': 'Tyre'},
+                                       title="Last Year's Tyre Strategies", 
+                                       labels={'Driver': 'Driver', 'Compound': 'Tyre'},
                                        color_discrete_map=ff1_plt.COMPOUND_COLORS)
+                # Sort the y-axis by finishing order from last year's race
                 if driver_order:
                     tyre_fig.update_layout(xaxis_title="Lap Number", yaxis_title="Driver", 
-                                           yaxis={'categoryorder':'array', 'categoryarray':driver_order[::-1]})
-                
-                # --- AI Tyre Strategy Insights Logic ---
-                weather_data = next_race_data.get('WeatherData')
-                if weather_data:
-                    # Create a summary of last year's strategy and this year's weather
-                    strategy_summary_list = ["Last Year's Strategy Highlights:"]
-                    for driver in stints_df['Driver'].unique()[:5]: # Summarize for top 5 finishers
-                        driver_stints = stints_df[stints_df['Driver'] == driver]
-                        stint_summary = f"  - {driver}: " + " -> ".join([f"{row['Compound']}({row['LapEnd'] - row['LapStart'] + 1} laps)" for _, row in driver_stints.iterrows()])
-                        strategy_summary_list.append(stint_summary)
-                    
-                    weather_summary_list = ["This Year's Weather Forecast:"]
-                    for day in weather_data:
-                        weather_summary_list.append(f"  - {day['Date']}: {day['Temp']}, {day['Description']}")
-
-                    ai_prompt_data = "\n".join(strategy_summary_list) + "\n\n" + "\n".join(weather_summary_list)
-                    
-                    # Create the prompt for Gemini
-                    ai_prompt = (
-                        f"You are an expert F1 strategist analyzing the upcoming {next_race_data['EventName']}.\n"
-                        f"{ai_prompt_data}\n\n"
-                        "Based on last year's strategies and this year's weather forecast, provide 2-3 bullet points on "
-                        "potential tyre strategy changes or key considerations for this year's race. Consider if the weather "
-                        "(e.g., hotter, cooler, rain) would favor harder or softer compounds, or change the number of pit stops."
-                    )
-                    
-                    ai_tyre_insights = get_race_highlights_from_gemini(ai_prompt) # Re-using our Gemini function
+                                           yaxis={'categoryorder':'array', 'categoryarray':driver_order[::-1]}) # Reverse for P1 at top
             
             tyre_strategy_section = dbc.Row([
                 dbc.Col([
                     dbc.Card([dbc.CardHeader("Tyre Strategy Analysis"), dbc.CardBody(dcc.Graph(figure=tyre_fig))]),
-                    dbc.Card([dbc.CardHeader("AI Tyre Strategy Insights"), dbc.CardBody(dcc.Loading(dcc.Markdown(ai_tyre_insights)))], className="mt-3")
+                    dbc.Card([dbc.CardHeader("AI Tyre Strategy Insights"), dbc.CardBody(dbc.Alert("AI Insights for tyre strategies will be generated here.", color="info"))], className="mt-3")
                 ])
             ], className="mb-4")
             
