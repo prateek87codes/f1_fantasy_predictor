@@ -454,12 +454,38 @@ def get_next_race_info(year):
                     driver_order_list = results_df.sort_values(by="Position")['Abbreviation'].unique().tolist()
                     data['DriverOrder'] = driver_order_list
                     for driver_abbr in driver_order_list:
-                        stints = laps_df.pick_driver(driver_abbr).get_stints()
-                        for stint in stints:
-                            stint['Driver'] = driver_abbr
-                            all_stints_list.append(stint)
+                        try:
+                            # Use pick_drivers as recommended by deprecation warning
+                            driver_laps_data = laps_df.pick_drivers(driver_abbr)
+                            if not driver_laps_data.empty:
+                                stints = driver_laps_data.get_stints()
+                                for stint_data in stints: # Renamed to avoid conflict if stint is already a df
+                                    # get_stints returns a list of DataFrames, each DF is a stint
+                                    # We need to add driver to each row of each stint DataFrame
+                                    # However, the original code structure implies stints was a list of dict-like objects
+                                    # Let's adjust based on typical FastF1 usage where get_stints() returns a list of Stint objects (which are like dicts)
+                                    # If stints is a list of Stint objects (which behave like dicts or Series)
+                                    # Create a dictionary from the Stint object and add the driver
+                                    current_stint_dict = stint_data.to_dict() if hasattr(stint_data, 'to_dict') else dict(stint_data)
+                                    current_stint_dict['Driver'] = driver_abbr
+                                    all_stints_list.append(current_stint_dict)
+                            else:
+                                print(f"No laps found for driver {driver_abbr} using pick_drivers.")
+                        except Exception as e_stint_fetch:
+                            print(f"Error fetching or processing stints for driver {driver_abbr}: {e_stint_fetch}")
+
                     if all_stints_list:
                         stints_df = pd.DataFrame(all_stints_list)
+                        print("--- Tyre Strategy Stints DF Head (Inside get_next_race_info) ---")
+                        try:
+                            print(stints_df.head().to_string())
+                        except Exception as e_print_head:
+                            print(f"Error printing stints_df head: {e_print_head}")
+                        print("--- Tyre Strategy Stints DF Info (Inside get_next_race_info) ---")
+                        try:
+                            stints_df.info()
+                        except Exception as e_print_info:
+                            print(f"Error printing stints_df info: {e_print_info}")
                         data['TyreStrategyData'] = stints_df
         except Exception as e:
             print(f"Could not load or process last year's ({year-1}) session data for {event_name}. Error: {e}")
