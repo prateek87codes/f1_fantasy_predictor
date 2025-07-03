@@ -12,6 +12,7 @@ import numpy as np
 import os
 import google.generativeai as genai # Make sure this is imported
 import requests
+from functools import lru_cache
 
 MY_COMPOUND_COLORS = {
     "SOFT": "#FF3333",
@@ -22,7 +23,7 @@ MY_COMPOUND_COLORS = {
 }
 
 # --- API Key and Global Configs ---
-GEMINI_API_KEY = "AIzaSyDCrrKCoOyjjEGdkAwau1hYOSnWV3hxXfM" # <--- REPLACE THIS
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 
 if GEMINI_API_KEY == "YOUR_API_KEY_HERE" or GEMINI_API_KEY == "": # Check for empty string too
     print("Warning: GEMINI_API_KEY is not set. AI features will be disabled.")
@@ -36,7 +37,7 @@ else:
         GEMINI_API_KEY = None
 
 # --- NEW: OPENWEATHERMAP API KEY ---
-OPENWEATHER_API_KEY = "498cab1bf71ff100104058cbfada4d45" # <--- PASTE YOUR KEY
+OPENWEATHER_API_KEY = os.environ.get("OPENWEATHER_API_KEY")
 
 if OPENWEATHER_API_KEY == "YOUR_NEW_OPENWEATHERMAP_API_KEY_HERE" or OPENWEATHER_API_KEY == "":
     print("Warning: OPENWEATHER_API_KEY is not set. Weather features will be disabled.")
@@ -173,6 +174,7 @@ def get_weather_forecast(lat, lon, api_key, race_date_obj):
         print(f"[Weather] General error fetching forecast: {e}")
         return []
 
+@lru_cache(maxsize=32)
 def get_championship_standings_progression(year, event_round):
     print(f"[get_championship_standings_progression] Called for Year: {year}, up to Round: {event_round}")
     ergast_api = ergast.Ergast(); print(f"[get_championship_standings_progression] Ergast client initialized.")
@@ -272,6 +274,7 @@ def get_ai_team_summary(team_name, summary_type="history", performance_data=""):
         return "Could not generate AI summary due to an API error."
 
 # --- REPLACE your existing get_all_teams_data function with this one ---
+@lru_cache(maxsize=32)
 def get_all_teams_data(year):
     print(f"[get_all_teams_data] Fetching data for all {year} teams...")
     try:
@@ -299,8 +302,7 @@ def get_all_teams_data(year):
 
         teams_data = []
         unique_teams = results['TeamName'].dropna().unique()
-        print(f"[DEBUG TEAM NAMES] All unique team names from session results: {results['TeamName'].dropna().unique()}")
-
+        
         for team_name in unique_teams: # e.g., 'Alpine' from session results
             team_drivers = results[results['TeamName'] == team_name]
             driver_list = team_drivers[['Abbreviation', 'FullName']].to_dict('records')
@@ -317,7 +319,7 @@ def get_all_teams_data(year):
             team_standing_info = "Current championship position data is unavailable."
             if not constructor_standings_df.empty:
                 team_in_standings = constructor_standings_df[constructor_standings_df['constructorName'] == official_constructor_name]
-                print(f"[DEBUG AI Data] For team '{team_name}' (using official name '{official_constructor_name}'), found {len(team_in_standings)} match(es) in standings.")
+                
                 if not team_in_standings.empty:
                     standing = team_in_standings.iloc[0]
                     team_standing_info = f"They are currently P{standing['position']} in the constructors' championship with {standing['points']} points after Round {latest_race['RoundNumber']}."
@@ -338,6 +340,7 @@ def get_all_teams_data(year):
         return []
 
 # --- MAIN DATA FETCHING FUNCTION (get_session_results) --- (MODIFIED for P_OVERVIEW table)
+@lru_cache(maxsize=32)
 def get_session_results(year, event_name_or_round, session_type='Q'):
     event_round_num = None; podium_data = []; fastest_lap_driver_name_for_table = None
     # Initialize with empty DataFrames
@@ -499,9 +502,9 @@ def get_session_results(year, event_name_or_round, session_type='Q'):
     except Exception as e: print(f"Error in get_session_results for {session_type}: {e}"); return pd.DataFrame(), pd.DataFrame(), f"{session_type} (Error)", event_round_num, []
 
 # --- REPLACE your existing get_next_race_info function with this FINAL version ---
+@lru_cache(maxsize=32)
 def get_next_race_info(year):
     # This function is now stable and fetches all necessary data, including tyre stints.
-    # The logic for TyreStrategyData now prepares it for the go.Bar loop.
     print(f"\n[get_next_race_info] Finding next race for {year}...")
     try:
         schedule = ff1.get_event_schedule(year, include_testing=False)
