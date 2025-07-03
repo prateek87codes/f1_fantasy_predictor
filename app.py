@@ -89,12 +89,19 @@ print("FastF1 Cache Enabled.")
 # -----------------------------------------
 
 # --- 1. Configure FastF1 Caching ---
+cache_dir = 'cache'
+# Create the cache directory on the server if it does not exist
+if not os.path.exists(cache_dir):
+    os.makedirs(cache_dir)
+    print(f"Cache directory '{cache_dir}' created.")
+
+# Now that we know the folder exists, enable the cache
 try:
-    ff1.Cache.enable_cache('cache')
-    print("FastF1 cache enabled.")
+    ff1.Cache.enable_cache(cache_dir)
+    print("FastF1 cache enabled successfully.")
 except Exception as e:
-    print(f"Error enabling FastF1 cache: {e}. Please create a 'cache' folder in your project directory.")
-    exit()
+    # This is a fallback for any other unexpected cache errors
+    print(f"An unexpected error occurred while enabling FastF1 cache: {e}")
 
 try:
     circuit_data_df = pd.read_csv("circuit_data.csv")
