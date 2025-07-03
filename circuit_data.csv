@@ -3,23 +3,23 @@ RoundNumber,CircuitName_ff1,CircuitLength_km,CircuitImageFile,Latitude,Longitude
 2,Shanghai International Circuit,5.451,shanghai_international_circuit.png,31.3389,121.2200
 3,Suzuka International Racing Course,5.807,suzuka_international_racing_course.png,34.8431,136.5410
 4,Bahrain International Circuit,5.412,bahrain_international_circuit.png,26.0325,50.5106
-5,Jeddah Corniche Circuit,6.174,jeddah_corniche_circuit.png,,
-6,Miami International Autodrome,5.412,miami_international_autodrome.png,,
-7,Autodromo Enzo e Dino Ferrari,4.909,autodromo_enzo_e_dino_ferrari.png,,
+5,Jeddah Corniche Circuit,6.174,jeddah_corniche_circuit.png,21.6319,39.1044
+6,Miami International Autodrome,5.412,miami_international_autodrome.png,25.9581,-80.2389
+7,Autodromo Enzo e Dino Ferrari,4.909,autodromo_enzo_e_dino_ferrari.png,44.3443,11.7144
 8,Circuit de Monaco,3.337,circuit_de_monaco.png,43.7347,7.4205
 9,Circuit de Barcelona-Catalunya,4.657,circuit_de_barcelona-catalunya.png,41.5700,2.2611
 10,Circuit Gilles-Villeneuve,4.361,circuit_gilles-villeneuve.png,45.5016,-73.5281
-11,Red Bull Ring,4.318,red_bull_ring.png,,
+11,Red Bull Ring,4.318,red_bull_ring.png,47.2230,14.7579
 12,Silverstone Circuit,5.891,silverstone_circuit.png,52.0786,-1.0169
 13,Circuit de Spa-Francorchamps,7.004,circuit_de_spa-francorchamps.png,50.4372,5.9714
 14,Hungaroring,4.381,hungaroring.png,47.5789,19.2486
-15,Circuit Zandvoort,4.259,circuit_zandvoort.png,,
+15,Circuit Zandvoort,4.259,circuit_zandvoort.png,52.3888,4.5409
 16,Autodromo Nazionale Monza,5.793,autodromo_nazionale_monza.png,45.6156,9.2811
-17,Baku City Circuit,6.003,baku_city_circuit.png,,
-18,Marina Bay Street Circuit,4.94,marina_bay_street_circuit.png,,
+17,Baku City Circuit,6.003,baku_city_circuit.png,40.3725,49.8533
+18,Marina Bay Street Circuit,4.94,marina_bay_street_circuit.png,1.2930,103.8599
 19,Circuit of the Americas,5.513,circuit_of_the_americas.png,30.1350,-97.6330
-20,Autódromo Hermanos Rodríguez,4.304,autódromo_hermanos_rodríguez.png,,
-21,Autódromo José Carlos Pace,4.309,autódromo_josé_carlos_pace.png,,
-22,Las Vegas Strip Circuit,6.201,las_vegas_strip_circuit.png,,
-23,Lusail International Circuit,5.419,lusail_international_circuit.png,,
+20,Autódromo Hermanos Rodríguez,4.304,autódromo_hermanos_rodríguez.png,19.4042,-99.0887
+21,Autódromo José Carlos Pace,4.309,autódromo_josé_carlos_pace.png,-23.7022,-46.6932
+22,Las Vegas Strip Circuit,6.201,las_vegas_strip_circuit.png,36.1017,-115.1605
+23,Lusail International Circuit,5.419,lusail_international_circuit.png,25.4254,51.5045
 24,Yas Marina Circuit,5.281,yas_marina_circuit.png,24.4672,54.6031

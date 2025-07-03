@@ -7,10 +7,19 @@ import fastf1.plotting as ff1_plt
 import pandas as pd
 from datetime import datetime
 import plotly.express as px
+import plotly.graph_objects as go
 import numpy as np
 import os
 import google.generativeai as genai # Make sure this is imported
 import requests
+
+MY_COMPOUND_COLORS = {
+    "SOFT": "#FF3333",
+    "MEDIUM": "#FFF200",
+    "HARD": "#EBEBEB",
+    "INTERMEDIATE": "#43B02A",
+    "WET": "#0067AD",
+}
 
 # --- API Key and Global Configs ---
 GEMINI_API_KEY = "AIzaSyDCrrKCoOyjjEGdkAwau1hYOSnWV3hxXfM" # <--- REPLACE THIS
@@ -40,6 +49,14 @@ ERGAS_CONSTRUCTOR_NAME_TO_KNOWN_TEAM_ID_OR_COLOR = {
     "Haas F1 Team": "Haas", "RB F1 Team": "#00359F", "Williams": "#64C4FF",
     "Alpine F1 Team":  "#0090FF", "Alpine": "#0090FF" 
 }
+
+# --- Setup FastF1 Cache (Simplified) ---
+cache_dir_path = os.path.join(os.path.expanduser('~'), 'fastf1_cache_data_project')
+if not os.path.exists(cache_dir_path):
+    os.makedirs(cache_dir_path)
+ff1.Cache.enable_cache(cache_dir_path)
+print("FastF1 Cache Enabled.")
+# -----------------------------------------
 
 # --- 1. Configure FastF1 Caching ---
 try:
@@ -344,26 +361,22 @@ def get_session_results(year, event_name_or_round, session_type='Q'):
     except ff1.ErgastMissingDataError: return pd.DataFrame(), pd.DataFrame(), f"{session_type} (Data Missing)", event_round_num, []
     except Exception as e: print(f"Error in get_session_results for {session_type}: {e}"); return pd.DataFrame(), pd.DataFrame(), f"{session_type} (Error)", event_round_num, []
 
-# --- REPLACE your existing get_next_race_info function with this one ---
+# --- REPLACE your existing get_next_race_info function with this FINAL version ---
 def get_next_race_info(year):
-    print(f"[get_next_race_info] Finding next race for {year}...")
+    # This function is now stable and fetches all necessary data, including tyre stints.
+    # The logic for TyreStrategyData now prepares it for the go.Bar loop.
+    print(f"\n[get_next_race_info] Finding next race for {year}...")
     try:
         schedule = ff1.get_event_schedule(year, include_testing=False)
-        if schedule.empty: return None
-
         schedule['EventDate'] = pd.to_datetime(schedule['EventDate'])
         now_local = pd.Timestamp.now()
         future_races = schedule[schedule['EventDate'] > now_local].sort_values(by='EventDate')
         
-        if future_races.empty:
-            print("[get_next_race_info] No upcoming races found for the rest of the season.")
-            return None
-
+        if future_races.empty: return None
         next_event_series = future_races.iloc[0]
         event_name = next_event_series['EventName']
         print(f"[get_next_race_info] Next event found: {event_name}")
         
-        # --- Initialize data dictionary with all keys ---
         data = {
             "EventName": next_event_series['OfficialEventName'], "Country": next_event_series['Country'],
             "CircuitName": next_event_series['Location'], "RaceDate": "TBC", "NumberOfLaps": "TBC",
@@ -374,91 +387,102 @@ def get_next_race_info(year):
             "WeatherData": [], "DriverOrder": [] 
         }
 
-        # --- Get Race Date and create the datetime object needed for the weather function ---
         race_date_obj = pd.to_datetime(next_event_series['EventDate'])
-        if pd.notna(race_date_obj):
-            data['RaceDate'] = race_date_obj.strftime('%d/%m/%y')
+        if pd.notna(race_date_obj): data['RaceDate'] = race_date_obj.strftime('%d/%m/%y')
 
-        # --- Get Circuit-Specific Data from our CSV file ---
         lat, lon, circuit_length_km = None, None, "TBC"
         if not circuit_data_df.empty:
             circuit_details = circuit_data_df[circuit_data_df['RoundNumber'] == next_event_series['RoundNumber']]
             if not circuit_details.empty:
                 if 'CircuitLength_km' in circuit_details.columns:
                     circuit_length_km = circuit_details['CircuitLength_km'].iloc[0]
-                    data['CircuitLength'] = f"{circuit_length_km} km"
+                    data['CircuitLength'] = f"{circuit_length_km} km" if isinstance(circuit_length_km, (int, float)) else "TBC"
                 if 'CircuitImageFile' in circuit_details.columns and pd.notna(circuit_details.iloc[0]['CircuitImageFile']):
                     specific_path = f"images/circuits/{circuit_details.iloc[0]['CircuitImageFile']}"
-                    if os.path.exists(os.path.join(assets_folder, specific_path)):
-                        data['CircuitImageRelativePath'] = specific_path
+                    if os.path.exists(os.path.join(assets_folder, specific_path)): data['CircuitImageRelativePath'] = specific_path
                 if 'Latitude' in circuit_details.columns and 'Longitude' in circuit_details.columns:
                     lat, lon = circuit_details['Latitude'].iloc[0], circuit_details['Longitude'].iloc[0]
         
-        # --- Call weather API if we have coordinates and the date object ---
-        if lat and lon and pd.notna(race_date_obj):
+        if lat and lon and 'race_date_obj' in locals() and pd.notna(race_date_obj):
             data['WeatherData'] = get_weather_forecast(lat, lon, OPENWEATHER_API_KEY, race_date_obj)
-
-        # --- Get data from last year's session ---
+        
         try:
             last_year_session = ff1.get_session(year - 1, event_name, 'R'); last_year_session.load()
             laps_df = last_year_session.laps; results_df = last_year_session.results
-            if not results_df.empty and 'Laps' in results_df.columns and pd.notna(results_df.iloc[0]['Laps']):
-                data['NumberOfLaps'] = int(results_df.iloc[0]['Laps'])
-            elif not laps_df.empty:
-                data['NumberOfLaps'] = int(laps_df['LapNumber'].max())
+            
+            if not results_df.empty and 'Laps' in results_df.columns and pd.notna(results_df.iloc[0]['Laps']): data['NumberOfLaps'] = int(results_df.iloc[0]['Laps'])
+            elif not laps_df.empty: data['NumberOfLaps'] = int(laps_df['LapNumber'].max())
             if isinstance(data['NumberOfLaps'], int) and isinstance(circuit_length_km, (int, float)):
                 data['RaceDistance'] = f"{round(data['NumberOfLaps'] * circuit_length_km, 2)} km"
+            
             if not laps_df.empty:
                 fastest = laps_df.pick_fastest()
                 if fastest is not None and pd.notna(fastest['LapTime']): data['LastYearsFastestLap'] = f"{format_timedelta(fastest['LapTime'])} by {fastest['Driver']} ({year-1})"
                 
-                # --- NEW, MORE ROBUST TYRE STRATEGY LOGIC ---
-                all_stints_list = []
+                # --- Tyre Strategy Data Logic (for go.Bar loop) ---
                 if not results_df.empty:
                     driver_order_list = results_df.sort_values(by="Position")['Abbreviation'].unique().tolist()
                     data['DriverOrder'] = driver_order_list
-                    for driver_abbr in driver_order_list:
-                        stints = laps_df.pick_driver(driver_abbr).get_stints()
-                        for stint in stints:
-                            stint['Driver'] = driver_abbr
-                            all_stints_list.append(stint)
-                    if all_stints_list:
-                        stints_df = pd.DataFrame(all_stints_list)
-                        data['TyreStrategyData'] = stints_df
-        except Exception as e: print(f"Could not load last year's session data. Error: {e}")
+                    stints = laps_df.loc[:, ['Driver', 'Stint', 'Compound', 'LapNumber']]
+                    stints = stints.groupby(['Driver', 'Stint', 'Compound']).agg(LapStart=('LapNumber', 'min'), LapEnd=('LapNumber', 'max')).reset_index()
+                    data['TyreStrategyData'] = stints
+
+                # --- NEW: Get Safety Car Data ---
+            if hasattr(last_year_session, 'race_control_messages') and not last_year_session.race_control_messages.empty:
+                rc_messages = last_year_session.race_control_messages
+                # Count messages where Category is 'SafetyCar'. Divide by 2 for Deploy/In cycle.
+                safety_car_count = len(rc_messages[rc_messages['Message'].str.contains('SAFETY CAR DEPLOYED')])
+                data['SafetyCarsLastYear'] = safety_car_count
+                print(f"[get_next_race_info] Found {safety_car_count} safety car deployments last year.")
+
+        except Exception as e: print(f"WARNING: Could not load or process last year's session data. Error: {e}")
 
         # --- Get Session Schedule for This Year ---
         try:
             from pytz import timezone
             utc, pacific = timezone('UTC'), timezone('US/Pacific')
+            schedule_items = []
             for i in range(1, 6):
-                session_name, session_date_utc = next_event_series.get(f'Session{i}'), next_event_series.get(f'Session{i}DateUtc')
+                session_name = next_event_series.get(f'Session{i}')
+                session_date_utc = next_event_series.get(f'Session{i}DateUtc')
                 if pd.notna(session_name) and pd.notna(session_date_utc):
-                    utc_time = utc.localize(pd.to_datetime(session_date_utc)); pacific_time = utc_time.astimezone(pacific)
+                    dt_utc = pd.to_datetime(session_date_utc)
+                    if dt_utc.tzinfo is None:
+                        dt_utc = utc.localize(dt_utc)
+                    pacific_time = dt_utc.astimezone(pacific)
                     data['SessionSchedule'].append({'Session': session_name, 'Date': pacific_time.strftime('%a, %b %d'), 'Time': pacific_time.strftime('%I:%M %p PT')})
-        except Exception as e: print(f"ERROR processing session schedule: {e}")
-
+            print(f"[get_next_race_info] SUCCESS: Found {len(data['SessionSchedule'])} sessions for schedule.")
+        except Exception as e:
+            print(f"[get_next_race_info] FAILED to process session schedule. Error: {e}")
+        
         # --- Get Past 3 Winners ---
         try:
+            print("[get_next_race_info] Fetching past winners...")
             for i in range(1, 4):
                 past_year = year - i
                 try:
                     past_session = ff1.get_session(past_year, event_name, 'R'); past_session.load(laps=True)
-                    winner_row = past_session.results.loc[past_session.results['Position'] == 1.0].iloc[0]
-                    winner_abbr = winner_row['Abbreviation']
-                    winner_laps = past_session.laps.pick_driver(winner_abbr)
-                    winner_best_lap = "N/A"
-                    if not winner_laps.empty: winner_best_lap = format_timedelta(winner_laps['LapTime'].min())
-                    data['PastWinners'].append({'Year': past_year, 'Winner': winner_row['BroadcastName'], 'Team': winner_row['TeamName'], 'BestLap': winner_best_lap, 'Abbreviation': winner_abbr})
-                except Exception as e: print(f"Could not get winner for {past_year} {event_name}: {e}")
-        except Exception as e: print(f"ERROR fetching past winners: {e}")
-        
+                    if not past_session.results.empty:
+                        winner_row = past_session.results.loc[past_session.results['Position'] == 1.0].iloc[0]
+                        winner_abbr = winner_row['Abbreviation']
+                        winner_laps = past_session.laps.pick_drivers([winner_abbr])
+                        winner_best_lap = "N/A"
+                        if not winner_laps.empty:
+                            winner_best_lap = format_timedelta(winner_laps['LapTime'].min())
+                        data['PastWinners'].append({'Year': past_year, 'Winner': winner_row['BroadcastName'], 'Team': winner_row['TeamName'], 'BestLap': winner_best_lap, 'Abbreviation': winner_abbr})
+                except Exception as e_inner:
+                    print(f"Could not get winner for {past_year} {event_name}: {e_inner}")
+            print(f"[get_next_race_info] SUCCESS: Found {len(data['PastWinners'])} past winners.")
+        except Exception as e:
+            print(f"ERROR fetching past winners block: {e}")
+
         return data
 
     except Exception as e:
         import traceback
-        print(f"Major error in get_next_race_info: {e}"); traceback.print_exc()
-        return None
+        print(f"FATAL error in get_next_race_info: {e}"); 
+        traceback.print_exc()
+        return None # CORRECTED: return None, not None()
 
 # --- Initialize the Dash App ---
 app = dash.Dash(__name__, 
@@ -983,21 +1007,68 @@ def update_cs_season_so_far_content(stored_selection, active_main_tab):
             table_data, table_columns, style_data_conditional_cs, 
             fig_cs, driver_standings_fig_cs, constructor_standings_fig_cs)
 
+# --- REPLACE your existing get_formatted_calendar function with this one ---
 def get_formatted_calendar(year):
     print(f"[get_formatted_calendar] Fetching calendar for {year}")
     try:
         schedule = ff1.get_event_schedule(year, include_testing=False)
         if schedule.empty:
             return dbc.Alert("Race calendar not available yet for this year.", color="warning")
-        
-        schedule['EventDate'] = pd.to_datetime(schedule['EventDate']).dt.strftime('%Y-%m-%d (%A)')
-        schedule_for_table = schedule[['RoundNumber', 'EventName', 'Country', 'Location', 'EventDate']]
-        schedule_for_table.rename(columns={
-            'RoundNumber': 'Round', 'EventName': 'Event', 'Location': 'Circuit'
-        }, inplace=True)
 
-        table = dbc.Table.from_dataframe(schedule_for_table, striped=True, bordered=True, hover=True, responsive=True)
-        return table
+        # Merge with our circuit_data_df to get the image filenames
+        schedule_with_images = pd.merge(schedule, circuit_data_df, on='RoundNumber', how='left')
+
+        # Center align the table headers
+        header_style = {'textAlign': 'center', 'verticalAlign': 'middle'}
+        table_header = [
+            html.Thead(html.Tr([
+                html.Th("Round", style=header_style),
+                html.Th("Grand Prix", style=header_style), 
+                html.Th("Country", style=header_style),
+                html.Th("Circuit", style=header_style),
+                html.Th("Date", style=header_style),
+                html.Th("Status", style=header_style)
+            ]))
+        ]
+
+        table_rows = []
+        now_local = pd.Timestamp.now()
+        
+        cell_style = {'textAlign': 'center', 'verticalAlign': 'middle'}
+
+        for index, row in schedule_with_images.iterrows():
+            # Status icon logic
+            status_icon = "🏁" if pd.to_datetime(row['EventDate']) < now_local else ""
+            
+            # Country flag image
+            country_flag_path = f"images/flags/{row['Country'].lower().replace(' ', '_')}.png"
+            flag_img = html.Img(src=app.get_asset_url(country_flag_path), style={'height': '30px'})
+            
+            # Mini circuit image
+            default_circuit_path = "images/circuit_default.png"
+            circuit_image_path = app.get_asset_url(default_circuit_path) 
+            if pd.notna(row.get('CircuitImageFile')):
+                specific_path = f"images/circuits/{row['CircuitImageFile']}"
+                if os.path.exists(os.path.join(assets_folder, specific_path)):
+                    circuit_image_path = app.get_asset_url(specific_path)
+            circuit_img = html.Img(src=circuit_image_path, style={'height': '35px', 'marginLeft': '10px', 'opacity': '1.0'})
+
+            # Date formatting
+            formatted_date = pd.to_datetime(row['EventDate']).strftime('%d %b %Y')
+
+            # Build the table row, applying the cell_style
+            table_rows.append(html.Tr([
+                html.Td(row['RoundNumber'], style=cell_style),
+                html.Td(row['EventName'], style={'verticalAlign': 'middle'}),
+                html.Td(flag_img, style=cell_style),
+                html.Td([row['Location'], circuit_img], style=cell_style),
+                html.Td(formatted_date, style=cell_style),
+                html.Td(status_icon, style={**cell_style, 'fontSize': '1.2rem'})
+            ]))
+        
+        table_body = [html.Tbody(table_rows)]
+        
+        return dbc.Table(table_header + table_body, bordered=True, striped=True, hover=True, responsive=True, className="align-middle")
     except Exception as e:
         print(f"Error fetching calendar: {e}")
         return dbc.Alert(f"Error loading race calendar: {e}", color="danger")
@@ -1033,90 +1104,78 @@ def render_cs_sub_tab(n_clicks_so_far, n_clicks_next_race, n_clicks_calendar, ma
         
         if next_race_data:
             # --- Build all sections for the Next Race tab ---
-            # 1. Header Section
+            # Header Section
             header_section = dbc.Container([
-                dbc.Row(dbc.Col(html.H4(f"{next_race_data['EventName']}", className="text-center fw-bold"))), html.Hr(),
+                dbc.Row(dbc.Col(html.H4(f"{next_race_data.get('EventName', 'Next Race')}", className="text-center fw-bold"))), html.Hr(),
                 dbc.Row([
-                    dbc.Col(html.Div(html.Img(src=app.get_asset_url(next_race_data['CircuitImageRelativePath']), className="img-fluid rounded track-map-style")), lg=7, md=12, className="mb-3"),
+                    dbc.Col(html.Div(html.Img(src=app.get_asset_url(next_race_data.get('CircuitImageRelativePath')), className="img-fluid rounded track-map-style")), lg=7, md=12, className="mb-3"),
                     dbc.Col(html.Div([
-                        dbc.Row([dbc.Col(html.Div([html.Img(src=app.get_asset_url(next_race_data['CountryFlagImageRelativePath']), style={'height': '24px', 'marginRight': '10px'}), html.Span(next_race_data['CircuitName'], className="h5")]), width=12, className="mb-4")]),
-                        
-                        # --- MODIFIED SECTION FOR CONSISTENT STYLING ---
-                        dbc.Row([
-                            dbc.Col(html.Div([html.P("Race Date", className="text-muted small mb-0"), html.H5(next_race_data['RaceDate'], className="stat-data")])),
-                            dbc.Col(html.Div([html.P("Number of Laps", className="text-muted small mb-0"), html.H5(next_race_data['NumberOfLaps'], className="stat-data")]))
-                        ], className="mb-4"),
-                        dbc.Row([
-                            dbc.Col(html.Div([html.P("Circuit Length", className="text-muted small mb-0"), html.H5(next_race_data['CircuitLength'], className="stat-data")])),
-                            dbc.Col(html.Div([html.P("Race Distance", className="text-muted small mb-0"), html.H5(next_race_data['RaceDistance'], className="stat-data")]))
-                        ], className="mb-4"),
-                        dbc.Row([
-                            dbc.Col(html.Div([
-                                html.P("Last Year's Fastest Lap", className="text-muted small mb-0"), 
-                                html.H5(next_race_data['LastYearsFastestLap'], className="stat-data d-inline-block")
-                            ]))
-                        ])
-                        # --- END MODIFIED SECTION ---
-
+                        dbc.Row([dbc.Col(html.Div([html.Img(src=app.get_asset_url(next_race_data.get('CountryFlagImageRelativePath')), style={'height': '24px', 'marginRight': '10px'}), html.Span(next_race_data.get('CircuitName', 'TBC'), className="h5")]), width=12, className="mb-4")]),
+                        dbc.Row([dbc.Col(html.Div([html.P("Race Date", className="text-muted small mb-0"), html.H5(next_race_data.get('RaceDate', 'TBC'))])), dbc.Col(html.Div([html.P("Number of Laps", className="text-muted small mb-0"), html.H5(next_race_data.get('NumberOfLaps', 'TBC'))]))], className="mb-4"),
+                        dbc.Row([dbc.Col(html.Div([html.P("Circuit Length", className="text-muted small mb-0"), html.H5(next_race_data.get('CircuitLength', 'TBC'))])), dbc.Col(html.Div([html.P("Race Distance", className="text-muted small mb-0"), html.H5(next_race_data.get('RaceDistance', 'TBC'))]))], className="mb-4"),
+                        dbc.Row([dbc.Col(html.Div([html.P("Last Year's Fastest Lap", className="text-muted small mb-0"), html.H6(next_race_data.get('LastYearsFastestLap', 'N/A'), className="fw-bold d-inline-block")]))])
                     ]), lg=5, md=12)
                 ], align="center")
             ], fluid=True, className="mb-4")
 
-            # 2. Weather Section (with OpenWeatherMap data)
+            # Weather Section
             weather_cards = []
             if next_race_data.get('WeatherData'):
                 for day_forecast in next_race_data['WeatherData']:
-                    weather_cards.append(dbc.Col(dbc.Card([dbc.CardHeader(day_forecast['Date']),dbc.CardBody([html.Img(src=day_forecast['Icon'], style={'width': '50px'}),html.H5(day_forecast['Temp']),html.P(day_forecast['Description'])],className="text-center")])))
-                weather_section = dbc.Row([dbc.Col([html.H5("Weather Forecast", className="mb-2"), dbc.Row(weather_cards, className="g-2")])], className="mb-4")
-            else:
-                weather_section = dbc.Row([dbc.Col(dbc.Card([dbc.CardHeader("Expected Weather Conditions"), dbc.CardBody(dbc.Alert("Weather forecast currently unavailable.", color="secondary"))]))], className="mb-4")
+                    weather_cards.append(dbc.Col(dbc.Card([dbc.CardHeader(day_forecast.get('Date')), dbc.CardBody([html.Img(src=day_forecast.get('Icon'), style={'width': '50px'}), html.H5(day_forecast.get('Temp')), html.P(day_forecast.get('Description'))], className="text-center")])))
+            weather_section = dbc.Row([dbc.Col([dbc.Card([dbc.CardHeader("Expected Weather Conditions"), dbc.CardBody(dbc.Row(weather_cards) if weather_cards else dbc.Alert("Weather forecast currently unavailable.", color="secondary"))])])], className="mb-4")
 
-            # 3. Schedule Section
-            schedule_items = [dbc.ListGroupItem(f"{s['Session']}: {s['Date']} - {s['Time']}") for s in next_race_data.get('SessionSchedule', [])]
-            schedule_section = dbc.Row([dbc.Col(dbc.Card([dbc.CardHeader("Race Weekend Schedule (Pacific Time)"), dbc.ListGroup(schedule_items, flush=True)]))], className="mb-4")
+            # Schedule Section
+            schedule_items = [dbc.ListGroupItem(f"{s.get('Session')}: {s.get('Date')} - {s.get('Time')}") for s in next_race_data.get('SessionSchedule', [])]
+            schedule_section = dbc.Row([dbc.Col(dbc.Card([dbc.CardHeader("Race Weekend Schedule (Pacific Time)"), dbc.ListGroup(schedule_items, flush=True) if schedule_items else dbc.CardBody(dbc.Alert("Schedule not available.", color="warning"))]))], className="mb-4")
 
-            # 4. Past Winners Section (Tweak #2: new styled layout)
+            # Past Winners Section
             winner_cards = []
             if next_race_data.get('PastWinners'):
                 for winner in next_race_data['PastWinners']:
                     winner_abbr = winner.get('Abbreviation', '').lower()
                     driver_image_src = app.get_asset_url(f"images/drivers/{winner_abbr}.png") if winner_abbr else app.get_asset_url("images/driver_default.png")
-                    winner_cards.append(dbc.Col(dbc.Card([
-                        dbc.CardBody([
-                            html.H5(f"{winner['Year']} Winner", className="card-title"),
-                            html.Img(src=driver_image_src, style={'width':'60px', 'height':'60px', 'borderRadius':'50%', 'objectFit':'cover', 'float':'left', 'marginRight':'15px'}),
-                            html.H6(winner['Winner'], className="card-subtitle"),
-                            html.P(f"Team: {winner['Team']}", className="card-text text-muted"),
-                            html.P(f"Best Lap: {winner['BestLap']}", className="card-text small")
-                        ])
-                    ]), md=4))
+                    winner_cards.append(dbc.Col(dbc.Card([dbc.CardBody([html.H5(f"{winner.get('Year')} Winner"), html.Img(src=driver_image_src, style={'width':'60px', 'height':'60px', 'borderRadius':'50%', 'objectFit':'cover', 'float':'left', 'marginRight':'15px'}), html.H6(winner.get('Winner')), html.P(f"Team: {winner.get('Team')}", className="text-muted"), html.P(f"Best Lap: {winner.get('BestLap')}", className="card-text small")])]), md=4))
             past_winners_section = dbc.Row([dbc.Col(dbc.Card([dbc.CardHeader("Recent Winners at this Event"), dbc.CardBody(dbc.Row(winner_cards))]))], className="mb-4")
 
-            # 5. Tyre Strategy Section (Tweak #3: new plot logic)
-            tyre_fig = {'layout': {'title': "Last Year's Tyre Strategy Data Unavailable"}}
+            # Tyre Strategy & AI Insights Section
             stints_df = next_race_data.get('TyreStrategyData')
             driver_order = next_race_data.get('DriverOrder', [])
-            
+            tyre_fig = {'layout': {'title': "Last Year's Tyre Strategy Data Unavailable"}}
+            ai_tyre_insights = dbc.Alert("AI Insights require weather and last year's strategy data.", color="info")
+
             if stints_df is not None and not stints_df.empty:
-                # Use LapStart and LapEnd, which come directly from get_stints()
-                tyre_fig = px.timeline(stints_df, x_start="LapStart", x_end="LapEnd", y="Driver", color="Compound",
-                                       title="Last Year's Tyre Strategies", 
-                                       labels={'Driver': 'Driver', 'Compound': 'Tyre'},
-                                       color_discrete_map=ff1_plt.COMPOUND_COLORS)
-                # Sort the y-axis by finishing order from last year's race
+                # Tyre Graph Plotting
+                tyre_fig = go.Figure()
                 if driver_order:
-                    tyre_fig.update_layout(xaxis_title="Lap Number", yaxis_title="Driver", 
-                                           yaxis={'categoryorder':'array', 'categoryarray':driver_order[::-1]}) # Reverse for P1 at top
+                    for driver in driver_order:
+                        driver_stints = stints_df[stints_df['Driver'] == driver]
+                        for _, stint in driver_stints.iterrows():
+                            tyre_fig.add_trace(go.Bar(
+                                y=[driver], x=[stint['LapEnd'] - stint['LapStart'] + 1], base=[stint['LapStart']], orientation='h',
+                                marker_color=MY_COMPOUND_COLORS.get(stint['Compound'], '#CCCCCC'),
+                                text=stint['Compound'], name=stint['Compound'], hoverinfo='text',
+                                hovertext=f"Driver: {stint['Driver']}<br>Laps: {stint['LapStart']}-{stint['LapEnd']}<br>Compound: {stint['Compound']}"
+                            ))
+                    graph_height = max(600, len(driver_order) * 40)
+                    tyre_fig.update_layout(title_text="Last Year's Tyre Strategies", xaxis_title="Lap Number", yaxis_title="Driver", barmode='stack', yaxis={'categoryorder':'array', 'categoryarray':driver_order[::-1]}, height=graph_height, showlegend=False, plot_bgcolor='white')
+                
+                # AI Tyre Strategy Insights Logic
+                weather_data = next_race_data.get('WeatherData')
+                if weather_data:
+                    strategy_summary_list = ["Last Year's Strategy Highlights:"]; strategy_df = stints_df.groupby('Driver')['Compound'].agg(lambda x: ' -> '.join(x)).reset_index(); common_strategies = strategy_df['Compound'].value_counts().head(2)
+                    for strategy, count in common_strategies.items(): strategy_summary_list.append(f"  - A {count}-stop ({strategy}) was used by {count} drivers.")
+                    weather_summary_list = ["This Year's Weather Forecast:"]; 
+                    for day in weather_data:
+                        if "Sun" in day.get('Date', ''): weather_summary_list.append(f"  - Race Day ({day['Date']}): {day['Temp']}, {day['Description']}")
+                    sc_count = next_race_data.get('SafetyCarsLastYear', 0); sc_summary = f"Safety Cars Last Year: There were {sc_count} safety car deployments."
+                    ai_prompt_data = "\n".join(strategy_summary_list) + "\n\n" + "\n".join(weather_summary_list) + "\n" + sc_summary
+                    ai_prompt = (f"You are an expert F1 strategist analyzing {next_race_data['EventName']}.\n\n{ai_prompt_data}\n\nBased ONLY on this data, provide 2-3 concise bullet points on potential tyre strategy considerations for this year's race.")
+                    ai_tyre_insights = dcc.Markdown(get_race_highlights_from_gemini(ai_prompt))
             
-            tyre_strategy_section = dbc.Row([
-                dbc.Col([
-                    dbc.Card([dbc.CardHeader("Tyre Strategy Analysis"), dbc.CardBody(dcc.Graph(figure=tyre_fig))]),
-                    dbc.Card([dbc.CardHeader("AI Tyre Strategy Insights"), dbc.CardBody(dbc.Alert("AI Insights for tyre strategies will be generated here.", color="info"))], className="mt-3")
-                ])
-            ], className="mb-4")
+            tyre_strategy_section = dbc.Row([dbc.Col([dbc.Card([dbc.CardHeader("Tyre Strategy Analysis"), dbc.CardBody(dcc.Graph(figure=tyre_fig))]), dbc.Card([dbc.CardHeader("AI Tyre Strategy Insights"), dbc.CardBody(dcc.Loading(ai_tyre_insights))], className="mt-3")])], className="mb-4")
             
             content_to_display = dbc.Container([header_section, weather_section, schedule_section, past_winners_section, tyre_strategy_section], fluid=True)
-            # ...
         else:
             content_to_display = dbc.Alert("Could not load data for the next race. The season may be over.", color="warning")
 
@@ -1131,10 +1190,10 @@ def render_cs_sub_tab(n_clicks_so_far, n_clicks_next_race, n_clicks_calendar, ma
         filter_card_style = {'display': 'none'}
     
     else: 
-        content_to_display = season_so_far_content_layout
-        active_so_far = True
+        content_to_display, active_so_far = season_so_far_content_layout, True
         
     return content_to_display, active_so_far, active_next_race, active_calendar, filter_card_style
+
 
 # --- Run the App ---
 if __name__ == '__main__':
