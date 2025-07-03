@@ -50,6 +50,35 @@ ERGAS_CONSTRUCTOR_NAME_TO_KNOWN_TEAM_ID_OR_COLOR = {
     "Alpine F1 Team":  "#0090FF", "Alpine": "#0090FF" 
 }
 
+# Dictionary 1: Maps TeamName from FastF1 session results to the official ConstructorName from Ergast API
+TEAM_NAME_TO_CONSTRUCTOR_NAME_MAP = {
+    "Red Bull Racing": "Red Bull",
+    "Mercedes": "Mercedes",
+    "Ferrari": "Ferrari",
+    "McLaren": "McLaren",
+    "Aston Martin": "Aston Martin",
+    "Alpine": "Alpine F1 Team",  # Map the name we see in results to the name in standings
+    "Racing Bulls": "RB F1 Team", # Map the name we see in results to the name in standings
+    "Sauber": "Sauber", 
+    "Kick Sauber": "Sauber",     # Also map "Kick Sauber" to the base "Sauber" name from standings
+    "Haas F1 Team": "Haas F1 Team",
+    "Williams": "Williams",
+}
+
+# Dictionary 2: Maps the official ConstructorName to a specific color
+CONSTRUCTOR_NAME_TO_COLOR_MAP = {
+    "Red Bull": "#0600EF",
+    "Ferrari": "#E80020",
+    "Mercedes": "#27F4D2",
+    "McLaren": "#FF8000",
+    "Aston Martin": "#229971",
+    "Alpine F1 Team": "#0090FF",
+    "RB F1 Team": "#00359F",
+    "Sauber": "#00FF00",
+    "Haas F1 Team": "#B6BABD",
+    "Williams": "#64C4FF",
+}
+
 # --- Setup FastF1 Cache (Simplified) ---
 cache_dir_path = os.path.join(os.path.expanduser('~'), 'fastf1_cache_data_project')
 if not os.path.exists(cache_dir_path):
@@ -81,6 +110,16 @@ def format_timedelta(td_object):
         hours = int(total_seconds // 3600); minutes = int((total_seconds % 3600) // 60); seconds = total_seconds % 60
         return f"{sign}{hours:02d}:{minutes:02d}:{seconds:06.3f}" if hours > 0 else f"{sign}{minutes:02d}:{seconds:06.3f}"
     return str(td_object)
+
+def hex_to_rgba(hex_color, alpha=0.15):
+    """Converts a hex color string to an rgba string with a given alpha."""
+    try:
+        hex_color = hex_color.lstrip('#')
+        rgb = tuple(int(hex_color[i:i+2], 16) for i in (0, 2, 4))
+        return f'rgba({rgb[0]}, {rgb[1]}, {rgb[2]}, {alpha})'
+    except:
+        # Fallback if the color is not a valid hex
+        return None 
 
 # REPLACE your get_weather_forecast function with this OpenWeatherMap version
 def get_weather_forecast(lat, lon, api_key, race_date_obj):
@@ -199,6 +238,104 @@ def get_race_highlights_from_gemini(race_summary_data_str):
         print(f"Error calling Gemini API: {e}")
         if "API_KEY_INVALID" in str(e) or "PERMISSION_DENIED" in str(e): return "AI highlights unavailable: API key/permission issue."
         return f"Error generating AI highlights: {str(e)[:200]}"
+
+# --- REPLACE your existing get_ai_team_summary function with this one ---
+def get_ai_team_summary(team_name, summary_type="history", performance_data=""):
+    """Generates a specific summary for a team using Gemini AI."""
+    if not GEMINI_API_KEY:
+        return "AI insights are disabled (API key not configured)."
+
+    # Default prompt in case of error
+    prompt_details = f"Could not generate summary for {team_name}."
+
+    if summary_type == "history":
+        prompt_details = f"Provide a brief, 1-2 sentence history of the {team_name} Formula 1 team, focusing on their origins and key achievements."
+    elif summary_type == "performance":
+        # Now we correctly use the performance_data passed into the function
+        prompt_details = (
+            f"You are an F1 analyst. Based on the following data, provide a 1-2 sentence summary of the "
+            f"{team_name} team's performance so far in the 2025 F1 season.\n\n"
+            f"Current Data: {performance_data}\n\n"
+            f"Your 1-2 sentence summary:"
+        )
+
+    try:
+        model = genai.GenerativeModel('gemini-1.5-flash-latest')
+        response = model.generate_content(prompt_details)
+        
+        # Add a more robust check for response text
+        if response.parts:
+            return "".join(part.text for part in response.parts if hasattr(part, 'text'))
+        return "AI summary generation resulted in an empty response."
+    except Exception as e:
+        print(f"Gemini error for {team_name} ({summary_type}): {e}")
+        return "Could not generate AI summary due to an API error."
+
+# --- REPLACE your existing get_all_teams_data function with this one ---
+def get_all_teams_data(year):
+    print(f"[get_all_teams_data] Fetching data for all {year} teams...")
+    try:
+        schedule = ff1.get_event_schedule(year, include_testing=False)
+        schedule['EventDate'] = pd.to_datetime(schedule['EventDate'])
+        completed_races = schedule[schedule['EventDate'] < pd.Timestamp.now()].sort_values(by='EventDate', ascending=False)
+        
+        if completed_races.empty:
+            print("[get_all_teams_data] No completed races found for this year yet.")
+            return []
+
+        latest_race = completed_races.iloc[0]
+        session = ff1.get_session(year, latest_race['EventName'], 'R'); session.load()
+        results = session.results
+        
+        ergast_api = ergast.Ergast()
+        constructor_standings_df = pd.DataFrame()
+        try:
+            standings_content = ergast_api.get_constructor_standings(season=year, round=latest_race['RoundNumber']).content
+            if standings_content:
+                constructor_standings_df = standings_content[0].reset_index()
+                print(f"[get_all_teams_data] Successfully fetched constructor standings. Available: {constructor_standings_df['constructorName'].tolist()}")
+        except Exception as e_ergast:
+            print(f"Could not fetch constructor standings: {e_ergast}")
+
+        teams_data = []
+        unique_teams = results['TeamName'].dropna().unique()
+        print(f"[DEBUG TEAM NAMES] All unique team names from session results: {results['TeamName'].dropna().unique()}")
+
+        for team_name in unique_teams: # e.g., 'Alpine' from session results
+            team_drivers = results[results['TeamName'] == team_name]
+            driver_list = team_drivers[['Abbreviation', 'FullName']].to_dict('records')
+            
+            # --- FINAL, CORRECTED LOGIC ---
+            
+            # 1. Use the map to find the official constructor name for lookups
+            official_constructor_name = TEAM_NAME_TO_CONSTRUCTOR_NAME_MAP.get(team_name, team_name)
+            
+            # 2. Get the team color using the official name
+            final_color = CONSTRUCTOR_NAME_TO_COLOR_MAP.get(official_constructor_name, "#CCCCCC")
+            
+            # 3. Get the team standing using the official name
+            team_standing_info = "Current championship position data is unavailable."
+            if not constructor_standings_df.empty:
+                team_in_standings = constructor_standings_df[constructor_standings_df['constructorName'] == official_constructor_name]
+                print(f"[DEBUG AI Data] For team '{team_name}' (using official name '{official_constructor_name}'), found {len(team_in_standings)} match(es) in standings.")
+                if not team_in_standings.empty:
+                    standing = team_in_standings.iloc[0]
+                    team_standing_info = f"They are currently P{standing['position']} in the constructors' championship with {standing['points']} points after Round {latest_race['RoundNumber']}."
+
+            team_info = {
+                "TeamName": team_name,
+                "TeamColor": final_color,
+                "Drivers": driver_list,
+                "History": get_ai_team_summary(team_name, "history"),
+                "Performance": get_ai_team_summary(team_name, "performance", team_standing_info)
+            }
+            teams_data.append(team_info)
+        
+        return teams_data
+    except Exception as e:
+        import traceback
+        print(f"Major error in get_all_teams_data: {e}"); traceback.print_exc()
+        return []
 
 # --- MAIN DATA FETCHING FUNCTION (get_session_results) --- (MODIFIED for P_OVERVIEW table)
 def get_session_results(year, event_name_or_round, session_type='Q'):
@@ -612,9 +749,19 @@ tab_2025_content = dbc.Card(
     ]), className="mt-3"
 )
 
+tab_teams_drivers_content = dbc.Card(
+    dbc.CardBody([
+        html.H4("2025 Teams & Drivers", className="text-center mb-4"),
+        # This Div will be populated with all 10 team cards by our new callback
+        dcc.Loading(
+            id="loading-teams-content",
+            type="default",
+            children=[html.Div(id="teams-drivers-content-area")]
+        )
+    ])
+)
+
 # --- Placeholder content for other tabs ---
-tab_tracks_content = dbc.Card(dbc.CardBody([html.P("Content for Tracks and Race Strategies will be built here.")]), className="mt-3")
-tab_teams_drivers_content = dbc.Card(dbc.CardBody([html.P("Content for Teams and Drivers analysis will be built here.")]), className="mt-3")
 tab_predictions_content = dbc.Card(dbc.CardBody([html.P("Content for Predictions models and results will be built here.")]), className="mt-3")
 tab_fantasy_rules_content = dbc.Card(dbc.CardBody([html.P("Content for Fantasy League Rules and Restrictions will be built here.")]), className="mt-3")
 tab_fantasy_creator_content = dbc.Card(dbc.CardBody([html.P("Content for Fantasy Team Creator tool will be built here.")]), className="mt-3")
@@ -626,7 +773,6 @@ app.layout = dbc.Container([
     dbc.Tabs([
         dbc.Tab(tab_historical_content, label="Past Seasons", tab_id="tab-historical"),
         dbc.Tab(tab_2025_content, label=f"Current Season ({current_year})", tab_id="tab-current-season"),
-        dbc.Tab(tab_tracks_content, label="Tracks & Strategies", tab_id="tab-tracks"),
         dbc.Tab(tab_teams_drivers_content, label="Teams & Drivers", tab_id="tab-teams-drivers"),
         dbc.Tab(tab_predictions_content, label="Predictions", tab_id="tab-predictions"),
         dbc.Tab(tab_fantasy_rules_content, label="Fantasy Rules", tab_id="tab-fantasy-rules"),
@@ -853,7 +999,6 @@ def update_cs_event_dropdown(active_main_tab):
         print(f"Error in cs_event_dropdown: {e}")
         return [], None
 
-# --- update_cs_season_so_far_content Callback (MODIFIED with debug print) ---
 # Main callback for "Season So Far" sub-section content - NOW TRIGGERED BY THE STORE
 @app.callback(
     Output('cs-page-title', 'children'),
@@ -1194,6 +1339,93 @@ def render_cs_sub_tab(n_clicks_so_far, n_clicks_next_race, n_clicks_calendar, ma
         
     return content_to_display, active_so_far, active_next_race, active_calendar, filter_card_style
 
+# --- Callbacks for Teams & Drivers Tab ---
+# --- REPLACE your existing update_teams_drivers_tab callback with this one ---
+@app.callback(
+    Output('teams-drivers-content-area', 'children'),
+    Input('app-main-tabs', 'active_tab')
+)
+def update_teams_drivers_tab(active_tab):
+    if active_tab != 'tab-teams-drivers':
+        return dash.no_update
+
+    cs_year = datetime.now().year
+    all_teams_data = get_all_teams_data(cs_year)
+
+    if not all_teams_data:
+        return dbc.Alert("Could not load team and driver data for the current season.", color="warning")
+
+    team_cards = []
+    for team in all_teams_data:
+        # --- Create Driver and Logo Columns ---
+        driver_logo_cols = []
+        
+        # Add Driver #1
+        if len(team['Drivers']) > 0:
+            driver1 = team['Drivers'][0]
+            # Use a default image path if a specific one is missing
+            driver1_img_path = f"images/drivers/{driver1.get('Abbreviation', '').lower()}.png"
+            driver1_img_src = app.get_asset_url(driver1_img_path) if os.path.exists(os.path.join(assets_folder, driver1_img_path)) else app.get_asset_url("images/driver_default.png")
+            
+            driver_logo_cols.append(
+                dbc.Col(
+                    dbc.Card([
+                        html.Img(src=driver1_img_src, className="img-fluid rounded-circle p-2 mx-auto d-block", style={'width':'150px', 'height':'150px', 'objectFit':'cover'}),
+                        dbc.CardBody(html.H5(driver1['FullName'], className="text-center"))
+                    ], style={'backgroundColor': hex_to_rgba(team['TeamColor'], alpha=0.1)}), 
+                width=5)
+            )
+
+        # Add Team Logo in the middle
+        team_logo_simple_name = team['TeamName'].lower().replace(' ', '_').replace('-', '_')
+        team_logo_path = f"images/teams/{team_logo_simple_name}.png"
+        team_logo_src = app.get_asset_url(team_logo_path) if os.path.exists(os.path.join(assets_folder, team_logo_path)) else app.get_asset_url("images/team_default.png")
+
+        driver_logo_cols.append(
+            dbc.Col(
+                html.Div(
+                    html.Img(src=team_logo_src, style={'width': '150px', 'height': '150px', 'objectFit': 'contain'}),
+                    className="d-flex align-items-center justify-content-center h-100"
+                ),
+                width=2,
+                className="d-flex align-items-center justify-content-center"
+            )
+        )
+
+        # Add Driver #2
+        if len(team['Drivers']) > 1:
+            driver2 = team['Drivers'][1]
+            driver2_img_path = f"images/drivers/{driver2.get('Abbreviation', '').lower()}.png"
+            driver2_img_src = app.get_asset_url(driver2_img_path) if os.path.exists(os.path.join(assets_folder, driver2_img_path)) else app.get_asset_url("images/driver_default.png")
+            
+            driver_logo_cols.append(
+                dbc.Col(
+                    dbc.Card([
+                        html.Img(src=driver2_img_src, className="img-fluid rounded-circle p-2 mx-auto d-block", style={'width':'150px', 'height':'150px', 'objectFit':'cover'}),
+                        dbc.CardBody(html.H5(driver2['FullName'], className="text-center"))
+                    ], style={'backgroundColor': hex_to_rgba(team['TeamColor'], alpha=0.1)}), 
+                width=5)
+            )
+        
+        # --- Create the full card for the team ---
+        team_card = dbc.Card([
+            dbc.CardHeader(
+                html.H4(team['TeamName'], className="mb-0 text-white"), # Only the H4 title remains
+                style={'backgroundColor': team['TeamColor']}
+            ),
+            dbc.CardBody([
+                # CORRECTED: Use the 'driver_logo_cols' list we just created
+                dbc.Row(driver_logo_cols, className="mb-3", justify="center"), 
+                html.Hr(),
+                html.H6("AI Insights:", className="mt-3"),
+                dcc.Markdown(f"* **Team History:** {team.get('History', 'N/A')}"),
+                dcc.Markdown(f"* **2025 Performance:** {team.get('Performance', 'N/A')}")
+            ])
+        ], className="mb-4 shadow-sm")
+        
+        team_cards.append(team_card)
+
+    return team_cards
 
 # --- Run the App ---
 if __name__ == '__main__':
