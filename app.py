@@ -294,7 +294,7 @@ def get_all_teams_data(year):
             return []
 
         latest_race = completed_races.iloc[0]
-        session = ff1.get_session(year, latest_race['EventName'], 'R'); session.load()
+        session = ff1.get_session(year, latest_race['EventName'], 'R'); session.load(laps=False, telemetry=False, weather=False, messages=False)
         results = session.results
         
         ergast_api = ergast.Ergast()
@@ -554,7 +554,7 @@ def get_next_race_info(year):
             data['WeatherData'] = get_weather_forecast(lat, lon, OPENWEATHER_API_KEY, race_date_obj)
         
         try:
-            last_year_session = ff1.get_session(year - 1, event_name, 'R'); last_year_session.load()
+            last_year_session = ff1.get_session(year - 1, event_name, 'R'); last_year_session.load(laps=True, telemetry=False, weather=False, messages=False)
             laps_df = last_year_session.laps; results_df = last_year_session.results
             
             if not results_df.empty and 'Laps' in results_df.columns and pd.notna(results_df.iloc[0]['Laps']): data['NumberOfLaps'] = int(results_df.iloc[0]['Laps'])
