@@ -1,8 +1,5 @@
 # gunicorn_config.py
-# This tells Gunicorn how to run your Dash app.
-# The --preload flag is important for caching to work correctly across multiple workers.
-# You can adjust the number of workers if needed.
-
-workers = 2
+workers = 2  # Keep this at 2 for the free tier
 bind = "0.0.0.0:8050"
-preload_app = True
+preload_app = True # This is important for caching
+timeout = 120 # Increase timeout to allow for slow initial data loads
