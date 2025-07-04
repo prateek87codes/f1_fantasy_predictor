@@ -100,7 +100,6 @@ try:
     ff1.Cache.enable_cache(cache_dir)
     print("FastF1 cache enabled successfully.")
 except Exception as e:
-    # This is a fallback for any other unexpected cache errors
     print(f"An unexpected error occurred while enabling FastF1 cache: {e}")
 
 try:
