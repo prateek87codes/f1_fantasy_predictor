@@ -80,14 +80,6 @@ CONSTRUCTOR_NAME_TO_COLOR_MAP = {
     "Williams": "#64C4FF",
 }
 
-# --- Setup FastF1 Cache (Simplified) ---
-cache_dir_path = os.path.join(os.path.expanduser('~'), 'fastf1_cache_data_project')
-if not os.path.exists(cache_dir_path):
-    os.makedirs(cache_dir_path)
-ff1.Cache.enable_cache(cache_dir_path)
-print("FastF1 Cache Enabled.")
-# -----------------------------------------
-
 # --- 1. Configure FastF1 Caching ---
 cache_dir = 'cache'
 # Create the cache directory on the server if it does not exist
