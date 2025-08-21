@@ -1,0 +1,920 @@
+Year,Round,TrackID,DriverID,TeamID,DriverTeamID,QualifyingPosition,ChampionshipStanding,ChampionshipPoints,Points,RecentFormPoints,RecentQualiPos,RecentFinishPos,FinishingPosition
+2023,1,Sakhir,VER,Red Bull Racing,VER_Red Bull Racing,1.0,0.0,0.0,25.0,0.0,10.0,10.0,1
+2023,1,Sakhir,PER,Red Bull Racing,PER_Red Bull Racing,2.0,0.0,0.0,18.0,0.0,10.0,10.0,2
+2023,1,Sakhir,ALO,Aston Martin,ALO_Aston Martin,5.0,0.0,0.0,15.0,0.0,10.0,10.0,3
+2023,1,Sakhir,SAI,Ferrari,SAI_Ferrari,4.0,0.0,0.0,12.0,0.0,10.0,10.0,4
+2023,1,Sakhir,HAM,Mercedes,HAM_Mercedes,7.0,0.0,0.0,10.0,0.0,10.0,10.0,5
+2023,1,Sakhir,STR,Aston Martin,STR_Aston Martin,8.0,0.0,0.0,8.0,0.0,10.0,10.0,6
+2023,1,Sakhir,RUS,Mercedes,RUS_Mercedes,6.0,0.0,0.0,6.0,0.0,10.0,10.0,7
+2023,1,Sakhir,BOT,Alfa Romeo,BOT_Alfa Romeo,12.0,0.0,0.0,4.0,0.0,10.0,10.0,8
+2023,1,Sakhir,GAS,Alpine,GAS_Alpine,20.0,0.0,0.0,2.0,0.0,10.0,10.0,9
+2023,1,Sakhir,ALB,Williams,ALB_Williams,15.0,0.0,0.0,1.0,0.0,10.0,10.0,10
+2023,1,Sakhir,TSU,AlphaTauri,TSU_AlphaTauri,14.0,0.0,0.0,0.0,0.0,10.0,10.0,11
+2023,1,Sakhir,SAR,Williams,SAR_Williams,16.0,0.0,0.0,0.0,0.0,10.0,10.0,12
+2023,1,Sakhir,MAG,Haas F1 Team,MAG_Haas F1 Team,17.0,0.0,0.0,0.0,0.0,10.0,10.0,13
+2023,1,Sakhir,DEV,AlphaTauri,DEV_AlphaTauri,19.0,0.0,0.0,0.0,0.0,10.0,10.0,14
+2023,1,Sakhir,HUL,Haas F1 Team,HUL_Haas F1 Team,10.0,0.0,0.0,0.0,0.0,10.0,10.0,15
+2023,1,Sakhir,ZHO,Alfa Romeo,ZHO_Alfa Romeo,13.0,0.0,0.0,0.0,0.0,10.0,10.0,16
+2023,1,Sakhir,NOR,McLaren,NOR_McLaren,11.0,0.0,0.0,0.0,0.0,10.0,10.0,17
+2023,1,Sakhir,OCO,Alpine,OCO_Alpine,9.0,0.0,0.0,0.0,0.0,10.0,10.0,18
+2023,1,Sakhir,LEC,Ferrari,LEC_Ferrari,3.0,0.0,0.0,0.0,0.0,10.0,10.0,19
+2023,1,Sakhir,PIA,McLaren,PIA_McLaren,18.0,0.0,0.0,0.0,0.0,10.0,10.0,20
+2023,2,Jeddah,PER,Red Bull Racing,PER_Red Bull Racing,1.0,2.0,18.0,25.0,18.0,2.0,2.0,1
+2023,2,Jeddah,VER,Red Bull Racing,VER_Red Bull Racing,15.0,1.0,25.0,19.0,25.0,1.0,1.0,2
+2023,2,Jeddah,ALO,Aston Martin,ALO_Aston Martin,2.0,3.0,15.0,15.0,15.0,5.0,3.0,3
+2023,2,Jeddah,RUS,Mercedes,RUS_Mercedes,3.0,7.0,6.0,12.0,6.0,6.0,7.0,4
+2023,2,Jeddah,HAM,Mercedes,HAM_Mercedes,7.0,5.0,10.0,10.0,10.0,7.0,5.0,5
+2023,2,Jeddah,SAI,Ferrari,SAI_Ferrari,4.0,4.0,12.0,8.0,12.0,4.0,4.0,6
+2023,2,Jeddah,LEC,Ferrari,LEC_Ferrari,12.0,0.0,0.0,6.0,0.0,3.0,19.0,7
+2023,2,Jeddah,OCO,Alpine,OCO_Alpine,6.0,0.0,0.0,4.0,0.0,9.0,18.0,8
+2023,2,Jeddah,GAS,Alpine,GAS_Alpine,9.0,9.0,2.0,2.0,2.0,20.0,9.0,9
+2023,2,Jeddah,MAG,Haas F1 Team,MAG_Haas F1 Team,13.0,13.0,0.0,1.0,0.0,17.0,13.0,10
+2023,2,Jeddah,TSU,AlphaTauri,TSU_AlphaTauri,16.0,11.0,0.0,0.0,0.0,14.0,11.0,11
+2023,2,Jeddah,HUL,Haas F1 Team,HUL_Haas F1 Team,10.0,15.0,0.0,0.0,0.0,10.0,15.0,12
+2023,2,Jeddah,ZHO,Alfa Romeo,ZHO_Alfa Romeo,11.0,16.0,0.0,0.0,0.0,13.0,16.0,13
+2023,2,Jeddah,DEV,AlphaTauri,DEV_AlphaTauri,18.0,14.0,0.0,0.0,0.0,19.0,14.0,14
+2023,2,Jeddah,PIA,McLaren,PIA_McLaren,8.0,0.0,0.0,0.0,0.0,18.0,20.0,15
+2023,2,Jeddah,SAR,Williams,SAR_Williams,20.0,12.0,0.0,0.0,0.0,16.0,12.0,16
+2023,2,Jeddah,NOR,McLaren,NOR_McLaren,19.0,17.0,0.0,0.0,0.0,11.0,17.0,17
+2023,2,Jeddah,BOT,Alfa Romeo,BOT_Alfa Romeo,14.0,8.0,4.0,0.0,4.0,12.0,8.0,18
+2023,2,Jeddah,ALB,Williams,ALB_Williams,17.0,10.0,1.0,0.0,1.0,15.0,10.0,19
+2023,2,Jeddah,STR,Aston Martin,STR_Aston Martin,5.0,6.0,8.0,0.0,8.0,8.0,6.0,20
+2023,3,Melbourne,VER,Red Bull Racing,VER_Red Bull Racing,1.0,1.0,44.0,25.0,22.0,8.0,1.5,1
+2023,3,Melbourne,HAM,Mercedes,HAM_Mercedes,3.0,5.0,20.0,18.0,10.0,7.0,5.0,2
+2023,3,Melbourne,ALO,Aston Martin,ALO_Aston Martin,4.0,3.0,30.0,15.0,15.0,3.5,3.0,3
+2023,3,Melbourne,STR,Aston Martin,STR_Aston Martin,6.0,7.0,8.0,12.0,4.0,6.5,13.0,4
+2023,3,Melbourne,PER,Red Bull Racing,PER_Red Bull Racing,20.0,2.0,43.0,11.0,21.5,1.5,1.5,5
+2023,3,Melbourne,NOR,McLaren,NOR_McLaren,13.0,20.0,0.0,8.0,0.0,15.0,17.0,6
+2023,3,Melbourne,HUL,Haas F1 Team,HUL_Haas F1 Team,10.0,15.0,0.0,6.0,0.0,10.0,13.5,7
+2023,3,Melbourne,PIA,McLaren,PIA_McLaren,16.0,19.0,0.0,4.0,0.0,13.0,17.5,8
+2023,3,Melbourne,ZHO,Alfa Romeo,ZHO_Alfa Romeo,17.0,17.0,0.0,2.0,0.0,12.0,14.5,9
+2023,3,Melbourne,TSU,AlphaTauri,TSU_AlphaTauri,12.0,14.0,0.0,1.0,0.0,15.0,11.0,10
+2023,3,Melbourne,BOT,Alfa Romeo,BOT_Alfa Romeo,19.0,9.0,4.0,0.0,2.0,13.0,13.0,11
+2023,3,Melbourne,SAI,Ferrari,SAI_Ferrari,5.0,4.0,20.0,0.0,10.0,4.0,5.0,12
+2023,3,Melbourne,GAS,Alpine,GAS_Alpine,9.0,11.0,4.0,0.0,2.0,14.5,9.0,13
+2023,3,Melbourne,OCO,Alpine,OCO_Alpine,11.0,10.0,4.0,0.0,2.0,7.5,13.0,14
+2023,3,Melbourne,DEV,AlphaTauri,DEV_AlphaTauri,15.0,18.0,0.0,0.0,0.0,18.5,14.0,15
+2023,3,Melbourne,SAR,Williams,SAR_Williams,18.0,16.0,0.0,0.0,0.0,18.0,14.0,16
+2023,3,Melbourne,MAG,Haas F1 Team,MAG_Haas F1 Team,14.0,12.0,1.0,0.0,0.5,15.0,11.5,17
+2023,3,Melbourne,RUS,Mercedes,RUS_Mercedes,2.0,6.0,18.0,0.0,9.0,4.5,5.5,18
+2023,3,Melbourne,ALB,Williams,ALB_Williams,8.0,13.0,1.0,0.0,0.5,16.0,14.5,19
+2023,3,Melbourne,LEC,Ferrari,LEC_Ferrari,7.0,8.0,6.0,0.0,3.0,7.5,13.0,20
+2023,4,Baku,PER,Red Bull Racing,PER_Red Bull Racing,3.0,2.0,54.0,25.0,18.0,7.666666666666667,2.6666666666666665,1
+2023,4,Baku,VER,Red Bull Racing,VER_Red Bull Racing,2.0,1.0,69.0,18.0,23.0,5.666666666666667,1.3333333333333333,2
+2023,4,Baku,LEC,Ferrari,LEC_Ferrari,1.0,10.0,6.0,15.0,2.0,7.333333333333333,15.333333333333334,3
+2023,4,Baku,ALO,Aston Martin,ALO_Aston Martin,6.0,3.0,45.0,12.0,15.0,3.6666666666666665,3.0,4
+2023,4,Baku,SAI,Ferrari,SAI_Ferrari,4.0,5.0,20.0,10.0,6.666666666666667,4.333333333333333,7.333333333333333,5
+2023,4,Baku,HAM,Mercedes,HAM_Mercedes,5.0,4.0,38.0,8.0,12.666666666666666,5.666666666666667,4.0,6
+2023,4,Baku,STR,Aston Martin,STR_Aston Martin,9.0,6.0,20.0,6.0,6.666666666666667,6.333333333333333,10.0,7
+2023,4,Baku,RUS,Mercedes,RUS_Mercedes,11.0,7.0,18.0,5.0,6.0,3.6666666666666665,9.666666666666666,8
+2023,4,Baku,NOR,McLaren,NOR_McLaren,7.0,8.0,8.0,2.0,2.6666666666666665,14.333333333333334,13.333333333333334,9
+2023,4,Baku,TSU,AlphaTauri,TSU_AlphaTauri,8.0,16.0,1.0,1.0,0.3333333333333333,14.0,10.666666666666666,10
+2023,4,Baku,PIA,McLaren,PIA_McLaren,10.0,13.0,4.0,0.0,1.3333333333333333,14.0,14.333333333333334,11
+2023,4,Baku,ALB,Williams,ALB_Williams,12.0,18.0,1.0,0.0,0.3333333333333333,13.333333333333334,16.0,12
+2023,4,Baku,MAG,Haas F1 Team,MAG_Haas F1 Team,16.0,17.0,1.0,0.0,0.3333333333333333,14.666666666666666,13.333333333333334,13
+2023,4,Baku,GAS,Alpine,GAS_Alpine,17.0,14.0,4.0,0.0,1.3333333333333333,12.666666666666666,10.333333333333334,14
+2023,4,Baku,OCO,Alpine,OCO_Alpine,19.0,12.0,4.0,0.0,1.3333333333333333,8.666666666666666,13.333333333333334,15
+2023,4,Baku,SAR,Williams,SAR_Williams,14.0,19.0,0.0,0.0,0.0,18.0,14.666666666666666,16
+2023,4,Baku,HUL,Haas F1 Team,HUL_Haas F1 Team,20.0,9.0,6.0,0.0,2.0,10.0,11.333333333333334,17
+2023,4,Baku,BOT,Alfa Romeo,BOT_Alfa Romeo,13.0,11.0,4.0,0.0,1.3333333333333333,15.0,12.333333333333334,18
+2023,4,Baku,ZHO,Alfa Romeo,ZHO_Alfa Romeo,15.0,15.0,2.0,0.0,0.6666666666666666,13.666666666666666,12.666666666666666,19
+2023,4,Baku,DEV,AlphaTauri,DEV_AlphaTauri,18.0,20.0,0.0,0.0,0.0,17.333333333333332,14.333333333333334,20
+2023,5,Miami,VER,Red Bull Racing,VER_Red Bull Racing,9.0,1.0,93.0,26.0,21.75,4.75,1.5,1
+2023,5,Miami,PER,Red Bull Racing,PER_Red Bull Racing,1.0,2.0,87.0,18.0,19.75,6.5,2.25,2
+2023,5,Miami,ALO,Aston Martin,ALO_Aston Martin,2.0,3.0,60.0,15.0,14.25,4.25,3.25,3
+2023,5,Miami,RUS,Mercedes,RUS_Mercedes,6.0,7.0,28.0,12.0,5.75,5.5,9.25,4
+2023,5,Miami,SAI,Ferrari,SAI_Ferrari,3.0,5.0,34.0,10.0,7.5,4.25,6.75,5
+2023,5,Miami,HAM,Mercedes,HAM_Mercedes,13.0,4.0,48.0,8.0,11.5,5.5,4.5,6
+2023,5,Miami,LEC,Ferrari,LEC_Ferrari,7.0,6.0,28.0,6.0,5.25,5.75,12.25,7
+2023,5,Miami,GAS,Alpine,GAS_Alpine,5.0,14.0,4.0,4.0,1.0,13.75,11.25,8
+2023,5,Miami,OCO,Alpine,OCO_Alpine,8.0,13.0,4.0,2.0,1.0,11.25,13.75,9
+2023,5,Miami,MAG,Haas F1 Team,MAG_Haas F1 Team,4.0,18.0,1.0,1.0,0.25,15.0,13.25,10
+2023,5,Miami,TSU,AlphaTauri,TSU_AlphaTauri,17.0,16.0,2.0,0.0,0.5,12.5,10.5,11
+2023,5,Miami,STR,Aston Martin,STR_Aston Martin,18.0,8.0,27.0,0.0,6.5,7.0,9.25,12
+2023,5,Miami,BOT,Alfa Romeo,BOT_Alfa Romeo,10.0,12.0,4.0,0.0,1.0,14.5,13.75,13
+2023,5,Miami,ALB,Williams,ALB_Williams,11.0,17.0,1.0,0.0,0.25,13.0,15.0,14
+2023,5,Miami,HUL,Haas F1 Team,HUL_Haas F1 Team,12.0,10.0,6.0,0.0,1.5,12.5,12.75,15
+2023,5,Miami,ZHO,Alfa Romeo,ZHO_Alfa Romeo,14.0,15.0,2.0,0.0,0.5,14.0,14.25,16
+2023,5,Miami,NOR,McLaren,NOR_McLaren,16.0,9.0,10.0,0.0,2.5,12.5,12.25,17
+2023,5,Miami,DEV,AlphaTauri,DEV_AlphaTauri,15.0,20.0,0.0,0.0,0.0,17.5,15.75,18
+2023,5,Miami,PIA,McLaren,PIA_McLaren,19.0,11.0,4.0,0.0,1.0,13.0,13.5,19
+2023,5,Miami,SAR,Williams,SAR_Williams,20.0,19.0,0.0,0.0,0.0,17.0,15.0,20
+2023,6,Monaco,VER,Red Bull Racing,VER_Red Bull Racing,1.0,1.0,119.0,25.0,22.6,5.6,1.4,1
+2023,6,Monaco,ALO,Aston Martin,ALO_Aston Martin,2.0,3.0,75.0,18.0,14.4,3.8,3.2,2
+2023,6,Monaco,OCO,Alpine,OCO_Alpine,3.0,12.0,6.0,15.0,1.2,10.6,12.8,3
+2023,6,Monaco,HAM,Mercedes,HAM_Mercedes,5.0,4.0,56.0,13.0,10.8,7.0,4.8,4
+2023,6,Monaco,RUS,Mercedes,RUS_Mercedes,8.0,6.0,40.0,10.0,7.0,5.6,8.2,5
+2023,6,Monaco,LEC,Ferrari,LEC_Ferrari,6.0,7.0,34.0,8.0,5.4,6.0,11.2,6
+2023,6,Monaco,GAS,Alpine,GAS_Alpine,7.0,10.0,8.0,6.0,1.6,12.0,10.6,7
+2023,6,Monaco,SAI,Ferrari,SAI_Ferrari,4.0,5.0,44.0,4.0,8.0,4.0,6.4,8
+2023,6,Monaco,NOR,McLaren,NOR_McLaren,10.0,9.0,10.0,2.0,2.0,13.2,13.2,9
+2023,6,Monaco,PIA,McLaren,PIA_McLaren,11.0,14.0,4.0,1.0,0.8,14.2,14.6,10
+2023,6,Monaco,BOT,Alfa Romeo,BOT_Alfa Romeo,15.0,13.0,4.0,0.0,0.8,13.6,13.6,11
+2023,6,Monaco,DEV,AlphaTauri,DEV_AlphaTauri,12.0,20.0,0.0,0.0,0.0,17.0,16.2,12
+2023,6,Monaco,ZHO,Alfa Romeo,ZHO_Alfa Romeo,19.0,15.0,2.0,0.0,0.4,14.0,14.6,13
+2023,6,Monaco,ALB,Williams,ALB_Williams,13.0,18.0,1.0,0.0,0.2,12.6,14.8,14
+2023,6,Monaco,TSU,AlphaTauri,TSU_AlphaTauri,9.0,16.0,2.0,0.0,0.4,13.4,10.6,15
+2023,6,Monaco,PER,Red Bull Racing,PER_Red Bull Racing,20.0,2.0,105.0,0.0,19.4,5.4,2.2,16
+2023,6,Monaco,HUL,Haas F1 Team,HUL_Haas F1 Team,18.0,11.0,6.0,0.0,1.2,12.4,13.2,17
+2023,6,Monaco,SAR,Williams,SAR_Williams,16.0,19.0,0.0,0.0,0.0,17.6,16.0,18
+2023,6,Monaco,MAG,Haas F1 Team,MAG_Haas F1 Team,17.0,17.0,2.0,0.0,0.4,12.8,12.6,19
+2023,6,Monaco,STR,Aston Martin,STR_Aston Martin,14.0,8.0,27.0,0.0,5.2,9.2,9.8,20
+2023,7,Barcelona,VER,Red Bull Racing,VER_Red Bull Racing,1.0,1.0,144.0,26.0,22.6,5.6,1.4,1
+2023,7,Barcelona,HAM,Mercedes,HAM_Mercedes,4.0,4.0,69.0,18.0,11.4,6.6,4.6,2
+2023,7,Barcelona,RUS,Mercedes,RUS_Mercedes,12.0,5.0,50.0,15.0,7.8,6.0,7.8,3
+2023,7,Barcelona,PER,Red Bull Racing,PER_Red Bull Racing,11.0,2.0,105.0,12.0,15.8,9.0,5.0,4
+2023,7,Barcelona,SAI,Ferrari,SAI_Ferrari,2.0,6.0,48.0,10.0,6.4,4.0,7.2,5
+2023,7,Barcelona,STR,Aston Martin,STR_Aston Martin,5.0,8.0,27.0,8.0,3.6,10.4,12.6,6
+2023,7,Barcelona,ALO,Aston Martin,ALO_Aston Martin,8.0,3.0,93.0,6.0,15.0,3.2,3.0,7
+2023,7,Barcelona,OCO,Alpine,OCO_Alpine,6.0,9.0,21.0,4.0,4.2,9.4,9.8,8
+2023,7,Barcelona,ZHO,Alfa Romeo,ZHO_Alfa Romeo,13.0,15.0,2.0,2.0,0.4,15.2,14.0,9
+2023,7,Barcelona,GAS,Alpine,GAS_Alpine,10.0,10.0,14.0,1.0,2.4,9.4,10.2,10
+2023,7,Barcelona,LEC,Ferrari,LEC_Ferrari,19.0,7.0,42.0,0.0,7.0,6.6,8.6,11
+2023,7,Barcelona,TSU,AlphaTauri,TSU_AlphaTauri,15.0,16.0,2.0,0.0,0.4,12.4,11.4,12
+2023,7,Barcelona,PIA,McLaren,PIA_McLaren,9.0,13.0,5.0,0.0,1.0,12.8,12.6,13
+2023,7,Barcelona,DEV,AlphaTauri,DEV_AlphaTauri,14.0,19.0,0.0,0.0,0.0,15.6,15.8,14
+2023,7,Barcelona,HUL,Haas F1 Team,HUL_Haas F1 Team,7.0,12.0,6.0,0.0,1.2,14.0,13.6,15
+2023,7,Barcelona,ALB,Williams,ALB_Williams,18.0,18.0,1.0,0.0,0.0,12.2,15.6,16
+2023,7,Barcelona,NOR,McLaren,NOR_McLaren,3.0,11.0,12.0,0.0,2.4,13.0,11.6,17
+2023,7,Barcelona,MAG,Haas F1 Team,MAG_Haas F1 Team,17.0,17.0,2.0,0.0,0.4,12.8,13.8,18
+2023,7,Barcelona,BOT,Alfa Romeo,BOT_Alfa Romeo,16.0,14.0,4.0,0.0,0.0,14.2,14.2,19
+2023,7,Barcelona,SAR,Williams,SAR_Williams,20.0,20.0,0.0,0.0,0.0,17.6,17.2,20
+2023,8,Montréal,VER,Red Bull Racing,VER_Red Bull Racing,1.0,1.0,170.0,25.0,24.0,2.8,1.2,1
+2023,8,Montréal,ALO,Aston Martin,ALO_Aston Martin,2.0,3.0,99.0,18.0,13.2,4.4,3.8,2
+2023,8,Montréal,HAM,Mercedes,HAM_Mercedes,3.0,4.0,87.0,15.0,13.0,6.0,4.0,3
+2023,8,Montréal,LEC,Ferrari,LEC_Ferrari,10.0,7.0,42.0,12.0,5.8,8.0,9.4,4
+2023,8,Montréal,SAI,Ferrari,SAI_Ferrari,11.0,6.0,58.0,10.0,6.8,3.6,7.0,5
+2023,8,Montréal,PER,Red Bull Racing,PER_Red Bull Racing,12.0,2.0,117.0,9.0,13.2,11.0,5.6,6
+2023,8,Montréal,ALB,Williams,ALB_Williams,9.0,18.0,1.0,6.0,0.0,12.4,15.0,7
+2023,8,Montréal,OCO,Alpine,OCO_Alpine,6.0,9.0,25.0,4.0,4.2,9.4,9.8,8
+2023,8,Montréal,STR,Aston Martin,STR_Aston Martin,16.0,8.0,35.0,2.0,5.2,10.4,9.8,9
+2023,8,Montréal,BOT,Alfa Romeo,BOT_Alfa Romeo,14.0,14.0,4.0,1.0,0.0,14.6,14.4,10
+2023,8,Montréal,PIA,McLaren,PIA_McLaren,8.0,13.0,5.0,0.0,1.0,13.0,12.2,11
+2023,8,Montréal,GAS,Alpine,GAS_Alpine,15.0,10.0,15.0,0.0,2.2,9.6,10.4,12
+2023,8,Montréal,NOR,McLaren,NOR_McLaren,7.0,11.0,12.0,0.0,2.4,9.8,11.6,13
+2023,8,Montréal,TSU,AlphaTauri,TSU_AlphaTauri,19.0,16.0,2.0,0.0,0.4,12.2,11.6,14
+2023,8,Montréal,HUL,Haas F1 Team,HUL_Haas F1 Team,5.0,12.0,6.0,0.0,1.2,13.4,14.2,15
+2023,8,Montréal,ZHO,Alfa Romeo,ZHO_Alfa Romeo,20.0,15.0,4.0,0.0,0.8,15.6,13.2,16
+2023,8,Montréal,MAG,Haas F1 Team,MAG_Haas F1 Team,13.0,17.0,2.0,0.0,0.2,13.6,15.4,17
+2023,8,Montréal,DEV,AlphaTauri,DEV_AlphaTauri,17.0,19.0,0.0,0.0,0.0,14.8,15.8,18
+2023,8,Montréal,RUS,Mercedes,RUS_Mercedes,4.0,5.0,65.0,0.0,8.4,7.8,7.6,19
+2023,8,Montréal,SAR,Williams,SAR_Williams,18.0,20.0,0.0,0.0,0.0,17.6,18.0,20
+2023,9,Spielberg,VER,Red Bull Racing,VER_Red Bull Racing,1.0,1.0,195.0,26.0,24.0,2.8,1.2,1
+2023,9,Spielberg,LEC,Ferrari,LEC_Ferrari,2.0,7.0,54.0,18.0,8.2,8.6,6.2,2
+2023,9,Spielberg,PER,Red Bull Racing,PER_Red Bull Racing,15.0,2.0,126.0,15.0,12.8,9.4,5.8,3
+2023,9,Spielberg,NOR,McLaren,NOR_McLaren,4.0,11.0,12.0,12.0,0.8,8.6,13.0,4
+2023,9,Spielberg,ALO,Aston Martin,ALO_Aston Martin,7.0,3.0,117.0,10.0,13.8,4.0,3.6,5
+2023,9,Spielberg,SAI,Ferrari,SAI_Ferrari,3.0,5.0,68.0,8.0,8.8,4.8,5.6,6
+2023,9,Spielberg,RUS,Mercedes,RUS_Mercedes,11.0,6.0,65.0,6.0,8.4,8.2,7.8,7
+2023,9,Spielberg,HAM,Mercedes,HAM_Mercedes,5.0,4.0,102.0,4.0,12.4,6.0,4.2,8
+2023,9,Spielberg,STR,Aston Martin,STR_Aston Martin,6.0,8.0,37.0,2.0,3.2,12.4,10.8,9
+2023,9,Spielberg,GAS,Alpine,GAS_Alpine,9.0,10.0,15.0,1.0,2.2,10.8,10.2,10
+2023,9,Spielberg,ALB,Williams,ALB_Williams,10.0,12.0,7.0,0.0,1.2,12.6,12.6,11
+2023,9,Spielberg,ZHO,Alfa Romeo,ZHO_Alfa Romeo,17.0,16.0,4.0,0.0,0.4,16.2,14.6,12
+2023,9,Spielberg,SAR,Williams,SAR_Williams,18.0,20.0,0.0,0.0,0.0,17.6,18.8,13
+2023,9,Spielberg,OCO,Alpine,OCO_Alpine,12.0,9.0,29.0,0.0,5.0,8.4,8.6,14
+2023,9,Spielberg,BOT,Alfa Romeo,BOT_Alfa Romeo,14.0,15.0,5.0,0.0,0.2,13.6,14.2,15
+2023,9,Spielberg,PIA,McLaren,PIA_McLaren,13.0,14.0,5.0,0.0,0.2,11.4,12.8,16
+2023,9,Spielberg,DEV,AlphaTauri,DEV_AlphaTauri,20.0,19.0,0.0,0.0,0.0,15.2,16.4,17
+2023,9,Spielberg,MAG,Haas F1 Team,MAG_Haas F1 Team,19.0,18.0,2.0,0.0,0.2,13.4,15.4,18
+2023,9,Spielberg,TSU,AlphaTauri,TSU_AlphaTauri,16.0,17.0,2.0,0.0,0.2,13.6,12.4,19
+2023,9,Spielberg,HUL,Haas F1 Team,HUL_Haas F1 Team,8.0,13.0,6.0,0.0,0.0,12.4,15.8,20
+2023,10,Silverstone,VER,Red Bull Racing,VER_Red Bull Racing,1.0,1.0,229.0,26.0,25.6,2.6,1.0,1
+2023,10,Silverstone,NOR,McLaren,NOR_McLaren,2.0,10.0,24.0,18.0,2.8,8.0,12.0,2
+2023,10,Silverstone,HAM,Mercedes,HAM_Mercedes,7.0,4.0,106.0,15.0,11.6,6.0,4.6,3
+2023,10,Silverstone,PIA,McLaren,PIA_McLaren,3.0,14.0,5.0,12.0,0.2,12.0,13.8,4
+2023,10,Silverstone,RUS,Mercedes,RUS_Mercedes,6.0,7.0,72.0,10.0,8.6,8.2,7.6,5
+2023,10,Silverstone,PER,Red Bull Racing,PER_Red Bull Racing,15.0,2.0,148.0,8.0,10.8,11.8,6.2,6
+2023,10,Silverstone,ALO,Aston Martin,ALO_Aston Martin,9.0,3.0,131.0,6.0,13.4,4.2,3.8,7
+2023,10,Silverstone,ALB,Williams,ALB_Williams,8.0,13.0,7.0,4.0,1.2,12.2,12.4,8
+2023,10,Silverstone,LEC,Ferrari,LEC_Ferrari,4.0,6.0,72.0,2.0,8.8,8.8,6.0,9
+2023,10,Silverstone,SAI,Ferrari,SAI_Ferrari,5.0,5.0,82.0,1.0,8.4,4.6,5.8,10
+2023,10,Silverstone,SAR,Williams,SAR_Williams,14.0,19.0,0.0,0.0,0.0,18.4,18.2,11
+2023,10,Silverstone,BOT,Alfa Romeo,BOT_Alfa Romeo,20.0,15.0,5.0,0.0,0.2,13.8,13.6,12
+2023,10,Silverstone,HUL,Haas F1 Team,HUL_Haas F1 Team,11.0,12.0,9.0,0.0,0.0,10.0,16.4,13
+2023,10,Silverstone,STR,Aston Martin,STR_Aston Martin,12.0,8.0,44.0,0.0,2.4,11.8,11.2,14
+2023,10,Silverstone,ZHO,Alfa Romeo,ZHO_Alfa Romeo,17.0,16.0,4.0,0.0,0.4,16.6,13.2,15
+2023,10,Silverstone,TSU,AlphaTauri,TSU_AlphaTauri,16.0,17.0,2.0,0.0,0.0,15.2,14.2,16
+2023,10,Silverstone,DEV,AlphaTauri,DEV_AlphaTauri,18.0,20.0,0.0,0.0,0.0,15.6,15.8,17
+2023,10,Silverstone,GAS,Alpine,GAS_Alpine,10.0,11.0,16.0,0.0,2.4,9.2,9.4,18
+2023,10,Silverstone,MAG,Haas F1 Team,MAG_Haas F1 Team,19.0,18.0,2.0,0.0,0.2,14.0,16.4,19
+2023,10,Silverstone,OCO,Alpine,OCO_Alpine,13.0,9.0,31.0,0.0,5.0,7.0,8.4,20
+2023,11,Budapest,VER,Red Bull Racing,VER_Red Bull Racing,2.0,1.0,255.0,26.0,25.6,1.0,1.0,1
+2023,11,Budapest,NOR,McLaren,NOR_McLaren,3.0,9.0,42.0,18.0,6.4,5.2,9.0,2
+2023,11,Budapest,PER,Red Bull Racing,PER_Red Bull Racing,9.0,2.0,156.0,15.0,8.8,14.6,7.0,3
+2023,11,Budapest,HAM,Mercedes,HAM_Mercedes,1.0,4.0,121.0,12.0,13.0,4.8,4.0,4
+2023,11,Budapest,PIA,McLaren,PIA_McLaren,4.0,11.0,17.0,10.0,2.6,8.8,10.8,5
+2023,11,Budapest,RUS,Mercedes,RUS_Mercedes,18.0,6.0,82.0,8.0,8.2,8.2,7.8,6
+2023,11,Budapest,LEC,Ferrari,LEC_Ferrari,6.0,7.0,74.0,6.0,8.0,8.2,6.4,7
+2023,11,Budapest,SAI,Ferrari,SAI_Ferrari,11.0,5.0,83.0,4.0,6.6,5.0,6.8,8
+2023,11,Budapest,ALO,Aston Martin,ALO_Aston Martin,8.0,3.0,137.0,2.0,11.6,5.6,4.6,9
+2023,11,Budapest,STR,Aston Martin,STR_Aston Martin,14.0,8.0,44.0,1.0,2.4,10.6,11.6,10
+2023,11,Budapest,ALB,Williams,ALB_Williams,16.0,13.0,11.0,0.0,2.0,11.6,11.2,11
+2023,11,Budapest,BOT,Alfa Romeo,BOT_Alfa Romeo,7.0,15.0,5.0,0.0,0.2,15.8,13.4,12
+2023,11,Budapest,RIC,AlphaTauri,RIC_AlphaTauri,13.0,0.0,0.0,0.0,0.0,10.0,10.0,13
+2023,11,Budapest,HUL,Haas F1 Team,HUL_Haas F1 Team,10.0,14.0,9.0,0.0,0.0,9.8,16.0,14
+2023,11,Budapest,TSU,AlphaTauri,TSU_AlphaTauri,17.0,17.0,2.0,0.0,0.0,15.0,15.2,15
+2023,11,Budapest,ZHO,Alfa Romeo,ZHO_Alfa Romeo,5.0,16.0,4.0,0.0,0.4,17.2,13.0,16
+2023,11,Budapest,MAG,Haas F1 Team,MAG_Haas F1 Team,19.0,18.0,2.0,0.0,0.0,17.0,18.2,17
+2023,11,Budapest,SAR,Williams,SAR_Williams,20.0,19.0,0.0,0.0,0.0,17.2,16.4,18
+2023,11,Budapest,OCO,Alpine,OCO_Alpine,12.0,10.0,31.0,0.0,4.6,8.0,10.6,19
+2023,11,Budapest,GAS,Alpine,GAS_Alpine,15.0,12.0,16.0,0.0,1.6,10.2,11.4,20
+2023,12,Spa-Francorchamps,VER,Red Bull Racing,VER_Red Bull Racing,6.0,1.0,281.0,25.0,25.8,1.2,1.0,1
+2023,12,Spa-Francorchamps,PER,Red Bull Racing,PER_Red Bull Racing,2.0,2.0,171.0,18.0,11.8,12.4,4.4,2
+2023,12,Spa-Francorchamps,LEC,Ferrari,LEC_Ferrari,1.0,7.0,80.0,15.0,7.6,8.2,6.6,3
+2023,12,Spa-Francorchamps,HAM,Mercedes,HAM_Mercedes,3.0,4.0,133.0,13.0,12.8,4.0,4.0,4
+2023,12,Spa-Francorchamps,ALO,Aston Martin,ALO_Aston Martin,9.0,3.0,139.0,10.0,8.4,6.8,6.0,5
+2023,12,Spa-Francorchamps,RUS,Mercedes,RUS_Mercedes,8.0,5.0,90.0,8.0,7.8,10.2,8.0,6
+2023,12,Spa-Francorchamps,NOR,McLaren,NOR_McLaren,7.0,8.0,60.0,6.0,9.6,3.8,7.6,7
+2023,12,Spa-Francorchamps,OCO,Alpine,OCO_Alpine,14.0,10.0,31.0,4.0,1.6,9.8,13.8,8
+2023,12,Spa-Francorchamps,STR,Aston Martin,STR_Aston Martin,10.0,9.0,45.0,2.0,2.6,10.6,9.6,9
+2023,12,Spa-Francorchamps,TSU,AlphaTauri,TSU_AlphaTauri,11.0,17.0,2.0,1.0,0.0,16.6,15.2,10
+2023,12,Spa-Francorchamps,GAS,Alpine,GAS_Alpine,12.0,12.0,16.0,0.0,0.4,11.8,14.0,11
+2023,12,Spa-Francorchamps,BOT,Alfa Romeo,BOT_Alfa Romeo,13.0,15.0,5.0,0.0,0.2,14.2,13.6,12
+2023,12,Spa-Francorchamps,ZHO,Alfa Romeo,ZHO_Alfa Romeo,17.0,16.0,4.0,0.0,0.4,14.4,13.6,13
+2023,12,Spa-Francorchamps,ALB,Williams,ALB_Williams,15.0,13.0,11.0,0.0,2.0,12.2,10.6,14
+2023,12,Spa-Francorchamps,MAG,Haas F1 Team,MAG_Haas F1 Team,16.0,18.0,2.0,0.0,0.0,17.4,17.8,15
+2023,12,Spa-Francorchamps,RIC,AlphaTauri,RIC_AlphaTauri,19.0,21.0,0.0,0.0,0.0,13.0,13.0,16
+2023,12,Spa-Francorchamps,SAR,Williams,SAR_Williams,18.0,19.0,0.0,0.0,0.0,18.0,16.4,17
+2023,12,Spa-Francorchamps,HUL,Haas F1 Team,HUL_Haas F1 Team,20.0,14.0,9.0,0.0,0.0,8.2,15.4,18
+2023,12,Spa-Francorchamps,SAI,Ferrari,SAI_Ferrari,4.0,6.0,87.0,0.0,6.6,6.4,6.8,19
+2023,12,Spa-Francorchamps,PIA,McLaren,PIA_McLaren,5.0,11.0,27.0,0.0,4.4,7.4,9.8,20
+2023,13,Zandvoort,VER,Red Bull Racing,VER_Red Bull Racing,1.0,1.0,314.0,25.0,25.6,2.2,1.0,1
+2023,13,Zandvoort,ALO,Aston Martin,ALO_Aston Martin,5.0,3.0,149.0,19.0,9.2,7.0,5.6,2
+2023,13,Zandvoort,GAS,Alpine,GAS_Alpine,12.0,12.0,22.0,15.0,0.2,12.2,14.2,3
+2023,13,Zandvoort,PER,Red Bull Racing,PER_Red Bull Racing,7.0,2.0,189.0,12.0,13.0,10.6,4.0,4
+2023,13,Zandvoort,SAI,Ferrari,SAI_Ferrari,6.0,7.0,92.0,10.0,4.6,6.8,9.6,5
+2023,13,Zandvoort,HAM,Mercedes,HAM_Mercedes,13.0,4.0,148.0,8.0,11.8,3.8,4.4,6
+2023,13,Zandvoort,NOR,McLaren,NOR_McLaren,2.0,8.0,69.0,6.0,10.8,4.6,5.6,7
+2023,13,Zandvoort,ALB,Williams,ALB_Williams,4.0,13.0,11.0,4.0,2.0,11.6,10.2,8
+2023,13,Zandvoort,PIA,McLaren,PIA_McLaren,8.0,11.0,34.0,2.0,4.4,6.6,11.2,9
+2023,13,Zandvoort,OCO,Alpine,OCO_Alpine,16.0,10.0,35.0,1.0,1.6,11.4,13.8,10
+2023,13,Zandvoort,STR,Aston Martin,STR_Aston Martin,11.0,9.0,47.0,0.0,1.4,11.6,10.2,11
+2023,13,Zandvoort,HUL,Haas F1 Team,HUL_Haas F1 Team,14.0,14.0,9.0,0.0,0.0,10.8,16.0,12
+2023,13,Zandvoort,LAW,AlphaTauri,LAW_AlphaTauri,19.0,0.0,0.0,0.0,0.0,10.0,10.0,13
+2023,13,Zandvoort,BOT,Alfa Romeo,BOT_Alfa Romeo,18.0,15.0,5.0,0.0,0.2,13.6,12.2,14
+2023,13,Zandvoort,TSU,AlphaTauri,TSU_AlphaTauri,17.0,17.0,3.0,0.0,0.2,15.8,14.8,15
+2023,13,Zandvoort,MAG,Haas F1 Team,MAG_Haas F1 Team,20.0,18.0,2.0,0.0,0.0,17.2,17.2,16
+2023,13,Zandvoort,RUS,Mercedes,RUS_Mercedes,3.0,6.0,99.0,0.0,6.4,9.4,8.6,17
+2023,13,Zandvoort,ZHO,Alfa Romeo,ZHO_Alfa Romeo,15.0,16.0,4.0,0.0,0.0,15.2,14.4,18
+2023,13,Zandvoort,LEC,Ferrari,LEC_Ferrari,9.0,5.0,99.0,0.0,10.6,4.6,5.0,19
+2023,13,Zandvoort,SAR,Williams,SAR_Williams,10.0,19.0,0.0,0.0,0.0,17.6,15.8,20
+2023,14,Monza,VER,Red Bull Racing,VER_Red Bull Racing,2.0,1.0,339.0,25.0,25.6,2.2,1.0,1
+2023,14,Monza,PER,Red Bull Racing,PER_Red Bull Racing,5.0,2.0,201.0,18.0,13.6,9.6,3.6,2
+2023,14,Monza,SAI,Ferrari,SAI_Ferrari,1.0,5.0,102.0,15.0,4.6,5.8,9.6,3
+2023,14,Monza,LEC,Ferrari,LEC_Ferrari,3.0,6.0,99.0,12.0,8.2,4.4,8.0,4
+2023,14,Monza,RUS,Mercedes,RUS_Mercedes,4.0,7.0,99.0,10.0,6.4,9.2,8.2,5
+2023,14,Monza,HAM,Mercedes,HAM_Mercedes,8.0,4.0,156.0,8.0,10.4,5.8,5.0,6
+2023,14,Monza,ALB,Williams,ALB_Williams,6.0,13.0,15.0,6.0,1.6,10.6,10.4,7
+2023,14,Monza,NOR,McLaren,NOR_McLaren,9.0,8.0,75.0,4.0,12.0,3.6,4.4,8
+2023,14,Monza,ALO,Aston Martin,ALO_Aston Martin,10.0,3.0,168.0,2.0,9.4,7.6,5.6,9
+2023,14,Monza,BOT,Alfa Romeo,BOT_Alfa Romeo,14.0,15.0,5.0,1.0,0.0,14.4,13.0,10
+2023,14,Monza,LAW,AlphaTauri,LAW_AlphaTauri,12.0,22.0,0.0,0.0,0.0,19.0,13.0,11
+2023,14,Monza,PIA,McLaren,PIA_McLaren,7.0,12.0,36.0,0.0,4.8,6.6,10.8,12
+2023,14,Monza,SAR,Williams,SAR_Williams,15.0,19.0,0.0,0.0,0.0,16.0,15.8,13
+2023,14,Monza,ZHO,Alfa Romeo,ZHO_Alfa Romeo,16.0,16.0,4.0,0.0,0.0,14.2,14.8,14
+2023,14,Monza,GAS,Alpine,GAS_Alpine,17.0,10.0,37.0,0.0,3.2,11.6,12.4,15
+2023,14,Monza,STR,Aston Martin,STR_Aston Martin,20.0,9.0,47.0,0.0,1.0,10.6,10.6,16
+2023,14,Monza,HUL,Haas F1 Team,HUL_Haas F1 Team,13.0,14.0,9.0,0.0,0.0,12.6,15.4,17
+2023,14,Monza,MAG,Haas F1 Team,MAG_Haas F1 Team,19.0,18.0,2.0,0.0,0.0,18.6,17.0,18
+2023,14,Monza,OCO,Alpine,OCO_Alpine,18.0,11.0,36.0,0.0,1.0,13.4,14.2,19
+2023,14,Monza,TSU,AlphaTauri,TSU_AlphaTauri,11.0,17.0,3.0,0.0,0.2,15.4,15.0,20
+2023,15,Marina Bay,SAI,Ferrari,SAI_Ferrari,1.0,5.0,117.0,25.0,6.0,5.4,9.0,1
+2023,15,Marina Bay,NOR,McLaren,NOR_McLaren,4.0,8.0,79.0,18.0,10.4,4.6,5.2,2
+2023,15,Marina Bay,HAM,Mercedes,HAM_Mercedes,5.0,4.0,164.0,16.0,11.2,6.4,4.6,3
+2023,15,Marina Bay,LEC,Ferrari,LEC_Ferrari,3.0,6.0,111.0,12.0,7.0,4.6,8.4,4
+2023,15,Marina Bay,VER,Red Bull Racing,VER_Red Bull Racing,11.0,1.0,364.0,10.0,25.4,2.4,1.0,5
+2023,15,Marina Bay,GAS,Alpine,GAS_Alpine,12.0,10.0,37.0,8.0,3.0,13.2,13.4,6
+2023,15,Marina Bay,PIA,McLaren,PIA_McLaren,17.0,12.0,36.0,6.0,4.8,5.4,10.0,7
+2023,15,Marina Bay,PER,Red Bull Racing,PER_Red Bull Racing,13.0,2.0,219.0,4.0,14.2,7.6,3.4,8
+2023,15,Marina Bay,LAW,AlphaTauri,LAW_AlphaTauri,10.0,20.0,0.0,2.0,0.0,15.5,12.0,9
+2023,15,Marina Bay,MAG,Haas F1 Team,MAG_Haas F1 Team,6.0,18.0,2.0,1.0,0.0,18.6,17.0,10
+2023,15,Marina Bay,ALB,Williams,ALB_Williams,14.0,13.0,21.0,0.0,2.8,9.8,9.6,11
+2023,15,Marina Bay,ZHO,Alfa Romeo,ZHO_Alfa Romeo,19.0,16.0,4.0,0.0,0.0,14.0,15.2,12
+2023,15,Marina Bay,HUL,Haas F1 Team,HUL_Haas F1 Team,9.0,14.0,9.0,0.0,0.0,13.6,14.8,13
+2023,15,Marina Bay,SAR,Williams,SAR_Williams,18.0,19.0,0.0,0.0,0.0,15.4,15.8,14
+2023,15,Marina Bay,ALO,Aston Martin,ALO_Aston Martin,7.0,3.0,170.0,0.0,7.8,8.2,6.4,15
+2023,15,Marina Bay,RUS,Mercedes,RUS_Mercedes,2.0,7.0,109.0,0.0,7.2,7.8,7.8,16
+2023,15,Marina Bay,BOT,Alfa Romeo,BOT_Alfa Romeo,16.0,15.0,6.0,0.0,0.2,14.4,12.0,17
+2023,15,Marina Bay,OCO,Alpine,OCO_Alpine,8.0,11.0,36.0,0.0,1.0,14.6,15.2,18
+2023,15,Marina Bay,TSU,AlphaTauri,TSU_AlphaTauri,15.0,17.0,3.0,0.0,0.2,14.4,15.2,19
+2023,15,Marina Bay,STR,Aston Martin,STR_Aston Martin,20.0,9.0,47.0,0.0,0.6,13.4,12.0,0
+2023,16,Suzuka,VER,Red Bull Racing,VER_Red Bull Racing,1.0,1.0,374.0,26.0,22.2,4.4,1.8,1
+2023,16,Suzuka,NOR,McLaren,NOR_McLaren,3.0,8.0,97.0,18.0,10.4,5.0,5.2,2
+2023,16,Suzuka,PIA,McLaren,PIA_McLaren,2.0,11.0,42.0,15.0,3.6,8.2,10.6,3
+2023,16,Suzuka,LEC,Ferrari,LEC_Ferrari,4.0,6.0,123.0,12.0,9.0,4.4,7.4,4
+2023,16,Suzuka,HAM,Mercedes,HAM_Mercedes,7.0,3.0,180.0,10.0,11.4,6.0,4.6,5
+2023,16,Suzuka,SAI,Ferrari,SAI_Ferrari,6.0,5.0,142.0,8.0,10.8,4.6,7.2,6
+2023,16,Suzuka,RUS,Mercedes,RUS_Mercedes,8.0,7.0,109.0,6.0,5.2,7.0,10.0,7
+2023,16,Suzuka,ALO,Aston Martin,ALO_Aston Martin,10.0,4.0,170.0,4.0,6.6,7.8,8.0,8
+2023,16,Suzuka,OCO,Alpine,OCO_Alpine,14.0,12.0,36.0,2.0,1.0,13.6,14.8,9
+2023,16,Suzuka,GAS,Alpine,GAS_Alpine,12.0,10.0,45.0,1.0,4.6,13.6,11.0,10
+2023,16,Suzuka,LAW,AlphaTauri,LAW_AlphaTauri,11.0,19.0,2.0,0.0,0.6666666666666666,13.666666666666666,11.0,11
+2023,16,Suzuka,TSU,AlphaTauri,TSU_AlphaTauri,9.0,17.0,3.0,0.0,0.2,14.2,15.8,12
+2023,16,Suzuka,ZHO,Alfa Romeo,ZHO_Alfa Romeo,19.0,16.0,4.0,0.0,0.0,14.4,14.6,13
+2023,16,Suzuka,HUL,Haas F1 Team,HUL_Haas F1 Team,18.0,14.0,9.0,0.0,0.0,13.2,14.8,14
+2023,16,Suzuka,MAG,Haas F1 Team,MAG_Haas F1 Team,15.0,18.0,3.0,0.0,0.2,16.0,15.2,15
+2023,16,Suzuka,ALB,Williams,ALB_Williams,13.0,13.0,21.0,0.0,2.0,11.0,10.2,16
+2023,16,Suzuka,SAR,Williams,SAR_Williams,20.0,20.0,0.0,0.0,0.0,16.2,16.4,17
+2023,16,Suzuka,STR,Aston Martin,STR_Aston Martin,17.0,9.0,47.0,0.0,0.6,15.0,9.2,18
+2023,16,Suzuka,PER,Red Bull Racing,PER_Red Bull Racing,5.0,2.0,223.0,0.0,13.4,7.2,3.8,19
+2023,16,Suzuka,BOT,Alfa Romeo,BOT_Alfa Romeo,16.0,15.0,6.0,0.0,0.2,13.6,13.0,20
+2023,17,Lusail,VER,Red Bull Racing,VER_Red Bull Racing,1.0,1.0,400.0,26.0,22.2,4.2,1.8,1
+2023,17,Lusail,PIA,McLaren,PIA_McLaren,6.0,9.0,57.0,18.0,4.6,7.8,10.2,2
+2023,17,Lusail,NOR,McLaren,NOR_McLaren,10.0,7.0,115.0,15.0,10.4,5.0,5.2,3
+2023,17,Lusail,RUS,Mercedes,RUS_Mercedes,2.0,8.0,115.0,12.0,4.8,5.0,10.2,4
+2023,17,Lusail,LEC,Ferrari,LEC_Ferrari,5.0,6.0,135.0,10.0,10.2,4.0,6.8,5
+2023,17,Lusail,ALO,Aston Martin,ALO_Aston Martin,4.0,4.0,174.0,8.0,7.0,8.2,7.8,6
+2023,17,Lusail,OCO,Alpine,OCO_Alpine,8.0,12.0,38.0,6.0,1.4,14.0,12.8,7
+2023,17,Lusail,BOT,Alfa Romeo,BOT_Alfa Romeo,9.0,15.0,6.0,4.0,0.2,15.4,14.6,8
+2023,17,Lusail,ZHO,Alfa Romeo,ZHO_Alfa Romeo,19.0,16.0,4.0,2.0,0.0,17.2,14.0,9
+2023,17,Lusail,PER,Red Bull Racing,PER_Red Bull Racing,20.0,2.0,223.0,1.0,10.4,6.4,7.0,10
+2023,17,Lusail,STR,Aston Martin,STR_Aston Martin,16.0,10.0,47.0,0.0,0.4,15.6,10.8,11
+2023,17,Lusail,GAS,Alpine,GAS_Alpine,7.0,11.0,46.0,0.0,4.8,13.0,9.0,12
+2023,17,Lusail,ALB,Williams,ALB_Williams,13.0,13.0,21.0,0.0,2.0,10.4,11.2,13
+2023,17,Lusail,MAG,Haas F1 Team,MAG_Haas F1 Team,18.0,18.0,3.0,0.0,0.2,15.2,14.8,14
+2023,17,Lusail,TSU,AlphaTauri,TSU_AlphaTauri,11.0,17.0,3.0,0.0,0.2,12.6,15.2,15
+2023,17,Lusail,HUL,Haas F1 Team,HUL_Haas F1 Team,14.0,14.0,9.0,0.0,0.0,14.8,14.8,16
+2023,17,Lusail,LAW,AlphaTauri,LAW_AlphaTauri,17.0,19.0,2.0,0.0,0.5,13.0,11.0,17
+2023,17,Lusail,SAR,Williams,SAR_Williams,15.0,20.0,0.0,0.0,0.0,16.2,16.2,18
+2023,17,Lusail,HAM,Mercedes,HAM_Mercedes,3.0,3.0,190.0,0.0,11.0,7.2,4.8,19
+2023,17,Lusail,SAI,Ferrari,SAI_Ferrari,12.0,5.0,150.0,0.0,11.6,3.6,6.8,20
+2023,18,Austin,VER,Red Bull Racing,VER_Red Bull Racing,6.0,1.0,433.0,25.0,22.4,3.2,1.8,1
+2023,18,Austin,NOR,McLaren,NOR_McLaren,2.0,7.0,136.0,18.0,12.2,5.6,4.4,2
+2023,18,Austin,SAI,Ferrari,SAI_Ferrari,4.0,5.0,153.0,15.0,11.6,5.2,7.0,3
+2023,18,Austin,PER,Red Bull Racing,PER_Red Bull Racing,9.0,2.0,224.0,12.0,7.0,10.0,8.6,4
+2023,18,Austin,RUS,Mercedes,RUS_Mercedes,5.0,8.0,132.0,10.0,5.6,3.8,9.8,5
+2023,18,Austin,GAS,Alpine,GAS_Alpine,7.0,11.0,46.0,8.0,4.8,12.0,9.2,6
+2023,18,Austin,STR,Aston Martin,STR_Aston Martin,20.0,10.0,47.0,6.0,0.0,16.8,11.2,7
+2023,18,Austin,TSU,AlphaTauri,TSU_AlphaTauri,11.0,17.0,3.0,5.0,0.0,12.6,16.2,8
+2023,18,Austin,ALB,Williams,ALB_Williams,15.0,13.0,23.0,2.0,2.0,10.0,11.0,9
+2023,18,Austin,SAR,Williams,SAR_Williams,16.0,20.0,0.0,1.0,0.0,15.6,16.4,10
+2023,18,Austin,HUL,Haas F1 Team,HUL_Haas F1 Team,18.0,15.0,9.0,0.0,0.0,13.6,14.4,11
+2023,18,Austin,BOT,Alfa Romeo,BOT_Alfa Romeo,13.0,14.0,10.0,0.0,1.0,14.6,13.8,12
+2023,18,Austin,ZHO,Alfa Romeo,ZHO_Alfa Romeo,12.0,16.0,6.0,0.0,0.4,17.6,13.2,13
+2023,18,Austin,MAG,Haas F1 Team,MAG_Haas F1 Team,17.0,18.0,3.0,0.0,0.2,15.6,14.6,14
+2023,18,Austin,RIC,AlphaTauri,RIC_AlphaTauri,14.0,22.0,0.0,0.0,0.0,16.0,14.5,15
+2023,18,Austin,ALO,Aston Martin,ALO_Aston Martin,19.0,4.0,183.0,0.0,6.6,7.2,8.0,16
+2023,18,Austin,PIA,McLaren,PIA_McLaren,10.0,9.0,83.0,0.0,8.2,8.0,6.6,17
+2023,18,Austin,OCO,Alpine,OCO_Alpine,8.0,12.0,44.0,0.0,1.8,12.8,12.6,18
+2023,18,Austin,HAM,Mercedes,HAM_Mercedes,3.0,3.0,194.0,0.0,8.4,7.2,7.8,19
+2023,18,Austin,LEC,Ferrari,LEC_Ferrari,1.0,6.0,145.0,0.0,9.2,4.8,7.2,20
+2023,19,Mexico City,VER,Red Bull Racing,VER_Red Bull Racing,3.0,1.0,466.0,25.0,22.4,4.2,1.8,1
+2023,19,Mexico City,HAM,Mercedes,HAM_Mercedes,6.0,3.0,201.0,19.0,6.8,5.2,10.4,2
+2023,19,Mexico City,LEC,Ferrari,LEC_Ferrari,1.0,7.0,151.0,15.0,9.2,3.2,7.4,3
+2023,19,Mexico City,SAI,Ferrari,SAI_Ferrari,2.0,5.0,171.0,12.0,12.6,4.8,6.6,4
+2023,19,Mexico City,NOR,McLaren,NOR_McLaren,17.0,6.0,159.0,10.0,14.6,5.6,3.4,5
+2023,19,Mexico City,RUS,Mercedes,RUS_Mercedes,8.0,8.0,143.0,8.0,7.6,4.2,7.4,6
+2023,19,Mexico City,RIC,AlphaTauri,RIC_AlphaTauri,4.0,22.0,0.0,6.0,0.0,15.333333333333334,14.666666666666666,7
+2023,19,Mexico City,PIA,McLaren,PIA_McLaren,7.0,9.0,83.0,4.0,7.8,8.4,8.2,8
+2023,19,Mexico City,ALB,Williams,ALB_Williams,14.0,13.0,25.0,2.0,1.6,12.2,11.2,9
+2023,19,Mexico City,OCO,Alpine,OCO_Alpine,15.0,12.0,44.0,1.0,1.6,11.2,14.2,10
+2023,19,Mexico City,GAS,Alpine,GAS_Alpine,11.0,10.0,56.0,0.0,3.4,11.0,9.8,11
+2023,19,Mexico City,TSU,AlphaTauri,TSU_AlphaTauri,18.0,16.0,8.0,0.0,1.0,11.4,14.8,12
+2023,19,Mexico City,HUL,Haas F1 Team,HUL_Haas F1 Team,12.0,15.0,9.0,0.0,0.0,14.4,14.2,13
+2023,19,Mexico City,ZHO,Alfa Romeo,ZHO_Alfa Romeo,10.0,17.0,6.0,0.0,0.4,17.0,12.2,14
+2023,19,Mexico City,BOT,Alfa Romeo,BOT_Alfa Romeo,9.0,14.0,10.0,0.0,1.0,13.6,13.4,15
+2023,19,Mexico City,SAR,Williams,SAR_Williams,19.0,20.0,1.0,0.0,0.2,16.8,14.4,16
+2023,19,Mexico City,STR,Aston Martin,STR_Aston Martin,20.0,11.0,53.0,0.0,1.2,18.6,10.4,17
+2023,19,Mexico City,ALO,Aston Martin,ALO_Aston Martin,13.0,4.0,183.0,0.0,2.8,10.0,10.8,18
+2023,19,Mexico City,MAG,Haas F1 Team,MAG_Haas F1 Team,16.0,18.0,3.0,0.0,0.2,15.0,14.2,19
+2023,19,Mexico City,PER,Red Bull Racing,PER_Red Bull Racing,5.0,2.0,240.0,0.0,7.0,10.4,8.6,20
+2023,20,São Paulo,VER,Red Bull Racing,VER_Red Bull Racing,1.0,1.0,491.0,25.0,22.4,4.4,1.8,1
+2023,20,São Paulo,NOR,McLaren,NOR_McLaren,6.0,6.0,169.0,19.0,15.8,7.2,2.8,2
+2023,20,São Paulo,ALO,Aston Martin,ALO_Aston Martin,4.0,5.0,183.0,15.0,2.4,10.6,12.6,3
+2023,20,São Paulo,PER,Red Bull Racing,PER_Red Bull Racing,9.0,2.0,240.0,12.0,3.4,10.4,12.2,4
+2023,20,São Paulo,STR,Aston Martin,STR_Aston Martin,3.0,11.0,53.0,10.0,1.2,18.6,10.6,5
+2023,20,São Paulo,SAI,Ferrari,SAI_Ferrari,7.0,4.0,183.0,8.0,12.0,5.0,6.8,6
+2023,20,São Paulo,GAS,Alpine,GAS_Alpine,15.0,10.0,56.0,6.0,3.4,9.8,9.0,7
+2023,20,São Paulo,HAM,Mercedes,HAM_Mercedes,5.0,3.0,220.0,4.0,9.0,4.8,9.6,8
+2023,20,São Paulo,TSU,AlphaTauri,TSU_AlphaTauri,16.0,16.0,8.0,2.0,1.0,12.8,13.2,9
+2023,20,São Paulo,OCO,Alpine,OCO_Alpine,14.0,12.0,45.0,1.0,1.8,10.6,12.4,10
+2023,20,São Paulo,SAR,Williams,SAR_Williams,19.0,21.0,1.0,0.0,0.2,17.6,15.0,11
+2023,20,São Paulo,HUL,Haas F1 Team,HUL_Haas F1 Team,11.0,15.0,9.0,0.0,0.0,14.2,13.4,12
+2023,20,São Paulo,RIC,AlphaTauri,RIC_AlphaTauri,17.0,17.0,6.0,0.0,1.5,12.5,12.75,13
+2023,20,São Paulo,PIA,McLaren,PIA_McLaren,10.0,9.0,87.0,0.0,8.6,8.4,7.4,14
+2023,20,São Paulo,RUS,Mercedes,RUS_Mercedes,8.0,8.0,151.0,0.0,7.2,5.0,7.6,15
+2023,20,São Paulo,BOT,Alfa Romeo,BOT_Alfa Romeo,18.0,14.0,10.0,0.0,0.8,12.6,14.4,16
+2023,20,São Paulo,ZHO,Alfa Romeo,ZHO_Alfa Romeo,20.0,18.0,6.0,0.0,0.4,15.8,12.2,17
+2023,20,São Paulo,MAG,Haas F1 Team,MAG_Haas F1 Team,12.0,19.0,3.0,0.0,0.2,14.4,14.4,18
+2023,20,São Paulo,ALB,Williams,ALB_Williams,13.0,13.0,27.0,0.0,0.8,13.8,11.6,19
+2023,20,São Paulo,LEC,Ferrari,LEC_Ferrari,2.0,7.0,166.0,0.0,9.8,2.8,7.2,20
+2023,21,Las Vegas,VER,Red Bull Racing,VER_Red Bull Racing,2.0,1.0,524.0,25.0,25.4,2.4,1.0,1
+2023,21,Las Vegas,LEC,Ferrari,LEC_Ferrari,1.0,7.0,170.0,18.0,7.4,2.6,10.4,2
+2023,21,Las Vegas,PER,Red Bull Racing,PER_Red Bull Racing,11.0,2.0,258.0,15.0,5.0,9.6,11.4,3
+2023,21,Las Vegas,OCO,Alpine,OCO_Alpine,16.0,12.0,46.0,12.0,2.0,11.8,10.8,4
+2023,21,Las Vegas,STR,Aston Martin,STR_Aston Martin,19.0,10.0,63.0,10.0,3.2,15.2,11.6,5
+2023,21,Las Vegas,SAI,Ferrari,SAI_Ferrari,12.0,6.0,192.0,8.0,8.6,6.2,7.8,6
+2023,21,Las Vegas,HAM,Mercedes,HAM_Mercedes,10.0,3.0,226.0,6.0,6.6,4.8,10.6,7
+2023,21,Las Vegas,RUS,Mercedes,RUS_Mercedes,3.0,8.0,156.0,4.0,7.2,6.2,7.4,8
+2023,21,Las Vegas,ALO,Aston Martin,ALO_Aston Martin,9.0,4.0,198.0,2.0,5.4,10.0,10.2,9
+2023,21,Las Vegas,PIA,McLaren,PIA_McLaren,18.0,9.0,87.0,2.0,7.4,7.0,8.8,10
+2023,21,Las Vegas,GAS,Alpine,GAS_Alpine,4.0,11.0,62.0,0.0,3.0,10.4,9.2,11
+2023,21,Las Vegas,ALB,Williams,ALB_Williams,5.0,13.0,27.0,0.0,0.8,13.6,13.2,12
+2023,21,Las Vegas,MAG,Haas F1 Team,MAG_Haas F1 Team,8.0,19.0,3.0,0.0,0.0,15.6,16.0,13
+2023,21,Las Vegas,RIC,AlphaTauri,RIC_AlphaTauri,14.0,17.0,6.0,0.0,1.2,13.4,12.8,14
+2023,21,Las Vegas,ZHO,Alfa Romeo,ZHO_Alfa Romeo,17.0,18.0,6.0,0.0,0.4,16.0,13.2,15
+2023,21,Las Vegas,SAR,Williams,SAR_Williams,6.0,21.0,1.0,0.0,0.2,17.8,14.4,16
+2023,21,Las Vegas,BOT,Alfa Romeo,BOT_Alfa Romeo,7.0,15.0,10.0,0.0,0.8,13.0,14.2,17
+2023,21,Las Vegas,TSU,AlphaTauri,TSU_AlphaTauri,20.0,14.0,13.0,0.0,1.4,13.0,11.2,18
+2023,21,Las Vegas,HUL,Haas F1 Team,HUL_Haas F1 Team,13.0,16.0,9.0,0.0,0.0,14.6,13.2,19
+2023,21,Las Vegas,NOR,McLaren,NOR_McLaren,15.0,5.0,195.0,0.0,16.0,7.6,2.8,20
+2023,22,Yas Island,VER,Red Bull Racing,VER_Red Bull Racing,1.0,1.0,549.0,26.0,25.2,2.6,1.0,1
+2023,22,Yas Island,LEC,Ferrari,LEC_Ferrari,2.0,7.0,188.0,18.0,8.6,2.0,10.0,2
+2023,22,Yas Island,RUS,Mercedes,RUS_Mercedes,4.0,8.0,160.0,15.0,6.8,5.2,7.6,3
+2023,22,Yas Island,PER,Red Bull Racing,PER_Red Bull Racing,9.0,2.0,273.0,12.0,8.0,10.8,8.2,4
+2023,22,Yas Island,NOR,McLaren,NOR_McLaren,5.0,6.0,195.0,10.0,12.4,10.0,6.4,5
+2023,22,Yas Island,PIA,McLaren,PIA_McLaren,3.0,9.0,89.0,8.0,4.8,10.2,10.2,6
+2023,22,Yas Island,ALO,Aston Martin,ALO_Aston Martin,7.0,5.0,200.0,6.0,5.0,9.8,10.4,7
+2023,22,Yas Island,TSU,AlphaTauri,TSU_AlphaTauri,6.0,14.0,13.0,4.0,1.4,15.2,12.4,8
+2023,22,Yas Island,HAM,Mercedes,HAM_Mercedes,11.0,3.0,232.0,2.0,5.8,5.4,11.0,9
+2023,22,Yas Island,STR,Aston Martin,STR_Aston Martin,13.0,10.0,73.0,1.0,5.2,15.6,9.0,10
+2023,22,Yas Island,RIC,AlphaTauri,RIC_AlphaTauri,15.0,17.0,6.0,0.0,1.2,13.6,13.0,11
+2023,22,Yas Island,OCO,Alpine,OCO_Alpine,12.0,12.0,58.0,0.0,4.0,12.2,9.8,12
+2023,22,Yas Island,GAS,Alpine,GAS_Alpine,10.0,11.0,62.0,0.0,2.8,8.8,9.4,13
+2023,22,Yas Island,ALB,Williams,ALB_Williams,14.0,13.0,27.0,0.0,0.8,12.0,12.4,14
+2023,22,Yas Island,HUL,Haas F1 Team,HUL_Haas F1 Team,8.0,16.0,9.0,0.0,0.0,13.6,14.2,15
+2023,22,Yas Island,SAR,Williams,SAR_Williams,20.0,21.0,1.0,0.0,0.2,15.0,14.2,16
+2023,22,Yas Island,ZHO,Alfa Romeo,ZHO_Alfa Romeo,19.0,18.0,6.0,0.0,0.4,15.6,13.6,17
+2023,22,Yas Island,SAI,Ferrari,SAI_Ferrari,16.0,4.0,200.0,0.0,8.6,7.4,7.8,18
+2023,22,Yas Island,BOT,Alfa Romeo,BOT_Alfa Romeo,18.0,15.0,10.0,0.0,0.8,11.2,13.6,19
+2023,22,Yas Island,MAG,Haas F1 Team,MAG_Haas F1 Team,17.0,19.0,3.0,0.0,0.0,14.2,15.6,20
+2024,1,Sakhir,VER,Red Bull Racing,VER_Red Bull Racing,1.0,0.0,0.0,26.0,25.2,2.6,1.0,1
+2024,1,Sakhir,PER,Red Bull Racing,PER_Red Bull Racing,5.0,0.0,0.0,18.0,10.2,8.6,7.0,2
+2024,1,Sakhir,SAI,Ferrari,SAI_Ferrari,4.0,0.0,0.0,15.0,8.6,8.2,7.4,3
+2024,1,Sakhir,LEC,Ferrari,LEC_Ferrari,2.0,0.0,0.0,12.0,10.2,1.4,9.4,4
+2024,1,Sakhir,RUS,Mercedes,RUS_Mercedes,3.0,0.0,0.0,10.0,7.4,5.6,7.4,5
+2024,1,Sakhir,NOR,McLaren,NOR_McLaren,7.0,0.0,0.0,8.0,11.4,9.0,6.8,6
+2024,1,Sakhir,HAM,Mercedes,HAM_Mercedes,9.0,0.0,0.0,6.0,6.2,7.0,9.0,7
+2024,1,Sakhir,PIA,McLaren,PIA_McLaren,8.0,0.0,0.0,4.0,2.8,9.6,11.0,8
+2024,1,Sakhir,ALO,Aston Martin,ALO_Aston Martin,6.0,0.0,0.0,2.0,4.6,10.4,10.6,9
+2024,1,Sakhir,STR,Aston Martin,STR_Aston Martin,12.0,0.0,0.0,1.0,5.4,15.0,8.8,10
+2024,1,Sakhir,ZHO,Kick Sauber,ZHO_Kick Sauber,17.0,0.0,0.0,0.0,0.0,15.6,15.2,11
+2024,1,Sakhir,MAG,Haas F1 Team,MAG_Haas F1 Team,15.0,0.0,0.0,0.0,0.0,14.0,16.8,12
+2024,1,Sakhir,RIC,RB,RIC_RB,14.0,0.0,0.0,0.0,1.2,12.8,12.0,13
+2024,1,Sakhir,TSU,RB,TSU_RB,11.0,0.0,0.0,0.0,2.2,14.2,11.0,14
+2024,1,Sakhir,ALB,Williams,ALB_Williams,13.0,0.0,0.0,0.0,0.8,12.2,12.6,15
+2024,1,Sakhir,HUL,Haas F1 Team,HUL_Haas F1 Team,10.0,0.0,0.0,0.0,0.0,12.4,14.0,16
+2024,1,Sakhir,OCO,Alpine,OCO_Alpine,19.0,0.0,0.0,0.0,2.8,13.0,10.8,17
+2024,1,Sakhir,GAS,Alpine,GAS_Alpine,20.0,0.0,0.0,0.0,2.8,9.4,9.6,18
+2024,1,Sakhir,BOT,Kick Sauber,BOT_Kick Sauber,16.0,0.0,0.0,0.0,0.0,13.0,15.8,19
+2024,1,Sakhir,SAR,Williams,SAR_Williams,18.0,0.0,0.0,0.0,0.2,16.0,13.8,20
+2024,2,Jeddah,VER,Red Bull Racing,VER_Red Bull Racing,1.0,1.0,26.0,25.0,25.4,1.6,1.0,1
+2024,2,Jeddah,PER,Red Bull Racing,PER_Red Bull Racing,3.0,2.0,18.0,18.0,11.4,7.8,6.6,2
+2024,2,Jeddah,LEC,Ferrari,LEC_Ferrari,2.0,4.0,12.0,16.0,12.6,1.6,6.2,3
+2024,2,Jeddah,PIA,McLaren,PIA_McLaren,5.0,8.0,4.0,12.0,3.6,9.2,9.2,4
+2024,2,Jeddah,ALO,Aston Martin,ALO_Aston Martin,4.0,9.0,2.0,10.0,5.0,7.8,9.2,5
+2024,2,Jeddah,RUS,Mercedes,RUS_Mercedes,7.0,5.0,10.0,8.0,7.4,5.2,7.4,6
+2024,2,Jeddah,BEA,Ferrari,BEA_Ferrari,11.0,0.0,0.0,6.0,0.0,10.0,10.0,7
+2024,2,Jeddah,NOR,McLaren,NOR_McLaren,6.0,6.0,8.0,4.0,9.4,10.0,7.6,8
+2024,2,Jeddah,HAM,Mercedes,HAM_Mercedes,8.0,7.0,6.0,2.0,7.4,8.2,6.6,9
+2024,2,Jeddah,HUL,Haas F1 Team,HUL_Haas F1 Team,15.0,16.0,0.0,1.0,0.0,10.8,15.0,10
+2024,2,Jeddah,ALB,Williams,ALB_Williams,12.0,15.0,0.0,0.0,0.4,11.8,13.8,11
+2024,2,Jeddah,MAG,Haas F1 Team,MAG_Haas F1 Team,13.0,12.0,0.0,0.0,0.0,13.6,16.4,12
+2024,2,Jeddah,OCO,Alpine,OCO_Alpine,17.0,17.0,0.0,0.0,2.8,15.2,10.6,13
+2024,2,Jeddah,SAR,Williams,SAR_Williams,19.0,20.0,0.0,0.0,0.0,16.4,15.8,14
+2024,2,Jeddah,TSU,RB,TSU_RB,9.0,14.0,0.0,0.0,1.2,14.2,12.2,15
+2024,2,Jeddah,RIC,RB,RIC_RB,14.0,13.0,0.0,0.0,1.2,12.8,11.6,16
+2024,2,Jeddah,BOT,Kick Sauber,BOT_Kick Sauber,16.0,19.0,0.0,0.0,0.0,13.6,17.2,17
+2024,2,Jeddah,ZHO,Kick Sauber,ZHO_Kick Sauber,20.0,11.0,0.0,0.0,0.0,16.6,14.8,18
+2024,2,Jeddah,STR,Aston Martin,STR_Aston Martin,10.0,10.0,1.0,0.0,4.4,13.4,9.4,19
+2024,2,Jeddah,GAS,Alpine,GAS_Alpine,18.0,18.0,0.0,0.0,1.2,12.0,12.0,20
+2024,3,Melbourne,SAI,Ferrari,SAI_Ferrari,2.0,6.0,15.0,25.0,8.6,8.2,7.4,1
+2024,3,Melbourne,LEC,Ferrari,LEC_Ferrari,4.0,3.0,28.0,19.0,12.8,1.8,6.2,2
+2024,3,Melbourne,NOR,McLaren,NOR_McLaren,3.0,8.0,12.0,15.0,8.2,7.8,8.2,3
+2024,3,Melbourne,PIA,McLaren,PIA_McLaren,5.0,5.0,16.0,12.0,5.2,8.8,8.4,4
+2024,3,Melbourne,PER,Red Bull Racing,PER_Red Bull Racing,6.0,2.0,36.0,10.0,15.0,7.4,3.0,5
+2024,3,Melbourne,STR,Aston Martin,STR_Aston Martin,9.0,12.0,1.0,8.0,4.4,11.4,9.8,6
+2024,3,Melbourne,TSU,RB,TSU_RB,8.0,18.0,0.0,6.0,1.2,12.4,12.8,7
+2024,3,Melbourne,ALO,Aston Martin,ALO_Aston Martin,10.0,7.0,12.0,4.0,7.0,6.0,6.6,8
+2024,3,Melbourne,HUL,Haas F1 Team,HUL_Haas F1 Team,16.0,11.0,1.0,2.0,0.2,11.4,14.4,9
+2024,3,Melbourne,MAG,Haas F1 Team,MAG_Haas F1 Team,14.0,15.0,0.0,1.0,0.0,13.0,15.0,10
+2024,3,Melbourne,ALB,Williams,ALB_Williams,12.0,13.0,0.0,0.0,0.0,11.4,14.2,11
+2024,3,Melbourne,RIC,RB,RIC_RB,18.0,16.0,0.0,0.0,0.0,14.8,13.4,12
+2024,3,Melbourne,GAS,Alpine,GAS_Alpine,17.0,21.0,0.0,0.0,1.2,13.4,13.8,13
+2024,3,Melbourne,BOT,Kick Sauber,BOT_Kick Sauber,13.0,20.0,0.0,0.0,0.0,15.0,17.6,14
+2024,3,Melbourne,ZHO,Kick Sauber,ZHO_Kick Sauber,19.0,14.0,0.0,0.0,0.0,18.6,15.6,15
+2024,3,Melbourne,OCO,Alpine,OCO_Alpine,15.0,17.0,0.0,0.0,2.6,15.6,11.2,16
+2024,3,Melbourne,RUS,Mercedes,RUS_Mercedes,7.0,4.0,18.0,0.0,7.4,5.0,7.4,17
+2024,3,Melbourne,HAM,Mercedes,HAM_Mercedes,11.0,9.0,8.0,0.0,4.0,8.6,8.0,18
+2024,3,Melbourne,VER,Red Bull Racing,VER_Red Bull Racing,1.0,1.0,51.0,0.0,25.4,1.2,1.0,19
+2024,4,Suzuka,VER,Red Bull Racing,VER_Red Bull Racing,1.0,1.0,51.0,26.0,20.4,1.2,4.6,1
+2024,4,Suzuka,PER,Red Bull Racing,PER_Red Bull Racing,2.0,3.0,46.0,18.0,14.6,6.8,3.2,2
+2024,4,Suzuka,SAI,Ferrari,SAI_Ferrari,4.0,4.0,40.0,15.0,11.2,8.2,6.8,3
+2024,4,Suzuka,LEC,Ferrari,LEC_Ferrari,8.0,2.0,47.0,12.0,16.6,2.2,2.6,4
+2024,4,Suzuka,NOR,McLaren,NOR_McLaren,3.0,6.0,27.0,10.0,7.4,7.2,8.4,5
+2024,4,Suzuka,ALO,Aston Martin,ALO_Aston Martin,5.0,8.0,16.0,8.0,4.8,7.2,7.6,6
+2024,4,Suzuka,RUS,Mercedes,RUS_Mercedes,9.0,7.0,18.0,6.0,7.4,4.8,7.8,7
+2024,4,Suzuka,PIA,McLaren,PIA_McLaren,6.0,5.0,28.0,4.0,7.6,7.8,6.4,8
+2024,4,Suzuka,HAM,Mercedes,HAM_Mercedes,7.0,10.0,8.0,2.0,3.2,9.8,10.0,9
+2024,4,Suzuka,TSU,RB,TSU_RB,10.0,11.0,6.0,1.0,2.0,10.8,12.4,10
+2024,4,Suzuka,HUL,Haas F1 Team,HUL_Haas F1 Team,12.0,13.0,3.0,0.0,0.6,12.4,13.8,11
+2024,4,Suzuka,STR,Aston Martin,STR_Aston Martin,16.0,9.0,9.0,0.0,4.0,12.6,10.0,12
+2024,4,Suzuka,MAG,Haas F1 Team,MAG_Haas F1 Team,18.0,14.0,1.0,0.0,0.2,13.4,13.4,13
+2024,4,Suzuka,BOT,Kick Sauber,BOT_Kick Sauber,13.0,20.0,0.0,0.0,0.0,14.0,17.2,14
+2024,4,Suzuka,OCO,Alpine,OCO_Alpine,15.0,18.0,0.0,0.0,2.4,15.8,12.4,15
+2024,4,Suzuka,GAS,Alpine,GAS_Alpine,17.0,19.0,0.0,0.0,0.0,13.8,15.0,16
+2024,4,Suzuka,SAR,Williams,SAR_Williams,19.0,21.0,0.0,0.0,0.0,16.4,15.4,17
+2024,4,Suzuka,ZHO,Kick Sauber,ZHO_Kick Sauber,20.0,16.0,0.0,0.0,0.0,18.4,15.2,18
+2024,4,Suzuka,RIC,RB,RIC_RB,11.0,17.0,0.0,0.0,0.0,15.0,13.2,19
+2024,4,Suzuka,ALB,Williams,ALB_Williams,14.0,15.0,0.0,0.0,0.0,11.2,12.6,20
+2024,5,Shanghai,VER,Red Bull Racing,VER_Red Bull Racing,1.0,1.0,77.0,25.0,20.6,1.0,4.6,1
+2024,5,Shanghai,NOR,McLaren,NOR_McLaren,4.0,5.0,37.0,18.0,9.4,4.8,5.4,2
+2024,5,Shanghai,PER,Red Bull Racing,PER_Red Bull Racing,2.0,2.0,64.0,15.0,15.2,5.0,3.0,3
+2024,5,Shanghai,LEC,Ferrari,LEC_Ferrari,6.0,3.0,59.0,12.0,15.4,3.6,3.0,4
+2024,5,Shanghai,SAI,Ferrari,SAI_Ferrari,7.0,4.0,55.0,10.0,12.6,7.6,6.2,5
+2024,5,Shanghai,RUS,Mercedes,RUS_Mercedes,8.0,7.0,24.0,8.0,7.8,6.0,7.6,6
+2024,5,Shanghai,ALO,Aston Martin,ALO_Aston Martin,3.0,8.0,24.0,7.0,6.0,6.4,7.0,7
+2024,5,Shanghai,PIA,McLaren,PIA_McLaren,5.0,6.0,32.0,4.0,8.0,5.4,6.0,8
+2024,5,Shanghai,HAM,Mercedes,HAM_Mercedes,18.0,9.0,10.0,2.0,2.4,9.2,10.4,9
+2024,5,Shanghai,HUL,Haas F1 Team,HUL_Haas F1 Team,9.0,13.0,3.0,1.0,0.6,12.2,12.2,10
+2024,5,Shanghai,OCO,Alpine,OCO_Alpine,13.0,18.0,0.0,0.0,0.0,15.6,14.6,11
+2024,5,Shanghai,ALB,Williams,ALB_Williams,14.0,15.0,0.0,0.0,0.0,13.0,14.2,12
+2024,5,Shanghai,GAS,Alpine,GAS_Alpine,15.0,19.0,0.0,0.0,0.0,16.4,16.0,13
+2024,5,Shanghai,ZHO,Kick Sauber,ZHO_Kick Sauber,16.0,16.0,0.0,0.0,0.0,19.0,15.8,14
+2024,5,Shanghai,STR,Aston Martin,STR_Aston Martin,11.0,10.0,9.0,0.0,2.0,12.0,11.4,15
+2024,5,Shanghai,MAG,Haas F1 Team,MAG_Haas F1 Team,17.0,14.0,1.0,0.0,0.2,15.4,13.4,16
+2024,5,Shanghai,SAR,Williams,SAR_Williams,20.0,21.0,0.0,0.0,0.0,16.4,16.6,17
+2024,5,Shanghai,RIC,RB,RIC_RB,12.0,17.0,0.0,0.0,0.0,14.4,14.2,18
+2024,5,Shanghai,TSU,RB,TSU_RB,19.0,11.0,7.0,0.0,2.2,8.8,10.8,19
+2024,5,Shanghai,BOT,Kick Sauber,BOT_Kick Sauber,10.0,20.0,0.0,0.0,0.0,15.2,16.6,20
+2024,6,Miami,NOR,McLaren,NOR_McLaren,5.0,5.0,58.0,25.0,11.0,4.6,4.8,1
+2024,6,Miami,VER,Red Bull Racing,VER_Red Bull Racing,1.0,1.0,110.0,18.0,20.4,1.0,4.6,2
+2024,6,Miami,LEC,Ferrari,LEC_Ferrari,2.0,3.0,76.0,15.0,14.2,4.4,3.4,3
+2024,6,Miami,PER,Red Bull Racing,PER_Red Bull Racing,4.0,2.0,85.0,12.0,15.8,3.6,2.8,4
+2024,6,Miami,SAI,Ferrari,SAI_Ferrari,3.0,4.0,69.0,10.0,13.0,6.6,6.0,5
+2024,6,Miami,HAM,Mercedes,HAM_Mercedes,8.0,9.0,19.0,8.0,2.4,10.6,10.4,6
+2024,6,Miami,TSU,RB,TSU_RB,10.0,11.0,7.0,6.0,1.4,11.4,13.0,7
+2024,6,Miami,RUS,Mercedes,RUS_Mercedes,7.0,7.0,33.0,4.0,6.4,6.8,8.2,8
+2024,6,Miami,ALO,Aston Martin,ALO_Aston Martin,15.0,8.0,31.0,2.0,6.2,5.6,7.0,9
+2024,6,Miami,OCO,Alpine,OCO_Alpine,13.0,16.0,0.0,1.0,0.0,15.8,14.4,10
+2024,6,Miami,HUL,Haas F1 Team,HUL_Haas F1 Team,9.0,13.0,4.0,0.0,0.8,12.4,11.2,11
+2024,6,Miami,GAS,Alpine,GAS_Alpine,12.0,19.0,0.0,0.0,0.0,17.4,16.0,12
+2024,6,Miami,PIA,McLaren,PIA_McLaren,6.0,6.0,38.0,0.0,7.2,5.8,6.4,13
+2024,6,Miami,ZHO,Kick Sauber,ZHO_Kick Sauber,19.0,17.0,0.0,0.0,0.0,18.4,15.2,14
+2024,6,Miami,RIC,RB,RIC_RB,20.0,18.0,0.0,0.0,0.0,13.8,15.6,15
+2024,6,Miami,BOT,Kick Sauber,BOT_Kick Sauber,16.0,20.0,0.0,0.0,0.0,13.6,16.8,16
+2024,6,Miami,STR,Aston Martin,STR_Aston Martin,11.0,10.0,9.0,0.0,1.8,11.6,12.4,17
+2024,6,Miami,ALB,Williams,ALB_Williams,14.0,15.0,0.0,0.0,0.0,13.0,13.8,18
+2024,6,Miami,MAG,Haas F1 Team,MAG_Haas F1 Team,18.0,14.0,1.0,0.0,0.2,15.4,12.6,19
+2024,6,Miami,SAR,Williams,SAR_Williams,17.0,21.0,0.0,0.0,0.0,19.2,16.8,20
+2024,7,Imola,VER,Red Bull Racing,VER_Red Bull Racing,1.0,1.0,136.0,25.0,18.8,1.0,4.8,1
+2024,7,Imola,NOR,McLaren,NOR_McLaren,2.0,4.0,83.0,18.0,14.4,4.2,3.8,2
+2024,7,Imola,LEC,Ferrari,LEC_Ferrari,3.0,3.0,98.0,15.0,14.8,4.4,3.2,3
+2024,7,Imola,PIA,McLaren,PIA_McLaren,5.0,6.0,41.0,12.0,6.4,5.4,7.4,4
+2024,7,Imola,SAI,Ferrari,SAI_Ferrari,4.0,5.0,83.0,10.0,15.0,4.0,3.4,5
+2024,7,Imola,HAM,Mercedes,HAM_Mercedes,8.0,9.0,27.0,8.0,2.8,10.4,10.2,6
+2024,7,Imola,RUS,Mercedes,RUS_Mercedes,6.0,7.0,37.0,7.0,5.2,7.6,8.8,7
+2024,7,Imola,PER,Red Bull Racing,PER_Red Bull Racing,11.0,2.0,103.0,4.0,14.6,3.4,3.2,8
+2024,7,Imola,STR,Aston Martin,STR_Aston Martin,13.0,11.0,9.0,2.0,1.6,11.4,13.8,9
+2024,7,Imola,TSU,RB,TSU_RB,7.0,10.0,14.0,1.0,2.6,11.2,11.6,10
+2024,7,Imola,HUL,Haas F1 Team,HUL_Haas F1 Team,10.0,13.0,6.0,0.0,0.8,12.2,10.2,11
+2024,7,Imola,MAG,Haas F1 Team,MAG_Haas F1 Team,18.0,16.0,1.0,0.0,0.2,16.0,14.0,12
+2024,7,Imola,RIC,RB,RIC_RB,9.0,14.0,5.0,0.0,0.0,15.0,16.0,13
+2024,7,Imola,OCO,Alpine,OCO_Alpine,12.0,15.0,1.0,0.0,0.2,14.6,13.0,14
+2024,7,Imola,ZHO,Kick Sauber,ZHO_Kick Sauber,17.0,18.0,0.0,0.0,0.0,18.8,15.8,15
+2024,7,Imola,GAS,Alpine,GAS_Alpine,15.0,19.0,0.0,0.0,0.0,15.8,14.8,16
+2024,7,Imola,SAR,Williams,SAR_Williams,19.0,21.0,0.0,0.0,0.0,18.6,17.6,17
+2024,7,Imola,BOT,Kick Sauber,BOT_Kick Sauber,16.0,20.0,0.0,0.0,0.0,13.6,16.2,18
+2024,7,Imola,ALO,Aston Martin,ALO_Aston Martin,20.0,8.0,33.0,0.0,6.2,7.4,7.0,19
+2024,7,Imola,ALB,Williams,ALB_Williams,14.0,17.0,0.0,0.0,0.0,13.2,14.4,20
+2024,8,Monaco,LEC,Ferrari,LEC_Ferrari,1.0,2.0,113.0,25.0,14.6,4.6,3.2,1
+2024,8,Monaco,PIA,McLaren,PIA_McLaren,2.0,6.0,53.0,18.0,6.4,5.4,7.4,2
+2024,8,Monaco,SAI,Ferrari,SAI_Ferrari,3.0,5.0,93.0,15.0,14.0,4.0,3.8,3
+2024,8,Monaco,NOR,McLaren,NOR_McLaren,4.0,4.0,101.0,12.0,17.2,3.4,2.6,4
+2024,8,Monaco,RUS,Mercedes,RUS_Mercedes,5.0,7.0,44.0,10.0,5.0,7.4,9.0,5
+2024,8,Monaco,VER,Red Bull Racing,VER_Red Bull Racing,6.0,1.0,161.0,8.0,18.8,1.0,4.8,6
+2024,8,Monaco,HAM,Mercedes,HAM_Mercedes,7.0,8.0,35.0,7.0,4.0,10.4,9.6,7
+2024,8,Monaco,TSU,RB,TSU_RB,8.0,10.0,15.0,4.0,2.8,10.8,10.6,8
+2024,8,Monaco,ALB,Williams,ALB_Williams,9.0,17.0,0.0,2.0,0.0,13.6,16.2,9
+2024,8,Monaco,GAS,Alpine,GAS_Alpine,10.0,19.0,0.0,1.0,0.0,15.2,14.0,10
+2024,8,Monaco,ALO,Aston Martin,ALO_Aston Martin,14.0,9.0,33.0,0.0,4.2,10.6,9.8,11
+2024,8,Monaco,RIC,RB,RIC_RB,12.0,14.0,5.0,0.0,0.0,14.0,15.4,12
+2024,8,Monaco,BOT,Kick Sauber,BOT_Kick Sauber,17.0,20.0,0.0,0.0,0.0,13.6,16.4,13
+2024,8,Monaco,STR,Aston Martin,STR_Aston Martin,13.0,11.0,11.0,0.0,2.0,12.0,11.8,14
+2024,8,Monaco,SAR,Williams,SAR_Williams,15.0,21.0,0.0,0.0,0.0,18.8,17.0,15
+2024,8,Monaco,ZHO,Kick Sauber,ZHO_Kick Sauber,18.0,18.0,0.0,0.0,0.0,18.2,15.2,16
+2024,8,Monaco,OCO,Alpine,OCO_Alpine,11.0,15.0,1.0,0.0,0.2,13.6,13.2,17
+2024,8,Monaco,PER,Red Bull Racing,PER_Red Bull Racing,16.0,3.0,107.0,0.0,11.8,5.0,4.4,18
+2024,8,Monaco,HUL,Haas F1 Team,HUL_Haas F1 Team,19.0,13.0,6.0,0.0,0.6,11.2,10.4,19
+2024,8,Monaco,MAG,Haas F1 Team,MAG_Haas F1 Team,20.0,16.0,1.0,0.0,0.2,17.0,14.0,20
+2024,9,Montréal,VER,Red Bull Racing,VER_Red Bull Racing,2.0,1.0,169.0,25.0,20.4,2.0,2.2,1
+2024,9,Montréal,NOR,McLaren,NOR_McLaren,3.0,3.0,113.0,18.0,16.6,3.6,2.8,2
+2024,9,Montréal,RUS,Mercedes,RUS_Mercedes,1.0,7.0,54.0,15.0,7.0,7.0,6.6,3
+2024,9,Montréal,HAM,Mercedes,HAM_Mercedes,7.0,8.0,42.0,13.0,5.4,9.6,7.4,4
+2024,9,Montréal,PIA,McLaren,PIA_McLaren,4.0,6.0,71.0,10.0,7.6,4.8,7.0,5
+2024,9,Montréal,ALO,Aston Martin,ALO_Aston Martin,6.0,9.0,33.0,8.0,3.4,11.4,10.4,6
+2024,9,Montréal,STR,Aston Martin,STR_Aston Martin,9.0,11.0,11.0,6.0,0.4,12.8,13.4,7
+2024,9,Montréal,RIC,RB,RIC_RB,5.0,14.0,5.0,4.0,0.0,12.8,15.4,8
+2024,9,Montréal,GAS,Alpine,GAS_Alpine,15.0,18.0,1.0,2.0,0.2,13.8,13.4,9
+2024,9,Montréal,OCO,Alpine,OCO_Alpine,18.0,16.0,1.0,1.0,0.2,12.8,13.4,10
+2024,9,Montréal,HUL,Haas F1 Team,HUL_Haas F1 Team,17.0,13.0,6.0,0.0,0.2,11.8,12.4,11
+2024,9,Montréal,MAG,Haas F1 Team,MAG_Haas F1 Team,14.0,17.0,1.0,0.0,0.0,18.2,16.0,12
+2024,9,Montréal,BOT,Kick Sauber,BOT_Kick Sauber,19.0,20.0,0.0,0.0,0.0,14.4,16.2,13
+2024,9,Montréal,TSU,RB,TSU_RB,8.0,10.0,19.0,0.0,2.4,10.8,10.8,14
+2024,9,Montréal,ZHO,Kick Sauber,ZHO_Kick Sauber,20.0,19.0,0.0,0.0,0.0,18.0,15.4,15
+2024,9,Montréal,SAI,Ferrari,SAI_Ferrari,12.0,4.0,108.0,0.0,12.0,4.2,4.2,16
+2024,9,Montréal,ALB,Williams,ALB_Williams,10.0,15.0,2.0,0.0,0.4,13.0,15.8,17
+2024,9,Montréal,PER,Red Bull Racing,PER_Red Bull Racing,16.0,5.0,107.0,0.0,9.8,7.0,7.0,18
+2024,9,Montréal,LEC,Ferrari,LEC_Ferrari,11.0,2.0,138.0,0.0,15.8,4.0,3.0,19
+2024,9,Montréal,SAR,Williams,SAR_Williams,13.0,21.0,0.0,0.0,0.0,18.0,17.2,20
+2024,10,Barcelona,VER,Red Bull Racing,VER_Red Bull Racing,2.0,1.0,194.0,25.0,20.2,2.2,2.2,1
+2024,10,Barcelona,NOR,McLaren,NOR_McLaren,1.0,3.0,131.0,19.0,18.2,3.6,2.2,2
+2024,10,Barcelona,HAM,Mercedes,HAM_Mercedes,3.0,8.0,55.0,15.0,7.6,9.6,6.4,3
+2024,10,Barcelona,RUS,Mercedes,RUS_Mercedes,4.0,7.0,69.0,12.0,8.8,5.4,5.8,4
+2024,10,Barcelona,LEC,Ferrari,LEC_Ferrari,5.0,2.0,138.0,10.0,13.4,4.6,6.0,5
+2024,10,Barcelona,SAI,Ferrari,SAI_Ferrari,6.0,4.0,108.0,8.0,9.0,5.8,6.8,6
+2024,10,Barcelona,PIA,McLaren,PIA_McLaren,9.0,6.0,81.0,6.0,8.8,4.4,6.4,7
+2024,10,Barcelona,PER,Red Bull Racing,PER_Red Bull Racing,11.0,5.0,107.0,4.0,6.2,9.8,10.2,8
+2024,10,Barcelona,GAS,Alpine,GAS_Alpine,7.0,15.0,3.0,2.0,0.6,13.4,12.0,9
+2024,10,Barcelona,OCO,Alpine,OCO_Alpine,8.0,17.0,2.0,1.0,0.4,13.4,12.4,10
+2024,10,Barcelona,HUL,Haas F1 Team,HUL_Haas F1 Team,13.0,14.0,6.0,0.0,0.2,12.8,12.4,11
+2024,10,Barcelona,ALO,Aston Martin,ALO_Aston Martin,10.0,9.0,41.0,0.0,3.4,11.6,10.4,12
+2024,10,Barcelona,ZHO,Kick Sauber,ZHO_Kick Sauber,15.0,19.0,0.0,0.0,0.0,18.0,14.8,13
+2024,10,Barcelona,STR,Aston Martin,STR_Aston Martin,14.0,11.0,17.0,0.0,1.6,11.4,12.4,14
+2024,10,Barcelona,RIC,RB,RIC_RB,18.0,12.0,9.0,0.0,0.8,11.6,13.2,15
+2024,10,Barcelona,BOT,Kick Sauber,BOT_Kick Sauber,12.0,20.0,0.0,0.0,0.0,15.6,16.0,16
+2024,10,Barcelona,MAG,Haas F1 Team,MAG_Haas F1 Team,16.0,18.0,1.0,0.0,0.0,17.4,15.8,17
+2024,10,Barcelona,ALB,Williams,ALB_Williams,20.0,16.0,2.0,0.0,0.4,12.2,15.2,18
+2024,10,Barcelona,TSU,RB,TSU_RB,17.0,10.0,19.0,0.0,2.2,10.4,11.6,19
+2024,10,Barcelona,SAR,Williams,SAR_Williams,19.0,21.0,0.0,0.0,0.0,16.8,17.8,20
+2024,11,Spielberg,RUS,Mercedes,RUS_Mercedes,3.0,7.0,81.0,25.0,9.6,4.6,5.4,1
+2024,11,Spielberg,PIA,McLaren,PIA_McLaren,7.0,6.0,87.0,18.0,9.2,5.2,6.2,2
+2024,11,Spielberg,SAI,Ferrari,SAI_Ferrari,4.0,4.0,116.0,15.0,8.6,5.6,7.0,3
+2024,11,Spielberg,HAM,Mercedes,HAM_Mercedes,5.0,8.0,70.0,12.0,10.2,6.6,5.2,4
+2024,11,Spielberg,VER,Red Bull Racing,VER_Red Bull Racing,1.0,1.0,219.0,10.0,20.2,2.4,2.2,5
+2024,11,Spielberg,HUL,Haas F1 Team,HUL_Haas F1 Team,9.0,14.0,6.0,8.0,0.0,13.6,12.6,6
+2024,11,Spielberg,PER,Red Bull Racing,PER_Red Bull Racing,8.0,5.0,111.0,6.0,4.0,11.6,11.2,7
+2024,11,Spielberg,MAG,Haas F1 Team,MAG_Haas F1 Team,12.0,18.0,1.0,4.0,0.0,17.2,16.0,8
+2024,11,Spielberg,RIC,RB,RIC_RB,11.0,12.0,9.0,2.0,0.8,12.8,12.6,9
+2024,11,Spielberg,GAS,Alpine,GAS_Alpine,13.0,15.0,5.0,1.0,1.0,11.8,11.2,10
+2024,11,Spielberg,LEC,Ferrari,LEC_Ferrari,6.0,3.0,148.0,0.0,13.0,4.4,6.2,11
+2024,11,Spielberg,OCO,Alpine,OCO_Alpine,10.0,16.0,3.0,0.0,0.6,12.4,12.2,12
+2024,11,Spielberg,STR,Aston Martin,STR_Aston Martin,17.0,11.0,17.0,0.0,1.6,12.0,12.2,13
+2024,11,Spielberg,TSU,RB,TSU_RB,14.0,10.0,19.0,0.0,2.2,10.0,11.6,14
+2024,11,Spielberg,ALB,Williams,ALB_Williams,16.0,17.0,2.0,0.0,0.4,13.4,16.4,15
+2024,11,Spielberg,BOT,Kick Sauber,BOT_Kick Sauber,18.0,20.0,0.0,0.0,0.0,16.0,15.2,16
+2024,11,Spielberg,ZHO,Kick Sauber,ZHO_Kick Sauber,20.0,19.0,0.0,0.0,0.0,17.8,14.6,17
+2024,11,Spielberg,ALO,Aston Martin,ALO_Aston Martin,15.0,9.0,41.0,0.0,2.0,13.0,11.4,18
+2024,11,Spielberg,SAR,Williams,SAR_Williams,19.0,21.0,0.0,0.0,0.0,16.6,18.4,19
+2024,11,Spielberg,NOR,McLaren,NOR_McLaren,2.0,2.0,150.0,0.0,18.4,3.0,2.2,20
+2024,12,Silverstone,HAM,Mercedes,HAM_Mercedes,2.0,8.0,85.0,25.0,11.0,6.0,4.8,1
+2024,12,Silverstone,VER,Red Bull Racing,VER_Red Bull Racing,4.0,1.0,237.0,18.0,18.6,2.4,2.8,2
+2024,12,Silverstone,NOR,McLaren,NOR_McLaren,3.0,2.0,156.0,15.0,13.4,2.4,6.0,3
+2024,12,Silverstone,PIA,McLaren,PIA_McLaren,5.0,6.0,112.0,12.0,12.8,5.4,4.0,4
+2024,12,Silverstone,SAI,Ferrari,SAI_Ferrari,7.0,4.0,135.0,11.0,9.6,5.8,6.6,5
+2024,12,Silverstone,HUL,Haas F1 Team,HUL_Haas F1 Team,6.0,12.0,14.0,8.0,1.6,13.6,11.6,6
+2024,12,Silverstone,STR,Aston Martin,STR_Aston Martin,8.0,11.0,17.0,6.0,1.6,13.2,11.4,7
+2024,12,Silverstone,ALO,Aston Martin,ALO_Aston Martin,10.0,9.0,41.0,4.0,1.6,13.0,13.2,8
+2024,12,Silverstone,ALB,Williams,ALB_Williams,9.0,18.0,2.0,2.0,0.4,13.8,15.8,9
+2024,12,Silverstone,TSU,RB,TSU_RB,13.0,10.0,19.0,1.0,1.0,10.8,13.0,10
+2024,12,Silverstone,SAR,Williams,SAR_Williams,12.0,21.0,0.0,0.0,0.0,17.0,18.2,11
+2024,12,Silverstone,MAG,Haas F1 Team,MAG_Haas F1 Team,17.0,16.0,5.0,0.0,0.8,16.0,13.8,12
+2024,12,Silverstone,RIC,RB,RIC_RB,15.0,13.0,11.0,0.0,1.2,11.0,11.4,13
+2024,12,Silverstone,LEC,Ferrari,LEC_Ferrari,11.0,3.0,150.0,0.0,10.0,5.2,7.8,14
+2024,12,Silverstone,BOT,Kick Sauber,BOT_Kick Sauber,16.0,20.0,0.0,0.0,0.0,16.4,15.2,15
+2024,12,Silverstone,OCO,Alpine,OCO_Alpine,18.0,17.0,3.0,0.0,0.4,11.8,12.6,16
+2024,12,Silverstone,PER,Red Bull Racing,PER_Red Bull Racing,20.0,5.0,118.0,0.0,2.8,12.4,11.8,17
+2024,12,Silverstone,ZHO,Kick Sauber,ZHO_Kick Sauber,14.0,19.0,0.0,0.0,0.0,18.0,15.2,18
+2024,12,Silverstone,RUS,Mercedes,RUS_Mercedes,1.0,7.0,111.0,0.0,13.8,3.8,4.0,19
+2024,12,Silverstone,GAS,Alpine,GAS_Alpine,19.0,15.0,6.0,0.0,1.2,12.0,10.8,20
+2024,13,Budapest,PIA,McLaren,PIA_McLaren,2.0,5.0,124.0,25.0,12.8,5.4,4.0,1
+2024,13,Budapest,NOR,McLaren,NOR_McLaren,1.0,2.0,171.0,18.0,12.8,2.6,6.2,2
+2024,13,Budapest,HAM,Mercedes,HAM_Mercedes,5.0,8.0,110.0,15.0,14.4,4.8,3.8,3
+2024,13,Budapest,LEC,Ferrari,LEC_Ferrari,6.0,3.0,150.0,12.0,7.0,6.8,10.0,4
+2024,13,Budapest,VER,Red Bull Racing,VER_Red Bull Racing,3.0,1.0,255.0,10.0,17.2,3.0,3.0,5
+2024,13,Budapest,SAI,Ferrari,SAI_Ferrari,4.0,4.0,146.0,8.0,9.8,6.4,6.6,6
+2024,13,Budapest,PER,Red Bull Racing,PER_Red Bull Racing,16.0,6.0,118.0,6.0,2.0,14.2,13.6,7
+2024,13,Budapest,RUS,Mercedes,RUS_Mercedes,17.0,7.0,111.0,5.0,12.4,2.8,6.4,8
+2024,13,Budapest,TSU,RB,TSU_RB,10.0,12.0,20.0,2.0,1.0,12.0,13.0,9
+2024,13,Budapest,STR,Aston Martin,STR_Aston Martin,8.0,10.0,23.0,1.0,2.4,12.2,11.0,10
+2024,13,Budapest,ALO,Aston Martin,ALO_Aston Martin,7.0,9.0,45.0,0.0,2.4,11.0,11.0,11
+2024,13,Budapest,RIC,RB,RIC_RB,9.0,13.0,11.0,0.0,1.2,12.2,11.4,12
+2024,13,Budapest,HUL,Haas F1 Team,HUL_Haas F1 Team,11.0,11.0,22.0,0.0,3.2,12.8,10.6,13
+2024,13,Budapest,ALB,Williams,ALB_Williams,13.0,17.0,4.0,0.0,0.8,12.8,13.6,14
+2024,13,Budapest,MAG,Haas F1 Team,MAG_Haas F1 Team,15.0,16.0,5.0,0.0,0.8,15.8,13.8,15
+2024,13,Budapest,BOT,Kick Sauber,BOT_Kick Sauber,12.0,21.0,0.0,0.0,0.0,16.4,14.6,16
+2024,13,Budapest,SAR,Williams,SAR_Williams,14.0,20.0,0.0,0.0,0.0,15.6,17.0,17
+2024,13,Budapest,OCO,Alpine,OCO_Alpine,19.0,18.0,3.0,0.0,0.4,13.0,13.0,18
+2024,13,Budapest,ZHO,Kick Sauber,ZHO_Kick Sauber,18.0,19.0,0.0,0.0,0.0,17.4,15.8,19
+2024,13,Budapest,GAS,Alpine,GAS_Alpine,20.0,15.0,6.0,0.0,1.2,12.8,11.6,20
+2024,14,Spa-Francorchamps,HAM,Mercedes,HAM_Mercedes,3.0,6.0,125.0,25.0,16.0,4.4,3.0,1
+2024,14,Spa-Francorchamps,PIA,McLaren,PIA_McLaren,5.0,5.0,149.0,18.0,14.2,5.4,3.8,2
+2024,14,Spa-Francorchamps,LEC,Ferrari,LEC_Ferrari,1.0,3.0,162.0,15.0,4.4,7.8,10.6,3
+2024,14,Spa-Francorchamps,VER,Red Bull Racing,VER_Red Bull Racing,11.0,1.0,265.0,12.0,17.6,2.4,2.8,4
+2024,14,Spa-Francorchamps,NOR,McLaren,NOR_McLaren,4.0,2.0,189.0,10.0,14.0,2.0,5.8,5
+2024,14,Spa-Francorchamps,SAI,Ferrari,SAI_Ferrari,7.0,4.0,154.0,8.0,8.4,6.6,7.2,6
+2024,14,Spa-Francorchamps,PER,Red Bull Racing,PER_Red Bull Racing,2.0,7.0,124.0,7.0,3.2,14.2,11.4,7
+2024,14,Spa-Francorchamps,ALO,Aston Martin,ALO_Aston Martin,8.0,9.0,45.0,4.0,2.4,9.6,11.0,8
+2024,14,Spa-Francorchamps,OCO,Alpine,OCO_Alpine,9.0,18.0,3.0,2.0,0.4,14.6,13.2,9
+2024,14,Spa-Francorchamps,RIC,RB,RIC_RB,13.0,13.0,11.0,1.0,1.2,11.6,11.4,10
+2024,14,Spa-Francorchamps,STR,Aston Martin,STR_Aston Martin,15.0,10.0,24.0,0.0,2.6,11.2,10.2,11
+2024,14,Spa-Francorchamps,ALB,Williams,ALB_Williams,10.0,17.0,4.0,0.0,0.4,13.6,14.6,12
+2024,14,Spa-Francorchamps,GAS,Alpine,GAS_Alpine,12.0,15.0,6.0,0.0,1.0,14.8,13.6,13
+2024,14,Spa-Francorchamps,MAG,Haas F1 Team,MAG_Haas F1 Team,17.0,16.0,5.0,0.0,0.8,14.8,12.8,14
+2024,14,Spa-Francorchamps,BOT,Kick Sauber,BOT_Kick Sauber,14.0,21.0,0.0,0.0,0.0,15.4,15.2,15
+2024,14,Spa-Francorchamps,TSU,RB,TSU_RB,20.0,12.0,22.0,0.0,0.6,12.4,13.2,16
+2024,14,Spa-Francorchamps,SAR,Williams,SAR_Williams,18.0,20.0,0.0,0.0,0.0,15.4,17.4,17
+2024,14,Spa-Francorchamps,HUL,Haas F1 Team,HUL_Haas F1 Team,16.0,11.0,22.0,0.0,3.2,11.2,9.4,18
+2024,14,Spa-Francorchamps,ZHO,Kick Sauber,ZHO_Kick Sauber,19.0,19.0,0.0,0.0,0.0,17.4,16.4,19
+2024,14,Spa-Francorchamps,RUS,Mercedes,RUS_Mercedes,6.0,8.0,116.0,0.0,11.4,5.2,7.0,20
+2024,15,Zandvoort,NOR,McLaren,NOR_McLaren,1.0,2.0,199.0,26.0,12.4,2.2,6.4,1
+2024,15,Zandvoort,VER,Red Bull Racing,VER_Red Bull Racing,2.0,1.0,277.0,18.0,15.0,4.2,3.4,2
+2024,15,Zandvoort,LEC,Ferrari,LEC_Ferrari,6.0,3.0,177.0,15.0,7.4,5.8,7.4,3
+2024,15,Zandvoort,PIA,McLaren,PIA_McLaren,3.0,4.0,167.0,12.0,15.8,5.6,3.2,4
+2024,15,Zandvoort,SAI,Ferrari,SAI_Ferrari,10.0,5.0,162.0,10.0,10.0,5.6,5.2,5
+2024,15,Zandvoort,PER,Red Bull Racing,PER_Red Bull Racing,5.0,7.0,131.0,8.0,4.6,11.4,9.2,6
+2024,15,Zandvoort,RUS,Mercedes,RUS_Mercedes,4.0,8.0,116.0,6.0,8.4,6.2,10.4,7
+2024,15,Zandvoort,HAM,Mercedes,HAM_Mercedes,14.0,6.0,150.0,4.0,18.4,3.6,2.4,8
+2024,15,Zandvoort,GAS,Alpine,GAS_Alpine,9.0,15.0,6.0,2.0,0.6,14.2,14.4,9
+2024,15,Zandvoort,ALO,Aston Martin,ALO_Aston Martin,7.0,9.0,49.0,1.0,1.6,10.0,11.4,10
+2024,15,Zandvoort,HUL,Haas F1 Team,HUL_Haas F1 Team,12.0,11.0,22.0,0.0,3.2,11.0,10.8,11
+2024,15,Zandvoort,RIC,RB,RIC_RB,13.0,13.0,12.0,0.0,0.6,13.2,11.8,12
+2024,15,Zandvoort,STR,Aston Martin,STR_Aston Martin,8.0,10.0,24.0,0.0,1.4,12.4,11.0,13
+2024,15,Zandvoort,ALB,Williams,ALB_Williams,19.0,18.0,4.0,0.0,0.4,13.6,13.6,14
+2024,15,Zandvoort,OCO,Alpine,OCO_Alpine,15.0,17.0,5.0,0.0,0.6,12.8,13.0,15
+2024,15,Zandvoort,SAR,Williams,SAR_Williams,18.0,20.0,0.0,0.0,0.0,16.4,16.8,16
+2024,15,Zandvoort,TSU,RB,TSU_RB,11.0,12.0,22.0,0.0,0.6,14.8,13.6,17
+2024,15,Zandvoort,MAG,Haas F1 Team,MAG_Haas F1 Team,20.0,16.0,5.0,0.0,0.8,15.4,13.2,18
+2024,15,Zandvoort,BOT,Kick Sauber,BOT_Kick Sauber,16.0,21.0,0.0,0.0,0.0,14.4,15.6,19
+2024,15,Zandvoort,ZHO,Kick Sauber,ZHO_Kick Sauber,17.0,19.0,0.0,0.0,0.0,17.2,17.2,20
+2024,16,Monza,LEC,Ferrari,LEC_Ferrari,4.0,3.0,192.0,25.0,8.4,6.0,7.0,1
+2024,16,Monza,PIA,McLaren,PIA_McLaren,2.0,4.0,179.0,18.0,17.0,4.4,2.6,2
+2024,16,Monza,NOR,McLaren,NOR_McLaren,1.0,2.0,225.0,16.0,13.8,2.2,6.2,3
+2024,16,Monza,SAI,Ferrari,SAI_Ferrari,5.0,5.0,172.0,12.0,10.4,6.4,5.0,4
+2024,16,Monza,HAM,Mercedes,HAM_Mercedes,6.0,6.0,154.0,10.0,16.2,5.8,3.4,5
+2024,16,Monza,VER,Red Bull Racing,VER_Red Bull Racing,7.0,1.0,295.0,8.0,13.6,4.2,3.6,6
+2024,16,Monza,RUS,Mercedes,RUS_Mercedes,3.0,8.0,122.0,6.0,7.2,6.2,11.0,7
+2024,16,Monza,PER,Red Bull Racing,PER_Red Bull Racing,8.0,7.0,139.0,4.0,5.4,10.2,8.8,8
+2024,16,Monza,ALB,Williams,ALB_Williams,9.0,18.0,4.0,2.0,0.4,13.4,12.8,9
+2024,16,Monza,MAG,Haas F1 Team,MAG_Haas F1 Team,13.0,16.0,5.0,1.0,0.8,16.2,13.4,10
+2024,16,Monza,ALO,Aston Martin,ALO_Aston Martin,11.0,9.0,50.0,0.0,1.8,9.4,11.0,11
+2024,16,Monza,COL,Williams,COL_Williams,18.0,0.0,0.0,0.0,0.0,10.0,10.0,12
+2024,16,Monza,RIC,RB,RIC_RB,12.0,13.0,12.0,0.0,0.6,12.2,11.2,13
+2024,16,Monza,OCO,Alpine,OCO_Alpine,15.0,17.0,5.0,0.0,0.4,14.2,14.0,14
+2024,16,Monza,GAS,Alpine,GAS_Alpine,14.0,14.0,8.0,0.0,0.6,14.6,14.4,15
+2024,16,Monza,BOT,Kick Sauber,BOT_Kick Sauber,19.0,21.0,0.0,0.0,0.0,15.2,16.2,16
+2024,16,Monza,HUL,Haas F1 Team,HUL_Haas F1 Team,10.0,11.0,22.0,0.0,3.2,10.8,10.8,17
+2024,16,Monza,ZHO,Kick Sauber,ZHO_Kick Sauber,20.0,19.0,0.0,0.0,0.0,17.6,18.6,18
+2024,16,Monza,STR,Aston Martin,STR_Aston Martin,17.0,10.0,24.0,0.0,1.4,11.2,10.8,19
+2024,16,Monza,TSU,RB,TSU_RB,16.0,12.0,22.0,0.0,0.6,13.6,13.2,20
+2024,17,Baku,PIA,McLaren,PIA_McLaren,2.0,4.0,197.0,25.0,17.0,3.4,2.6,1
+2024,17,Baku,LEC,Ferrari,LEC_Ferrari,1.0,3.0,217.0,18.0,13.4,5.6,5.0,2
+2024,17,Baku,RUS,Mercedes,RUS_Mercedes,5.0,8.0,128.0,15.0,3.4,6.2,12.2,3
+2024,17,Baku,NOR,McLaren,NOR_McLaren,15.0,2.0,241.0,13.0,17.0,2.0,2.8,4
+2024,17,Baku,VER,Red Bull Racing,VER_Red Bull Racing,6.0,1.0,303.0,10.0,13.2,5.4,3.8,5
+2024,17,Baku,ALO,Aston Martin,ALO_Aston Martin,7.0,9.0,50.0,8.0,1.8,8.6,9.6,6
+2024,17,Baku,ALB,Williams,ALB_Williams,9.0,17.0,6.0,6.0,0.8,12.0,11.6,7
+2024,17,Baku,COL,Williams,COL_Williams,8.0,21.0,0.0,4.0,0.0,18.0,12.0,8
+2024,17,Baku,HAM,Mercedes,HAM_Mercedes,19.0,6.0,164.0,2.0,15.8,6.0,3.6,9
+2024,17,Baku,BEA,Haas F1 Team,BEA_Haas F1 Team,10.0,15.0,6.0,1.0,6.0,11.0,7.0,10
+2024,17,Baku,HUL,Haas F1 Team,HUL_Haas F1 Team,12.0,11.0,22.0,0.0,1.6,11.0,13.0,11
+2024,17,Baku,GAS,Alpine,GAS_Alpine,18.0,14.0,8.0,0.0,0.4,14.8,15.4,12
+2024,17,Baku,RIC,RB,RIC_RB,14.0,13.0,12.0,0.0,0.2,12.4,12.0,13
+2024,17,Baku,ZHO,Kick Sauber,ZHO_Kick Sauber,17.0,19.0,0.0,0.0,0.0,17.6,18.8,14
+2024,17,Baku,OCO,Alpine,OCO_Alpine,20.0,18.0,5.0,0.0,0.4,15.2,14.4,15
+2024,17,Baku,BOT,Kick Sauber,BOT_Kick Sauber,16.0,22.0,0.0,0.0,0.0,15.4,16.2,16
+2024,17,Baku,PER,Red Bull Racing,PER_Red Bull Racing,4.0,7.0,143.0,0.0,5.0,10.2,9.0,17
+2024,17,Baku,SAI,Ferrari,SAI_Ferrari,3.0,5.0,184.0,0.0,9.8,6.6,5.2,18
+2024,17,Baku,STR,Aston Martin,STR_Aston Martin,13.0,10.0,24.0,0.0,1.4,11.2,12.0,19
+2024,17,Baku,TSU,RB,TSU_RB,11.0,12.0,22.0,0.0,0.6,14.0,14.4,20
+2024,18,Marina Bay,NOR,McLaren,NOR_McLaren,1.0,2.0,254.0,25.0,16.6,4.4,3.0,1
+2024,18,Marina Bay,VER,Red Bull Racing,VER_Red Bull Racing,2.0,1.0,313.0,18.0,11.6,5.8,4.4,2
+2024,18,Marina Bay,PIA,McLaren,PIA_McLaren,5.0,4.0,222.0,15.0,19.6,2.8,2.0,3
+2024,18,Marina Bay,RUS,Mercedes,RUS_Mercedes,4.0,7.0,143.0,12.0,6.4,7.0,9.0,4
+2024,18,Marina Bay,LEC,Ferrari,LEC_Ferrari,9.0,3.0,235.0,10.0,17.0,3.6,2.6,5
+2024,18,Marina Bay,HAM,Mercedes,HAM_Mercedes,3.0,6.0,166.0,8.0,11.2,9.4,5.2,6
+2024,18,Marina Bay,SAI,Ferrari,SAI_Ferrari,10.0,5.0,184.0,6.0,7.6,5.8,7.8,7
+2024,18,Marina Bay,ALO,Aston Martin,ALO_Aston Martin,7.0,9.0,58.0,4.0,2.6,8.0,9.2,8
+2024,18,Marina Bay,HUL,Haas F1 Team,HUL_Haas F1 Team,6.0,11.0,22.0,2.0,0.0,12.2,14.0,9
+2024,18,Marina Bay,PER,Red Bull Racing,PER_Red Bull Racing,13.0,8.0,143.0,1.0,5.0,7.0,9.0,10
+2024,18,Marina Bay,COL,Williams,COL_Williams,12.0,19.0,4.0,0.0,2.0,13.0,10.0,11
+2024,18,Marina Bay,TSU,RB,TSU_RB,8.0,12.0,22.0,0.0,0.4,13.6,16.4,12
+2024,18,Marina Bay,OCO,Alpine,OCO_Alpine,15.0,18.0,5.0,0.0,0.4,15.6,14.2,13
+2024,18,Marina Bay,STR,Aston Martin,STR_Aston Martin,17.0,10.0,24.0,0.0,0.2,12.2,14.4,14
+2024,18,Marina Bay,ZHO,Kick Sauber,ZHO_Kick Sauber,20.0,20.0,0.0,0.0,0.0,18.2,18.0,15
+2024,18,Marina Bay,BOT,Kick Sauber,BOT_Kick Sauber,19.0,22.0,0.0,0.0,0.0,15.4,16.4,16
+2024,18,Marina Bay,GAS,Alpine,GAS_Alpine,18.0,15.0,8.0,0.0,0.4,14.6,13.8,17
+2024,18,Marina Bay,RIC,RB,RIC_RB,16.0,14.0,12.0,0.0,0.2,12.2,12.0,18
+2024,18,Marina Bay,MAG,Haas F1 Team,MAG_Haas F1 Team,14.0,17.0,6.0,0.0,0.2,16.4,13.8,19
+2024,18,Marina Bay,ALB,Williams,ALB_Williams,11.0,13.0,12.0,0.0,1.6,12.0,11.2,20
+2024,19,Austin,LEC,Ferrari,LEC_Ferrari,4.0,3.0,245.0,25.0,16.6,4.2,2.8,1
+2024,19,Austin,SAI,Ferrari,SAI_Ferrari,3.0,5.0,190.0,18.0,7.2,7.0,8.0,2
+2024,19,Austin,VER,Red Bull Racing,VER_Red Bull Racing,2.0,1.0,331.0,15.0,13.2,5.6,3.8,3
+2024,19,Austin,NOR,McLaren,NOR_McLaren,1.0,2.0,279.0,12.0,18.0,4.4,2.8,4
+2024,19,Austin,PIA,McLaren,PIA_McLaren,5.0,4.0,237.0,10.0,17.6,3.4,2.4,5
+2024,19,Austin,RUS,Mercedes,RUS_Mercedes,20.0,7.0,155.0,8.0,7.8,4.4,8.2,6
+2024,19,Austin,PER,Red Bull Racing,PER_Red Bull Racing,9.0,8.0,144.0,6.0,4.0,6.4,9.6,7
+2024,19,Austin,HUL,Haas F1 Team,HUL_Haas F1 Team,11.0,10.0,24.0,4.0,0.4,11.2,13.2,8
+2024,19,Austin,LAW,RB,LAW_RB,19.0,0.0,0.0,2.0,0.4,13.8,12.2,9
+2024,19,Austin,COL,Williams,COL_Williams,15.0,19.0,4.0,1.0,1.3333333333333333,12.666666666666666,10.333333333333334,10
+2024,19,Austin,MAG,Haas F1 Team,MAG_Haas F1 Team,8.0,17.0,6.0,0.0,0.2,15.8,15.2,11
+2024,19,Austin,GAS,Alpine,GAS_Alpine,6.0,15.0,8.0,0.0,0.4,14.2,13.2,12
+2024,19,Austin,ALO,Aston Martin,ALO_Aston Martin,7.0,9.0,62.0,0.0,3.4,8.0,8.6,13
+2024,19,Austin,TSU,RB,TSU_RB,10.0,12.0,22.0,0.0,0.0,13.2,17.0,14
+2024,19,Austin,STR,Aston Martin,STR_Aston Martin,13.0,11.0,24.0,0.0,0.0,14.0,15.2,15
+2024,19,Austin,ALB,Williams,ALB_Williams,14.0,13.0,12.0,0.0,1.6,11.6,12.4,16
+2024,19,Austin,BOT,Kick Sauber,BOT_Kick Sauber,16.0,22.0,0.0,0.0,0.0,16.8,16.4,17
+2024,19,Austin,OCO,Alpine,OCO_Alpine,12.0,18.0,5.0,0.0,0.4,14.8,13.2,18
+2024,19,Austin,ZHO,Kick Sauber,ZHO_Kick Sauber,18.0,20.0,0.0,0.0,0.0,18.6,17.2,19
+2024,19,Austin,HAM,Mercedes,HAM_Mercedes,17.0,6.0,174.0,0.0,9.8,9.0,5.8,20
+2024,20,Mexico City,SAI,Ferrari,SAI_Ferrari,1.0,5.0,215.0,25.0,9.2,6.2,7.2,1
+2024,20,Mexico City,NOR,McLaren,NOR_McLaren,3.0,2.0,297.0,18.0,18.4,3.8,2.6,2
+2024,20,Mexico City,LEC,Ferrari,LEC_Ferrari,4.0,3.0,275.0,16.0,18.6,4.8,2.4,3
+2024,20,Mexico City,HAM,Mercedes,HAM_Mercedes,6.0,6.0,177.0,12.0,4.8,11.8,9.6,4
+2024,20,Mexico City,RUS,Mercedes,RUS_Mercedes,5.0,7.0,167.0,10.0,9.4,7.2,5.4,5
+2024,20,Mexico City,VER,Red Bull Racing,VER_Red Bull Racing,2.0,1.0,354.0,8.0,13.8,3.8,3.6,6
+2024,20,Mexico City,MAG,Haas F1 Team,MAG_Haas F1 Team,7.0,15.0,8.0,6.0,0.2,14.4,14.4,7
+2024,20,Mexico City,PIA,McLaren,PIA_McLaren,17.0,4.0,247.0,4.0,16.0,3.4,3.0,8
+2024,20,Mexico City,HUL,Haas F1 Team,HUL_Haas F1 Team,10.0,10.0,29.0,2.0,1.2,10.2,11.2,9
+2024,20,Mexico City,GAS,Alpine,GAS_Alpine,8.0,16.0,8.0,1.0,0.4,13.0,13.0,10
+2024,20,Mexico City,STR,Aston Martin,STR_Aston Martin,14.0,11.0,24.0,0.0,0.0,13.6,16.0,11
+2024,20,Mexico City,COL,Williams,COL_Williams,16.0,18.0,5.0,0.0,1.25,13.25,10.25,12
+2024,20,Mexico City,OCO,Alpine,OCO_Alpine,20.0,19.0,5.0,0.0,0.0,15.4,15.0,13
+2024,20,Mexico City,BOT,Kick Sauber,BOT_Kick Sauber,15.0,23.0,0.0,0.0,0.0,17.2,16.8,14
+2024,20,Mexico City,ZHO,Kick Sauber,ZHO_Kick Sauber,19.0,21.0,0.0,0.0,0.0,18.4,17.2,15
+2024,20,Mexico City,LAW,RB,LAW_RB,12.0,20.0,2.0,0.0,0.8,13.8,11.4,16
+2024,20,Mexico City,PER,Red Bull Racing,PER_Red Bull Racing,18.0,8.0,150.0,0.0,3.8,7.8,9.6,17
+2024,20,Mexico City,ALO,Aston Martin,ALO_Aston Martin,13.0,9.0,62.0,0.0,2.6,7.8,9.6,18
+2024,20,Mexico City,ALB,Williams,ALB_Williams,9.0,13.0,12.0,0.0,1.6,12.4,13.2,19
+2024,20,Mexico City,TSU,RB,TSU_RB,11.0,12.0,22.0,0.0,0.0,11.2,16.6,20
+2024,21,São Paulo,VER,Red Bull Racing,VER_Red Bull Racing,17.0,1.0,362.0,26.0,11.8,3.8,4.4,1
+2024,21,São Paulo,OCO,Alpine,OCO_Alpine,4.0,19.0,5.0,18.0,0.0,16.4,14.6,2
+2024,21,São Paulo,GAS,Alpine,GAS_Alpine,13.0,16.0,9.0,15.0,0.2,12.8,13.2,3
+2024,21,São Paulo,RUS,Mercedes,RUS_Mercedes,2.0,7.0,177.0,12.0,10.2,7.4,5.0,4
+2024,21,São Paulo,LEC,Ferrari,LEC_Ferrari,6.0,3.0,291.0,10.0,18.8,4.4,2.4,5
+2024,21,São Paulo,NOR,McLaren,NOR_McLaren,1.0,2.0,315.0,8.0,16.8,4.2,2.8,6
+2024,21,São Paulo,TSU,RB,TSU_RB,3.0,12.0,22.0,6.0,0.0,11.2,17.2,7
+2024,21,São Paulo,PIA,McLaren,PIA_McLaren,8.0,4.0,251.0,4.0,14.4,6.2,3.8,8
+2024,21,São Paulo,LAW,RB,LAW_RB,5.0,20.0,2.0,2.0,0.8,13.8,12.4,9
+2024,21,São Paulo,HAM,Mercedes,HAM_Mercedes,14.0,6.0,189.0,1.0,6.4,10.2,8.8,10
+2024,21,São Paulo,PER,Red Bull Racing,PER_Red Bull Racing,12.0,8.0,150.0,0.0,2.2,10.4,11.8,11
+2024,21,São Paulo,BEA,Haas F1 Team,BEA_Haas F1 Team,15.0,17.0,7.0,0.0,3.5,10.5,8.5,12
+2024,21,São Paulo,BOT,Kick Sauber,BOT_Kick Sauber,11.0,23.0,0.0,0.0,0.0,17.0,15.8,13
+2024,21,São Paulo,ALO,Aston Martin,ALO_Aston Martin,9.0,9.0,62.0,0.0,2.4,9.0,11.2,14
+2024,21,São Paulo,ZHO,Kick Sauber,ZHO_Kick Sauber,19.0,21.0,0.0,0.0,0.0,18.8,16.2,15
+2024,21,São Paulo,SAI,Ferrari,SAI_Ferrari,20.0,5.0,240.0,0.0,12.2,4.4,6.4,16
+2024,21,São Paulo,COL,Williams,COL_Williams,16.0,18.0,5.0,0.0,1.0,13.8,10.6,17
+2024,21,São Paulo,ALB,Williams,ALB_Williams,7.0,14.0,12.0,0.0,1.6,10.4,14.2,18
+2024,21,São Paulo,STR,Aston Martin,STR_Aston Martin,10.0,11.0,24.0,0.0,0.0,14.8,15.6,19
+2024,21,São Paulo,HUL,Haas F1 Team,HUL_Haas F1 Team,18.0,10.0,31.0,0.0,1.6,9.8,10.8,20
+2024,22,Las Vegas,RUS,Mercedes,RUS_Mercedes,1.0,6.0,192.0,25.0,11.4,7.2,4.4,1
+2024,22,Las Vegas,HAM,Mercedes,HAM_Mercedes,10.0,7.0,190.0,18.0,4.6,11.8,9.8,2
+2024,22,Las Vegas,SAI,Ferrari,SAI_Ferrari,2.0,5.0,244.0,15.0,9.8,7.4,8.8,3
+2024,22,Las Vegas,LEC,Ferrari,LEC_Ferrari,4.0,3.0,307.0,12.0,15.8,4.8,3.2,4
+2024,22,Las Vegas,VER,Red Bull Racing,VER_Red Bull Racing,5.0,1.0,393.0,10.0,15.4,5.8,3.4,5
+2024,22,Las Vegas,NOR,McLaren,NOR_McLaren,6.0,2.0,331.0,9.0,15.2,4.2,3.4,6
+2024,22,Las Vegas,PIA,McLaren,PIA_McLaren,8.0,4.0,262.0,6.0,11.6,7.4,5.0,7
+2024,22,Las Vegas,HUL,Haas F1 Team,HUL_Haas F1 Team,9.0,10.0,31.0,4.0,1.6,11.4,11.4,8
+2024,22,Las Vegas,TSU,RB,TSU_RB,7.0,11.0,28.0,2.0,1.2,8.6,14.6,9
+2024,22,Las Vegas,PER,Red Bull Racing,PER_Red Bull Racing,15.0,8.0,151.0,1.0,1.4,11.2,12.4,10
+2024,22,Las Vegas,ALO,Aston Martin,ALO_Aston Martin,16.0,9.0,62.0,0.0,2.4,8.6,11.8,11
+2024,22,Las Vegas,MAG,Haas F1 Team,MAG_Haas F1 Team,12.0,15.0,14.0,0.0,1.4,12.4,13.0,12
+2024,22,Las Vegas,ZHO,Kick Sauber,ZHO_Kick Sauber,13.0,21.0,0.0,0.0,0.0,18.6,15.6,13
+2024,22,Las Vegas,COL,Williams,COL_Williams,20.0,19.0,5.0,0.0,1.0,13.4,11.6,14
+2024,22,Las Vegas,STR,Aston Martin,STR_Aston Martin,18.0,13.0,24.0,0.0,0.0,13.4,15.6,15
+2024,22,Las Vegas,LAW,RB,LAW_RB,14.0,20.0,4.0,0.0,0.8,12.8,12.4,16
+2024,22,Las Vegas,OCO,Alpine,OCO_Alpine,11.0,14.0,23.0,0.0,3.6,14.2,12.2,17
+2024,22,Las Vegas,BOT,Kick Sauber,BOT_Kick Sauber,19.0,23.0,0.0,0.0,0.0,15.4,15.2,18
+2024,22,Las Vegas,ALB,Williams,ALB_Williams,17.0,16.0,12.0,0.0,1.2,10.0,16.0,19
+2024,22,Las Vegas,GAS,Alpine,GAS_Alpine,3.0,12.0,26.0,0.0,3.2,12.6,10.8,20
+2024,23,Lusail,VER,Red Bull Racing,VER_Red Bull Racing,2.0,1.0,403.0,25.0,15.4,5.6,3.4,1
+2024,23,Lusail,LEC,Ferrari,LEC_Ferrari,5.0,3.0,319.0,18.0,14.6,5.4,3.6,2
+2024,23,Lusail,PIA,McLaren,PIA_McLaren,4.0,4.0,268.0,15.0,7.8,8.6,6.2,3
+2024,23,Lusail,RUS,Mercedes,RUS_Mercedes,1.0,6.0,217.0,12.0,13.4,6.4,4.0,4
+2024,23,Lusail,GAS,Alpine,GAS_Alpine,11.0,12.0,26.0,10.0,3.2,9.6,12.4,5
+2024,23,Lusail,SAI,Ferrari,SAI_Ferrari,7.0,5.0,259.0,8.0,12.8,7.2,5.8,6
+2024,23,Lusail,ALO,Aston Martin,ALO_Aston Martin,8.0,9.0,62.0,6.0,0.8,10.4,12.8,7
+2024,23,Lusail,ZHO,Kick Sauber,ZHO_Kick Sauber,12.0,21.0,0.0,4.0,0.0,17.8,15.4,8
+2024,23,Lusail,MAG,Haas F1 Team,MAG_Haas F1 Team,10.0,15.0,14.0,2.0,1.4,10.8,11.8,9
+2024,23,Lusail,NOR,McLaren,NOR_McLaren,3.0,2.0,340.0,2.0,14.4,2.4,3.8,10
+2024,23,Lusail,BOT,Kick Sauber,BOT_Kick Sauber,13.0,23.0,0.0,0.0,0.0,16.0,15.6,11
+2024,23,Lusail,HAM,Mercedes,HAM_Mercedes,6.0,7.0,208.0,0.0,7.8,10.0,8.4,12
+2024,23,Lusail,TSU,RB,TSU_RB,14.0,11.0,30.0,0.0,1.6,7.8,12.4,13
+2024,23,Lusail,LAW,RB,LAW_RB,17.0,20.0,4.0,0.0,0.8,13.4,13.4,14
+2024,23,Lusail,ALB,Williams,ALB_Williams,16.0,16.0,12.0,0.0,0.0,11.6,18.4,15
+2024,23,Lusail,HUL,Haas F1 Team,HUL_Haas F1 Team,18.0,10.0,35.0,0.0,2.4,10.8,10.8,16
+2024,23,Lusail,PER,Red Bull Racing,PER_Red Bull Racing,9.0,8.0,152.0,0.0,1.6,13.4,11.0,17
+2024,23,Lusail,STR,Aston Martin,STR_Aston Martin,15.0,13.0,24.0,0.0,0.0,14.4,14.8,18
+2024,23,Lusail,COL,Williams,COL_Williams,19.0,19.0,5.0,0.0,0.2,15.8,12.8,19
+2024,23,Lusail,OCO,Alpine,OCO_Alpine,20.0,14.0,23.0,0.0,3.6,12.4,12.6,20
+2024,24,Yas Island,NOR,McLaren,NOR_McLaren,1.0,2.0,349.0,25.0,9.8,2.8,5.6,1
+2024,24,Yas Island,SAI,Ferrari,SAI_Ferrari,3.0,5.0,272.0,18.0,13.2,6.6,5.6,2
+2024,24,Yas Island,LEC,Ferrari,LEC_Ferrari,19.0,3.0,341.0,15.0,16.2,4.6,3.0,3
+2024,24,Yas Island,HAM,Mercedes,HAM_Mercedes,16.0,7.0,211.0,12.0,6.2,10.6,9.6,4
+2024,24,Yas Island,RUS,Mercedes,RUS_Mercedes,6.0,6.0,235.0,10.0,13.4,5.8,4.0,5
+2024,24,Yas Island,VER,Red Bull Racing,VER_Red Bull Racing,4.0,1.0,429.0,8.0,16.8,5.6,3.2,6
+2024,24,Yas Island,GAS,Alpine,GAS_Alpine,5.0,11.0,36.0,6.0,5.2,8.2,10.0,7
+2024,24,Yas Island,HUL,Haas F1 Team,HUL_Haas F1 Team,7.0,10.0,37.0,4.0,2.0,13.2,12.2,8
+2024,24,Yas Island,ALO,Aston Martin,ALO_Aston Martin,8.0,9.0,68.0,2.0,1.2,10.6,12.6,9
+2024,24,Yas Island,PIA,McLaren,PIA_McLaren,2.0,4.0,291.0,1.0,7.8,8.4,6.2,10
+2024,24,Yas Island,ALB,Williams,ALB_Williams,18.0,16.0,12.0,0.0,0.0,12.6,17.4,11
+2024,24,Yas Island,TSU,RB,TSU_RB,11.0,12.0,30.0,0.0,1.6,9.0,12.6,12
+2024,24,Yas Island,ZHO,Kick Sauber,ZHO_Kick Sauber,15.0,20.0,4.0,0.0,0.8,16.2,14.0,13
+2024,24,Yas Island,STR,Aston Martin,STR_Aston Martin,13.0,13.0,24.0,0.0,0.0,14.0,15.6,14
+2024,24,Yas Island,DOO,Alpine,DOO_Alpine,17.0,0.0,0.0,0.0,0.0,10.0,10.0,15
+2024,24,Yas Island,MAG,Haas F1 Team,MAG_Haas F1 Team,14.0,15.0,16.0,0.0,1.6,10.2,11.6,16
+2024,24,Yas Island,LAW,RB,LAW_RB,12.0,21.0,4.0,0.0,0.8,13.4,12.8,17
+2024,24,Yas Island,BOT,Kick Sauber,BOT_Kick Sauber,9.0,22.0,0.0,0.0,0.0,14.8,14.6,18
+2024,24,Yas Island,COL,Williams,COL_Williams,20.0,19.0,5.0,0.0,0.2,17.2,14.4,19
+2024,24,Yas Island,PER,Red Bull Racing,PER_Red Bull Racing,10.0,8.0,152.0,0.0,1.4,12.6,12.4,20

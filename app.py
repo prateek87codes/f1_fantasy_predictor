@@ -11,8 +11,13 @@ import plotly.graph_objects as go
 import numpy as np
 import os
 import google.generativeai as genai # Make sure this is imported
+import traceback 
 import requests
 from functools import lru_cache
+from tqdm import tqdm
+import joblib
+import xgboost as xgb
+from sklearn.metrics import mean_absolute_error
 
 MY_COMPOUND_COLORS = {
     "SOFT": "#FF3333",
@@ -119,6 +124,182 @@ def hex_to_rgba(hex_color, alpha=0.15):
     except:
         # Fallback if the color is not a valid hex
         return None 
+
+@lru_cache(maxsize=4) # Cache the result of this very slow function
+
+# --- ADD THIS HELPER FUNCTION to app.py ---
+# (Place it before the run_reinforcement_simulation function)
+
+# --- REPLACE the existing get_race_data function in app.py with this one ---
+def get_features_for_race(year, round_number, ergast_api):
+    """Fetches and processes data for a single race, adding advanced features."""
+    try:
+        session = ff1.get_session(year, round_number, 'R')
+        session.load()
+        results = session.results
+        if results is None or results.empty: return None
+
+        race_df = results.loc[:, ['Abbreviation', 'TeamName', 'GridPosition', 'Position', 'Points']].copy()
+        race_df.rename(columns={'Abbreviation': 'DriverID', 'TeamName': 'TeamID', 'GridPosition': 'QualifyingPosition', 'Position': 'FinishingPosition'}, inplace=True)
+        
+        race_df['DriverTeamID'] = race_df['DriverID'] + "_" + race_df['TeamID']
+        race_df['Year'] = year
+        race_df['Round'] = round_number
+        race_df['TrackID'] = session.event['Location']
+
+        standings_before_race = pd.DataFrame()
+        if round_number > 1:
+            try:
+                standings_content = ergast_api.get_driver_standings(season=year, round=round_number - 1).content
+                if standings_content: standings_before_race = standings_content[0][['driverCode', 'position', 'points']]
+            except Exception as e: print(f"  - Could not get standings for {year} R{round_number-1}: {e}")
+        
+        if not standings_before_race.empty:
+            race_df = race_df.merge(standings_before_race, left_on='DriverID', right_on='driverCode', how='left')
+            race_df.rename(columns={'position': 'ChampionshipStanding', 'points': 'ChampionshipPoints'}, inplace=True)
+            race_df.drop(columns=['driverCode'], inplace=True)
+        else:
+            race_df['ChampionshipStanding'] = 0
+            race_df['ChampionshipPoints'] = 0
+        
+        race_df.fillna(0, inplace=True)
+        race_df['FinishingPosition'] = pd.to_numeric(race_df['FinishingPosition'], errors='coerce')
+        race_df.dropna(subset=['FinishingPosition'], inplace=True)
+        race_df['FinishingPosition'] = race_df['FinishingPosition'].astype(int)
+        race_df.loc[race_df['QualifyingPosition'] == 0, 'QualifyingPosition'] = 20
+        
+        return race_df
+    except Exception as e:
+        print(f"Could not process data for {year} Round {round_number}. Error: {e}")
+        return None
+
+def get_race_data_with_features(year, round_number, ergast_api):
+    """Fetches and processes data for a single race, adding advanced features."""
+    try:
+        session = ff1.get_session(year, round_number, 'R')
+        session.load()
+        results = session.results
+        if results is None or results.empty: return None
+
+        # Prepare the data
+        race_df = results.loc[:, ['Abbreviation', 'TeamName', 'GridPosition', 'Position', 'Points']].copy()
+        race_df.rename(columns={
+            'Abbreviation': 'DriverID', 'TeamName': 'TeamID',
+            'GridPosition': 'QualifyingPosition', 'Position': 'FinishingPosition'
+        }, inplace=True)
+        
+        race_df['DriverTeamID'] = race_df['DriverID'] + "_" + race_df['TeamID']
+        race_df['Year'] = year
+        race_df['Round'] = round_number
+        race_df['TrackID'] = session.event['Location']
+
+        # Add Championship Standing & Points Features
+        standings_before_race = pd.DataFrame()
+        if round_number > 1:
+            try:
+                standings_content = ergast_api.get_driver_standings(season=year, round=round_number - 1).content
+                if standings_content: standings_before_race = standings_content[0][['driverCode', 'position', 'points']]
+            except Exception as e: print(f"  - Could not get standings for {year} R{round_number-1}: {e}")
+        
+        if not standings_before_race.empty:
+            race_df = race_df.merge(standings_before_race, left_on='DriverID', right_on='driverCode', how='left')
+            race_df.rename(columns={'position': 'ChampionshipStanding', 'points': 'ChampionshipPoints'}, inplace=True)
+            race_df.drop(columns=['driverCode'], inplace=True)
+        else:
+            race_df['ChampionshipStanding'] = 0
+            race_df['ChampionshipPoints'] = 0
+        
+        race_df.fillna(0, inplace=True)
+
+        # Final data prep
+        race_df['FinishingPosition'] = pd.to_numeric(race_df['FinishingPosition'], errors='coerce')
+        race_df.dropna(subset=['FinishingPosition'], inplace=True)
+        race_df['FinishingPosition'] = race_df['FinishingPosition'].astype(int)
+        race_df.loc[race_df['QualifyingPosition'] == 0, 'QualifyingPosition'] = 20
+        
+        return race_df
+    except Exception as e:
+        print(f"Could not process data for {year} Round {round_number}. Error: {e}")
+        return None
+
+@lru_cache(maxsize=4)
+def run_reinforcement_simulation(year, historical_data_path, initial_model_path):
+    print(f"\n[Reinforcement Sim] Starting for year {year}...")
+    try:
+        base_df = pd.read_csv(historical_data_path)
+        base_model = joblib.load(initial_model_path)
+        
+        schedule = ff1.get_event_schedule(year, include_testing=False)
+        schedule['EventDate'] = pd.to_datetime(schedule['EventDate'])
+        completed_races = schedule[schedule['EventDate'] < pd.Timestamp.now()].sort_values(by='RoundNumber')
+
+        if completed_races.empty:
+            print("[Reinforcement Sim] No completed races yet for this season.")
+            return None
+
+        ergast_api_main = ergast.Ergast()
+        simulation_results = []
+        current_training_data = base_df.copy()
+
+        for _, race in tqdm(completed_races.iterrows(), total=len(completed_races), desc=f"Simulating {year} season"):
+            round_num = race['RoundNumber']
+            new_race_data = get_features_for_race(year, round_num, ergast_api_main)
+            if new_race_data is None or new_race_data.empty: continue
+
+            # --- Calculate "form" features for the race we are about to predict ---
+            form_data = []
+            for driver_id in new_race_data['DriverID']:
+                driver_history = current_training_data[current_training_data['DriverID'] == driver_id]
+                last_5 = driver_history.tail(5)
+                form_data.append({
+                    'DriverID': driver_id,
+                    'RecentFormPoints': last_5['Points'].mean() if not last_5.empty else 0,
+                    'RecentQualiPos': last_5['QualifyingPosition'].mean() if not last_5.empty else 10,
+                    'RecentFinishPos': last_5['FinishingPosition'].mean() if not last_5.empty else 10
+                })
+            form_df = pd.DataFrame(form_data)
+            new_race_data = new_race_data.merge(form_df, on='DriverID', how='left').fillna(0)
+
+            # --- Prepare full training data (up to the previous race) ---
+            X_train = current_training_data.drop(columns=['FinishingPosition', 'DriverID', 'TeamID', 'Points'])
+            X_train_cat = pd.get_dummies(X_train[['DriverTeamID', 'TrackID']])
+            X_train = pd.concat([X_train.drop(columns=['DriverTeamID', 'TrackID']), X_train_cat], axis=1)
+            X_train.columns = [str(col) for col in X_train.columns]
+            y_train = current_training_data['FinishingPosition']
+
+            # Train a model on all data available *before* this race
+            current_model = xgb.XGBRegressor(objective='reg:squarederror', n_estimators=100, random_state=42)
+            current_model.fit(X_train, y_train)
+            
+            # Prepare data for the current race for prediction
+            X_predict = new_race_data.drop(columns=['FinishingPosition', 'DriverID', 'TeamID', 'Points'])
+            X_predict_cat = pd.get_dummies(X_predict[['DriverTeamID', 'TrackID']])
+            X_predict = pd.concat([X_predict.drop(columns=['DriverTeamID', 'TrackID']), X_predict_cat], axis=1)
+            
+            X_predict_aligned = X_predict.reindex(columns=current_model.get_booster().feature_names, fill_value=0)
+            
+            predictions = current_model.predict(X_predict_aligned)
+            new_race_data['PredictedPosition'] = predictions
+            
+            # Store results
+            predicted_top_10 = new_race_data.sort_values(by='PredictedPosition').head(10)['DriverID'].tolist()
+            actual_top_10 = new_race_data.sort_values(by='FinishingPosition').head(10)['DriverID'].tolist()
+            
+            simulation_results.append({
+                "Round": round_num, "Race": race['EventName'],
+                "PredictedTop10": predicted_top_10, "ActualTop10": actual_top_10,
+                "MAE": mean_absolute_error(new_race_data['FinishingPosition'], predictions),
+                "FeatureImportances": dict(zip(current_model.get_booster().feature_names, current_model.feature_importances_))
+            })
+
+            # "Reinforce": Add this race's data to the training set for the next iteration
+            current_training_data = pd.concat([current_training_data, new_race_data], ignore_index=True)
+
+        return pd.DataFrame(simulation_results)
+    except Exception as e:
+        print(f"Error during reinforcement simulation: {e}")
+        import traceback; traceback.print_exc()
+        return None
 
 # REPLACE your get_weather_forecast function with this OpenWeatherMap version
 def get_weather_forecast(lat, lon, api_key, race_date_obj):
@@ -238,6 +419,8 @@ def get_race_highlights_from_gemini(race_summary_data_str):
         print(f"Error calling Gemini API: {e}")
         if "API_KEY_INVALID" in str(e) or "PERMISSION_DENIED" in str(e): return "AI highlights unavailable: API key/permission issue."
         return f"Error generating AI highlights: {str(e)[:200]}"
+
+
 
 # --- REPLACE your existing get_ai_team_summary function with this one ---
 def get_ai_team_summary(team_name, summary_type="history", performance_data=""):
@@ -762,8 +945,36 @@ tab_teams_drivers_content = dbc.Card(
     ])
 )
 
+tab_predictions_content = dbc.Card(
+    dbc.CardBody([
+        html.H4("Machine Learning Predictions", className="text-center mb-2"),
+        dbc.Alert(
+            "This page simulates the model retraining process for each completed race of the 2025 season. As it's computationally intensive, it may take a minute to load for the first time.",
+            color="info"
+        ),
+        html.Hr(),
+        # This Div will be populated by our new callback
+        dcc.Loading(
+            id="loading-predictions-content",
+            type="default",
+            children=[html.Div(id="predictions-content-area")]
+        ),
+        html.Hr(className="my-4"),
+        # Section for predicting the next race
+        dbc.Card([
+            dbc.CardHeader(html.H5("Predict Next Race")),
+            dbc.CardBody([
+                dbc.Row([
+                    dbc.Col(dcc.Dropdown(id='predict-race-dropdown', placeholder="Select an upcoming race..."), md=8),
+                    dbc.Col(dbc.Button("Generate Prediction", id='predict-race-button', n_clicks=0, color="primary"), md=4),
+                ], align="center"),
+                dcc.Loading(html.Div(id="next-race-prediction-output", className="mt-3"))
+            ])
+        ])
+    ])
+)
+
 # --- Placeholder content for other tabs ---
-tab_predictions_content = dbc.Card(dbc.CardBody([html.P("Content for Predictions models and results will be built here.")]), className="mt-3")
 tab_fantasy_rules_content = dbc.Card(dbc.CardBody([html.P("Content for Fantasy League Rules and Restrictions will be built here.")]), className="mt-3")
 tab_fantasy_creator_content = dbc.Card(dbc.CardBody([html.P("Content for Fantasy Team Creator tool will be built here.")]), className="mt-3")
 
@@ -1427,6 +1638,187 @@ def update_teams_drivers_tab(active_tab):
         team_cards.append(team_card)
 
     return team_cards
+
+@app.callback(
+    Output('predictions-content-area', 'children'),
+    Input('app-main-tabs', 'active_tab')
+)
+def update_predictions_tab(active_tab):
+    if active_tab != 'tab-predictions':
+        return dash.no_update
+
+    cs_year = datetime.now().year
+    sim_results_df = run_reinforcement_simulation(cs_year, 'f1_historical_data.csv', 'f1_prediction_model.joblib')
+
+    if sim_results_df is None or sim_results_df.empty:
+        return dbc.Alert("Could not run prediction simulation.", color="danger")
+    
+    # Build the visualizations
+    race_prediction_cards = []
+    for _, race_result in sim_results_df.iterrows():
+        comparison_df = pd.DataFrame({'P': range(1, 11), 'Predicted Driver': race_result['PredictedTop10'], 'Actual Driver': race_result['ActualTop10']})
+        comparison_df['Correct'] = comparison_df.apply(lambda row: "✔️" if row['Predicted Driver'] == row['Actual Driver'] else "❌", axis=1)
+        race_card = dbc.Card([dbc.CardHeader(f"Round {race_result['Round']}: {race_result['Race']}"),
+            dbc.CardBody(dash_table.DataTable(
+                data=comparison_df.to_dict('records'),
+                columns=[{'name': i, 'id': i} for i in comparison_df.columns],
+                style_cell={'textAlign': 'center'},
+                style_data_conditional=[{'if': {'column_id': 'Correct'}, 'backgroundColor': 'rgba(40, 167, 69, 0.2)', 'fontWeight': 'bold'}]
+            ))
+        ], className="mb-3")
+        race_prediction_cards.append(race_card)
+
+    mae_fig = px.line(sim_results_df, x='Round', y='MAE', title='Model Prediction Error (MAE) Over Season', markers=True)
+    mae_fig.update_layout(yaxis_title="Prediction Error (+/- positions)")
+    
+    last_importances = sim_results_df['FeatureImportances'].iloc[-1]
+    imp_df = pd.DataFrame(list(last_importances.items()), columns=['Feature', 'Importance']).sort_values(by='Importance', ascending=False).head(10)
+    imp_fig = px.bar(imp_df, x='Importance', y='Feature', orientation='h', title=f"Top 10 Feature Importances (after Round {sim_results_df['Round'].max()})")
+    imp_fig.update_layout(yaxis={'categoryorder':'total ascending'})
+
+    return html.Div([
+        dbc.Row(dbc.Col(html.H5("2025 Race-by-Race Prediction Simulation"), width=12), className="mb-2"),
+        dbc.Row(dbc.Col(race_prediction_cards, width=12), className="mb-4"),
+        dbc.Row([dbc.Col(dcc.Graph(figure=mae_fig), md=6), dbc.Col(dcc.Graph(figure=imp_fig), md=6)], className="mb-4")
+    ])
+
+@app.callback(
+    Output('predict-race-dropdown', 'options'),
+    Input('app-main-tabs', 'active_tab') # Trigger when the Predictions tab is viewed
+)
+def update_predict_race_dropdown(active_tab):
+    if active_tab != 'tab-predictions':
+        return []
+
+    print("[update_predict_race_dropdown] Populating dropdown with upcoming races...")
+    try:
+        cs_year = datetime.now().year
+        schedule = ff1.get_event_schedule(cs_year, include_testing=False)
+        schedule['EventDate'] = pd.to_datetime(schedule['EventDate'])
+        
+        # Filter for races that are in the future
+        upcoming_races = schedule[schedule['EventDate'] > pd.Timestamp.now()].sort_values(by='EventDate')
+        
+        if upcoming_races.empty:
+            return [{'label': 'No upcoming races found for this season.', 'value': ''}]
+            
+        options = [{'label': f"{row['EventName']} (Round {row['RoundNumber']})", 'value': row['RoundNumber']} 
+                   for _, row in upcoming_races.iterrows()]
+        
+        return options
+    except Exception as e:
+        print(f"Error populating predict-race-dropdown: {e}")
+        return []
+
+def get_features_for_prediction(year, round_number, historical_df):
+    """Gathers the latest stats for all current drivers to predict an upcoming race."""
+    print(f"[get_features_for_prediction] Gathering features for {year} R{round_number}...")
+    try:
+        ergast_api = ergast.Ergast()
+        
+        # 1. Get the last completed race to find the current grid and standings
+        schedule = ff1.get_event_schedule(year, include_testing=False)
+        schedule['EventDate'] = pd.to_datetime(schedule['EventDate'])
+        completed_races = schedule[schedule['EventDate'] < pd.Timestamp.now()]
+        if completed_races.empty:
+            print("No completed races yet to base prediction on.")
+            return pd.DataFrame()
+            
+        last_race_round = completed_races['RoundNumber'].max()
+        session = ff1.get_session(year, last_race_round, 'R'); session.load()
+        
+        # Get the list of current drivers and teams
+        current_grid_df = session.results.loc[:, ['Abbreviation', 'TeamName']].copy()
+        current_grid_df.rename(columns={'Abbreviation': 'DriverID', 'TeamName': 'TeamID'}, inplace=True)
+        
+        # 2. Get latest championship standings
+        standings_df = pd.DataFrame()
+        try:
+            standings_content = ergast_api.get_driver_standings(season=year, round=last_race_round).content
+            if standings_content: standings_df = standings_content[0][['driverCode', 'position', 'points']]
+        except: pass
+        
+        # 3. Calculate "form" features from historical + current season data
+        all_season_data = pd.concat([historical_df, get_race_data_with_features(year, last_race_round, ergast_api)], ignore_index=True)
+        all_season_data.sort_values(by=['Year', 'Round'], inplace=True)
+        
+        features_list = []
+        for _, driver in current_grid_df.iterrows():
+            driver_id = driver['DriverID']
+            driver_history = all_season_data[all_season_data['DriverID'] == driver_id]
+            
+            # Calculate form based on the very latest data
+            recent_form = driver_history.tail(3)['Points'].mean() if not driver_history.empty else 0
+            avg_quali = driver_history['QualifyingPosition'].mean() if not driver_history.empty else 10 # Use 10 as a neutral default
+            
+            # Get current championship standing
+            standing = standings_df[standings_df['driverCode'] == driver_id]
+            current_standing = standing['position'].iloc[0] if not standing.empty else 20 # Default to last
+            current_points = standing['points'].iloc[0] if not standing.empty else 0
+            
+            features_list.append({
+                'DriverID': driver_id, 'TeamID': driver['TeamID'],
+                'QualifyingPosition': avg_quali, # Use average quali as a proxy
+                'ChampionshipStanding': current_standing,
+                'ChampionshipPoints': current_points,
+                'RecentFormPoints': recent_form,
+                'TrackID': schedule[schedule['RoundNumber'] == round_number]['Location'].iloc[0],
+                'DriverTeamID': f"{driver_id}_{driver['TeamID']}"
+            })
+            
+        return pd.DataFrame(features_list)
+    except Exception as e:
+        print(f"Error in get_features_for_prediction: {e}"); return pd.DataFrame()
+
+# --- REPLACE your existing predict_next_race callback in app.py ---
+@app.callback(
+    Output('next-race-prediction-output', 'children'),
+    Input('predict-race-button', 'n_clicks'),
+    State('predict-race-dropdown', 'value'),
+    prevent_initial_call=True
+)
+def predict_next_race(n_clicks, selected_race_round):
+    if not selected_race_round:
+        return dbc.Alert("Please select an upcoming race from the dropdown.", color="warning")
+
+    print(f"[predict_next_race] Generating prediction for round {selected_race_round}...")
+    cs_year = datetime.now().year
+    
+    try:
+        # 1. Load the trained model and the original training data (to get column structure)
+        model = joblib.load('f1_prediction_model.joblib')
+        historical_df = pd.read_csv('f1_historical_data.csv')
+        
+        # 2. Get features for ONLY the current drivers for the upcoming race
+        predict_df = get_features_for_prediction(cs_year, selected_race_round, historical_df)
+        
+        if predict_df.empty:
+            return dbc.Alert("Could not gather necessary data to make a prediction. A race may need to be completed in the current season first.", color="danger")
+
+        # 3. Pre-process the prediction data to match the training data format
+        X_predict_numerical = predict_df[['QualifyingPosition', 'ChampionshipStanding', 'ChampionshipPoints', 'RecentFormPoints']]
+        X_predict_categorical = pd.get_dummies(predict_df[['DriverTeamID', 'TrackID']])
+        X_predict = pd.concat([X_predict_numerical, X_predict_categorical], axis=1)
+
+        # Align columns: Ensure the prediction data has the exact same columns as the training data
+        training_cols = model.get_booster().feature_names
+        X_predict_aligned = X_predict.reindex(columns=training_cols, fill_value=0)
+        
+        # 4. Make Predictions
+        predictions = model.predict(X_predict_aligned)
+        predict_df['PredictedPosition'] = predictions
+        
+        # 5. Display Results
+        final_prediction = predict_df.sort_values(by='PredictedPosition').loc[:, ['DriverID', 'TeamID']]
+        final_prediction.insert(0, 'P', range(1, len(final_prediction) + 1))
+        
+        return html.Div([
+            html.H5(f"Predicted Top 10 Finishers", className="mt-3"),
+            dbc.Table.from_dataframe(final_prediction.head(10), striped=True, bordered=True, hover=True, className="mt-2")
+        ])
+    except Exception as e:
+        print(f"Error during prediction: {e}")
+        return dbc.Alert("An error occurred while generating the prediction.", color="danger")
 
 # --- Run the App ---
 if __name__ == '__main__':
