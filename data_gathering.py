@@ -3,6 +3,7 @@ from fastf1 import ergast
 import pandas as pd
 from tqdm import tqdm
 import traceback
+import os # Import the os module
 
 def get_race_data_with_features(year, round_number, ergast_api):
     """Fetches and processes data for a single race, adding advanced features."""
@@ -59,14 +60,28 @@ def get_race_data_with_features(year, round_number, ergast_api):
 
 # --- Main Script ---
 if __name__ == '__main__':
-    ff1.Cache.enable_cache('cache')
+    # --- START OF THE FIX ---
+    # Create the cache directory if it does not exist
+    cache_dir = 'cache'
+    if not os.path.exists(cache_dir):
+        os.makedirs(cache_dir)
+        print(f"Cache directory '{cache_dir}' created.")
+    
+    # Now that we know the folder exists, enable the cache
+    ff1.Cache.enable_cache(cache_dir)
+    print("FastF1 cache enabled successfully.")
+    # --- END OF THE FIX ---
+    
     ergast_api_main = ergast.Ergast()
+    
     ALL_RACE_DATA = []
-    YEARS = [2023, 2024]
-
+    # Using years 2023 and 2024 for a solid dataset
+    YEARS = [2023, 2024] 
+    
     for year in YEARS:
         schedule = ff1.get_event_schedule(year, include_testing=False)
-        race_rounds = schedule[schedule['EventFormat'] != 'testing']['RoundNumber']
+        race_rounds = schedule[schedule['EventName'].str.contains('Grand Prix')]['RoundNumber']
+        
         for rnd in tqdm(race_rounds, desc=f"Processing {year} Races"):
             data = get_race_data_with_features(year, rnd, ergast_api_main)
             if data is not None:
@@ -82,18 +97,19 @@ if __name__ == '__main__':
         ).fillna(0)
         master_df['RecentQualiPos'] = master_df.groupby('DriverID')['QualifyingPosition'].transform(
             lambda x: x.shift(1).rolling(window=5, min_periods=1).mean()
-        ).fillna(10)
+        ).fillna(10) # Fill with a mid-pack default
         master_df['RecentFinishPos'] = master_df.groupby('DriverID')['FinishingPosition'].transform(
             lambda x: x.shift(1).rolling(window=5, min_periods=1).mean()
-        ).fillna(10)
+        ).fillna(10) # Fill with a mid-pack default
         
         # Ensure all necessary columns are selected for the final CSV
         final_columns = [
-            'Year', 'Round', 'TrackID', 'DriverID', 'TeamID', 'DriverTeamID',
+            'Year', 'Round', 'TrackID', 'DriverID', 'TeamID', 'DriverTeamID', 
             'QualifyingPosition', 'ChampionshipStanding', 'ChampionshipPoints', 'Points',
             'RecentFormPoints', 'RecentQualiPos', 'RecentFinishPos',
             'FinishingPosition'
         ]
+        
         master_df = master_df[[col for col in final_columns if col in master_df.columns]]
         
         master_df.to_csv('f1_historical_data.csv', index=False)

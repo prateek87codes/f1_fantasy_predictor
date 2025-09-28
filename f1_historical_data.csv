@@ -1,24 +1,24 @@
 Year,Round,TrackID,DriverID,TeamID,DriverTeamID,QualifyingPosition,ChampionshipStanding,ChampionshipPoints,Points,RecentFormPoints,RecentQualiPos,RecentFinishPos,FinishingPosition
-2023,1,Sakhir,VER,Red Bull Racing,VER_Red Bull Racing,1.0,0.0,0.0,25.0,0.0,0,0,1
-2023,1,Sakhir,PER,Red Bull Racing,PER_Red Bull Racing,2.0,0.0,0.0,18.0,0.0,0,0,2
-2023,1,Sakhir,ALO,Aston Martin,ALO_Aston Martin,5.0,0.0,0.0,15.0,0.0,0,0,3
-2023,1,Sakhir,SAI,Ferrari,SAI_Ferrari,4.0,0.0,0.0,12.0,0.0,0,0.0,4
-2023,1,Sakhir,HAM,Mercedes,HAM_Mercedes,7.0,0.0,0.0,10.0,0.0,0,0,5
-2023,1,Sakhir,STR,Aston Martin,STR_Aston Martin,8.0,0.0,0.0,8.0,0.0,0,0,6
-2023,1,Sakhir,RUS,Mercedes,RUS_Mercedes,6.0,0.0,0.0,6.0,0.0,0,0,7
-2023,1,Sakhir,BOT,Alfa Romeo,BOT_Alfa Romeo,12.0,0.0,0.0,4.0,0.0,0,0,8
-2023,1,Sakhir,GAS,Alpine,GAS_Alpine,20.0,0.0,0.0,2.0,0.0,0,0,9
-2023,1,Sakhir,ALB,Williams,ALB_Williams,15.0,0.0,0.0,1.0,0.0,0,0,10
-2023,1,Sakhir,TSU,AlphaTauri,TSU_AlphaTauri,14.0,0.0,0.0,0.0,0.0,0,0,11
-2023,1,Sakhir,SAR,Williams,SAR_Williams,16.0,0.0,0.0,0.0,0.0,0,0,12
-2023,1,Sakhir,MAG,Haas F1 Team,MAG_Haas F1 Team,17.0,0.0,0.0,0.0,0.0,0,0,13
-2023,1,Sakhir,DEV,AlphaTauri,DEV_AlphaTauri,19.0,0.0,0.0,0.0,0.0,0,0,14
-2023,1,Sakhir,HUL,Haas F1 Team,HUL_Haas F1 Team,10.0,0.0,0.0,0.0,0.0,0,0,15
-2023,1,Sakhir,ZHO,Alfa Romeo,ZHO_Alfa Romeo,13.0,0.0,0.0,0.0,0.0,0,0,16
-2023,1,Sakhir,NOR,McLaren,NOR_McLaren,11.0,0.0,0.0,0.0,0.0,0,0,17
-2023,1,Sakhir,OCO,Alpine,OCO_Alpine,9.0,0.0,0.0,0.0,0.0,0,0,18
-2023,1,Sakhir,LEC,Ferrari,LEC_Ferrari,3.0,0.0,0.0,0.0,0.0,0,0,19
-2023,1,Sakhir,PIA,McLaren,PIA_McLaren,18.0,0.0,0.0,0.0,0.0,0,0,20
+2023,1,Sakhir,VER,Red Bull Racing,VER_Red Bull Racing,1.0,0.0,0.0,25.0,0.0,10.0,10.0,1
+2023,1,Sakhir,PER,Red Bull Racing,PER_Red Bull Racing,2.0,0.0,0.0,18.0,0.0,10.0,10.0,2
+2023,1,Sakhir,ALO,Aston Martin,ALO_Aston Martin,5.0,0.0,0.0,15.0,0.0,10.0,10.0,3
+2023,1,Sakhir,SAI,Ferrari,SAI_Ferrari,4.0,0.0,0.0,12.0,0.0,10.0,10.0,4
+2023,1,Sakhir,HAM,Mercedes,HAM_Mercedes,7.0,0.0,0.0,10.0,0.0,10.0,10.0,5
+2023,1,Sakhir,STR,Aston Martin,STR_Aston Martin,8.0,0.0,0.0,8.0,0.0,10.0,10.0,6
+2023,1,Sakhir,RUS,Mercedes,RUS_Mercedes,6.0,0.0,0.0,6.0,0.0,10.0,10.0,7
+2023,1,Sakhir,BOT,Alfa Romeo,BOT_Alfa Romeo,12.0,0.0,0.0,4.0,0.0,10.0,10.0,8
+2023,1,Sakhir,GAS,Alpine,GAS_Alpine,20.0,0.0,0.0,2.0,0.0,10.0,10.0,9
+2023,1,Sakhir,ALB,Williams,ALB_Williams,15.0,0.0,0.0,1.0,0.0,10.0,10.0,10
+2023,1,Sakhir,TSU,AlphaTauri,TSU_AlphaTauri,14.0,0.0,0.0,0.0,0.0,10.0,10.0,11
+2023,1,Sakhir,SAR,Williams,SAR_Williams,16.0,0.0,0.0,0.0,0.0,10.0,10.0,12
+2023,1,Sakhir,MAG,Haas F1 Team,MAG_Haas F1 Team,17.0,0.0,0.0,0.0,0.0,10.0,10.0,13
+2023,1,Sakhir,DEV,AlphaTauri,DEV_AlphaTauri,19.0,0.0,0.0,0.0,0.0,10.0,10.0,14
+2023,1,Sakhir,HUL,Haas F1 Team,HUL_Haas F1 Team,10.0,0.0,0.0,0.0,0.0,10.0,10.0,15
+2023,1,Sakhir,ZHO,Alfa Romeo,ZHO_Alfa Romeo,13.0,0.0,0.0,0.0,0.0,10.0,10.0,16
+2023,1,Sakhir,NOR,McLaren,NOR_McLaren,11.0,0.0,0.0,0.0,0.0,10.0,10.0,17
+2023,1,Sakhir,OCO,Alpine,OCO_Alpine,9.0,0.0,0.0,0.0,0.0,10.0,10.0,18
+2023,1,Sakhir,LEC,Ferrari,LEC_Ferrari,3.0,0.0,0.0,0.0,0.0,10.0,10.0,19
+2023,1,Sakhir,PIA,McLaren,PIA_McLaren,18.0,0.0,0.0,0.0,0.0,10.0,10.0,20
 2023,2,Jeddah,PER,Red Bull Racing,PER_Red Bull Racing,1.0,2.0,18.0,25.0,18.0,2.0,2.0,1
 2023,2,Jeddah,VER,Red Bull Racing,VER_Red Bull Racing,15.0,1.0,25.0,19.0,25.0,1.0,1.0,2
 2023,2,Jeddah,ALO,Aston Martin,ALO_Aston Martin,2.0,3.0,15.0,15.0,15.0,5.0,3.0,3

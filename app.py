@@ -10,7 +10,6 @@ import plotly.express as px
 import plotly.graph_objects as go
 import numpy as np
 import os
-import google.generativeai as genai # Make sure this is imported
 import traceback 
 import requests
 from functools import lru_cache
@@ -28,18 +27,7 @@ MY_COMPOUND_COLORS = {
 }
 
 # --- API Key and Global Configs ---
-GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 
-if GEMINI_API_KEY == "YOUR_API_KEY_HERE" or GEMINI_API_KEY == "": # Check for empty string too
-    print("Warning: GEMINI_API_KEY is not set. AI features will be disabled.")
-    GEMINI_API_KEY = None 
-else:
-    try:
-        genai.configure(api_key=GEMINI_API_KEY)
-        print("Gemini AI configured successfully.")
-    except Exception as e:
-        print(f"Error configuring Gemini AI: {e}. AI features may not work.")
-        GEMINI_API_KEY = None
 
 # --- NEW: OPENWEATHERMAP API KEY ---
 OPENWEATHER_API_KEY = os.environ.get("OPENWEATHER_API_KEY")
@@ -390,125 +378,178 @@ def get_championship_standings_progression(year, event_round):
     print(f"[get_championship_standings_progression] Completed. Drivers: {len(driver_df)} pts, Constructors: {len(constructor_df)} pts.")
     return driver_df, constructor_df
 
-def get_race_highlights_from_gemini(race_summary_data_str):
-    print(f"[Gemini] Attempting to generate highlights. Data string length: {len(race_summary_data_str) if race_summary_data_str else 0}")
-    if not GEMINI_API_KEY: return "AI highlights unavailable (API key not configured/valid)."
-    if not race_summary_data_str: return "Not enough race data for AI highlights."
+def get_race_highlights_from_perplexity(race_summary_data_str):
+    api_key = os.environ.get("PERPLEXITY_API_KEY")
+    if not api_key:
+        return "AI highlights unavailable - API key not configured."
+    
+    if not race_summary_data_str:
+        return "Not enough race data for AI highlights."
+
+    prompt = (
+    "You are an F1 race analyst. Based on the following F1 session information, "
+    "provide 3-4 key highlights of the race in bullet point format. "
+    "Focus on interesting outcomes, significant events implied by the data, "
+    "or notable performances. Be concise and use markdown for bullet points. "
+    "Do not include citations, reference numbers, or source links in your answer.\n\n"
+    f"Session Information:\n{race_summary_data_str}\n\nYour 3-4 bullet point highlights:")
+
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+    }
+
+    json_payload = {
+        "model": "sonar-pro",   # Example model name, check your Perplexity docs or dashboard for available models
+        "messages": [
+            {"role": "system", "content": "Be precise and concise."},
+            {"role": "user", "content": prompt}
+        ],
+        "max_tokens": 150,
+        "temperature": 0.7
+    }
+
     try:
-        model = genai.GenerativeModel('gemini-1.5-flash-latest') 
-        prompt = (
-            "You are an F1 race analyst. Based on the following F1 session information, "
-            "provide 3-4 key highlights of the race in bullet point format. "
-            "Focus on interesting outcomes, significant events implied by the data, or notable performances. Be concise and use markdown for bullet points (e.g., * Highlight 1).\n\n"
-            "Session Information:\n"
-            f"{race_summary_data_str}\n\n"
-            "Your 3-4 bullet point highlights:"
+        response = requests.post(
+            "https://api.perplexity.ai/chat/completions",
+            headers=headers,
+            json=json_payload,
+            timeout=10
         )
-        print(f"[Gemini Call] Sending prompt to model 'gemini-1.5-flash-latest' (first 100 chars): {prompt[:100]}...")
-        response = model.generate_content(prompt)
-        print("[Gemini Call] Received response.")
-        if response.parts:
-            generated_text = "".join(part.text for part in response.parts if hasattr(part, 'text'))
-            if generated_text: print(f"[Gemini Call] Generated text (first 100 chars): {generated_text[:100]}..."); return generated_text
-        if response.prompt_feedback and response.prompt_feedback.block_reason:
-            block_reason = response.prompt_feedback.block_reason; block_reason_message = response.prompt_feedback.block_reason_message or "No specific message."
-            print(f"[Gemini Call] Content blocked. Reason: {block_reason}, Message: {block_reason_message}")
-            return f"AI highlights could not be generated. Reason: Content blocked by API ({block_reason})."
-        return "AI highlights could not be generated (empty or unexpected response from AI)."
+        response.raise_for_status()
+        data = response.json()
+        # Extracting response text from the 'choices' list as in OpenAI-style APIs
+        if "choices" in data and len(data["choices"]) > 0:
+            return data["choices"][0]["message"]["content"].strip()
+        else:
+            return "AI highlights currently unavailable."
     except Exception as e:
-        print(f"Error calling Gemini API: {e}")
-        if "API_KEY_INVALID" in str(e) or "PERMISSION_DENIED" in str(e): return "AI highlights unavailable: API key/permission issue."
-        return f"Error generating AI highlights: {str(e)[:200]}"
+        print(f"Perplexity API error for race highlights: {e}")
+        return "Could not generate AI highlights due to an API error."
 
 
 
 # --- REPLACE your existing get_ai_team_summary function with this one ---
-def get_ai_team_summary(team_name, summary_type="history", performance_data=""):
-    """Generates a specific summary for a team using Gemini AI."""
-    if not GEMINI_API_KEY:
-        return "AI insights are disabled (API key not configured)."
-
-    # Default prompt in case of error
-    prompt_details = f"Could not generate summary for {team_name}."
+def get_ai_team_summary(team_name, summary_type, context=""):
+    api_key = os.environ.get("PERPLEXITY_API_KEY")
+    if not api_key:
+        return "AI insights are disabled - API key not configured."
 
     if summary_type == "history":
-        prompt_details = f"Provide a brief, 1-2 sentence history of the {team_name} Formula 1 team, focusing on their origins and key achievements."
+        user_prompt = (f"Provide a brief 1-2 sentence history of the Formula 1 team {team_name}, focusing on their origins and key achievements. "
+    "Do not include citations, reference numbers, or source links in your answer.")
     elif summary_type == "performance":
-        # Now we correctly use the performance_data passed into the function
-        prompt_details = (
-            f"You are an F1 analyst. Based on the following data, provide a 1-2 sentence summary of the "
-            f"{team_name} team's performance so far in the 2025 F1 season.\n\n"
-            f"Current Data: {performance_data}\n\n"
-            f"Your 1-2 sentence summary:"
-        )
+        user_prompt = (f"You are an F1 expert analyst. Based on the following data about the {team_name} team performance, "
+    "provide a concise 1-2 sentence summary. Do not include citations, reference numbers, or source links in your answer. "f"{context}")
+    else:
+        return "Information unavailable."
+
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+    }
+
+    json_payload = {
+        "model": "sonar-pro",  # Adjust if you have access to other models
+        "messages": [
+            {"role": "system", "content": "You are an F1 data analyst. Provide a concise, factual summary with NO citations, NO reference numbers, "
+    "and NO source links—just clear narrative text."
+    "\n\n[existing prompt content here]\n\n"},
+            {"role": "user", "content": user_prompt}
+        ],
+        "max_tokens": 100,
+        "temperature": 0.7
+    }
 
     try:
-        model = genai.GenerativeModel('gemini-1.5-flash-latest')
-        response = model.generate_content(prompt_details)
-        
-        # Add a more robust check for response text
-        if response.parts:
-            return "".join(part.text for part in response.parts if hasattr(part, 'text'))
-        return "AI summary generation resulted in an empty response."
+        response = requests.post(
+            "https://api.perplexity.ai/chat/completions",
+            headers=headers,
+            json=json_payload,
+            timeout=10
+        )
+        response.raise_for_status()
+        data = response.json()
+        if "choices" in data and len(data["choices"]) > 0:
+            return data["choices"][0]["message"]["content"].strip()
+        else:
+            return "AI summary currently unavailable."
     except Exception as e:
-        print(f"Gemini error for {team_name} ({summary_type}): {e}")
+        print(f"Perplexity API error for {team_name}: {e}")
         return "Could not generate AI summary due to an API error."
 
-# --- REPLACE your existing get_all_teams_data function with this one ---
-@lru_cache(maxsize=32)
+
+
+@lru_cache(maxsize=2)
 def get_all_teams_data(year):
     print(f"[get_all_teams_data] Fetching data for all {year} teams...")
     try:
         schedule = ff1.get_event_schedule(year, include_testing=False)
+        if schedule.empty:
+            print(f"Could not load event schedule for {year}.")
+            return []
+
+        # Get the latest completed race to fetch standings
         schedule['EventDate'] = pd.to_datetime(schedule['EventDate'])
-        completed_races = schedule[schedule['EventDate'] < pd.Timestamp.now()].sort_values(by='EventDate', ascending=False)
-        
+        completed_races = (
+            schedule[schedule['EventDate'] < pd.Timestamp.now()]
+            .sort_values(by='EventDate', ascending=False)
+            .copy()
+        )
         if completed_races.empty:
             print("[get_all_teams_data] No completed races found for this year yet.")
             return []
 
         latest_race = completed_races.iloc[0]
-        session = ff1.get_session(year, latest_race['EventName'], 'R'); session.load(laps=False, telemetry=False, weather=False, messages=False)
-        results = session.results
-        
+        print(f"Using latest race: {latest_race['EventName']}")  # Debug line
+
+        # Fetch constructor standings from Ergast (handle list case)
         ergast_api = ergast.Ergast()
         constructor_standings_df = pd.DataFrame()
         try:
-            standings_content = ergast_api.get_constructor_standings(season=year, round=latest_race['RoundNumber']).content
-            if standings_content:
-                constructor_standings_df = standings_content[0].reset_index()
-                print(f"[get_all_teams_data] Successfully fetched constructor standings. Available: {constructor_standings_df['constructorName'].tolist()}")
+            round_number = int(latest_race['RoundNumber'])  # Ensure it's an integer
+            standings_content = ergast_api.get_constructor_standings(season=year, round=round_number).content
+            # Ergast returns a list of DataFrames; get the first if available
+            if isinstance(standings_content, list) and len(standings_content) > 0:
+                constructor_standings_df = standings_content[0]
+            else:
+                constructor_standings_df = pd.DataFrame()
         except Exception as e_ergast:
             print(f"Could not fetch constructor standings: {e_ergast}")
+
+        # Get team and driver info from a minimal session load
+        session = ff1.get_session(year, latest_race['EventName'], 'R')
+        session.load(laps=False, telemetry=False, weather=False, messages=False)
+        results = session.results
+        
+        if results is None or results.empty:
+            print("Could not load session results for the latest race.")
+            return []
 
         teams_data = []
         unique_teams = results['TeamName'].dropna().unique()
         
-        for team_name in unique_teams: # e.g., 'Alpine' from session results
+        for team_name in unique_teams:
             team_drivers = results[results['TeamName'] == team_name]
             driver_list = team_drivers[['Abbreviation', 'FullName']].to_dict('records')
             
-            # --- FINAL, CORRECTED LOGIC ---
-            
-            # 1. Use the map to find the official constructor name for lookups
             official_constructor_name = TEAM_NAME_TO_CONSTRUCTOR_NAME_MAP.get(team_name, team_name)
-            
-            # 2. Get the team color using the official name
             final_color = CONSTRUCTOR_NAME_TO_COLOR_MAP.get(official_constructor_name, "#CCCCCC")
             
-            # 3. Get the team standing using the official name
             team_standing_info = "Current championship position data is unavailable."
             if not constructor_standings_df.empty:
                 team_in_standings = constructor_standings_df[constructor_standings_df['constructorName'] == official_constructor_name]
-                
                 if not team_in_standings.empty:
                     standing = team_in_standings.iloc[0]
-                    team_standing_info = f"They are currently P{standing['position']} in the constructors' championship with {standing['points']} points after Round {latest_race['RoundNumber']}."
+                    team_standing_info = (
+                        f"They are currently P{standing['position']} "
+                        f"in the constructors' championship with {standing['points']} points after Round {latest_race['RoundNumber']}."
+                    )
 
             team_info = {
-                "TeamName": team_name,
-                "TeamColor": final_color,
-                "Drivers": driver_list,
+                "TeamName": team_name, "TeamColor": final_color, "Drivers": driver_list,
                 "History": get_ai_team_summary(team_name, "history"),
                 "Performance": get_ai_team_summary(team_name, "performance", team_standing_info)
             }
@@ -517,7 +558,8 @@ def get_all_teams_data(year):
         return teams_data
     except Exception as e:
         import traceback
-        print(f"Major error in get_all_teams_data: {e}"); traceback.print_exc()
+        print(f"Major error in get_all_teams_ {e}")
+        traceback.print_exc()
         return []
 
 # --- MAIN DATA FETCHING FUNCTION (get_session_results) --- (MODIFIED for P_OVERVIEW table)
@@ -821,6 +863,7 @@ historical_years_options = [{'label': str(y), 'value': y} for y in range(2018, h
 hist_session_type_options = [{'label': 'Qualifying', 'value': 'Q'}, {'label': 'Sprint', 'value': 'S'}, {'label': 'Race', 'value': 'R'}]
 cs_session_type_options = [{'label': 'Practice Overview', 'value': 'P_OVERVIEW'}, {'label': 'Qualifying', 'value': 'Q'}, {'label': 'Sprint', 'value': 'S'}, {'label': 'Race', 'value': 'R'}]
 
+
 # --- Content for Tab 1: Historical Data ---
 tab_historical_content = dbc.Card(
     dbc.CardBody([
@@ -975,8 +1018,304 @@ tab_predictions_content = dbc.Card(
 )
 
 # --- Placeholder content for other tabs ---
-tab_fantasy_rules_content = dbc.Card(dbc.CardBody([html.P("Content for Fantasy League Rules and Restrictions will be built here.")]), className="mt-3")
+
 tab_fantasy_creator_content = dbc.Card(dbc.CardBody([html.P("Content for Fantasy Team Creator tool will be built here.")]), className="mt-3")
+
+# --- START: NEW FANTASY RULES LAYOUT ---
+
+# Data for the scoring tables, based on the F1 Fantasy rules PDF
+qualifying_sprint_points_data = [
+    {'position': 'P1', 'qualifying': 10, 'sprint': 8}, {'position': 'P2', 'qualifying': 9, 'sprint': 7},
+    {'position': 'P3', 'qualifying': 8, 'sprint': 6}, {'position': 'P4', 'qualifying': 7, 'sprint': 5},
+    {'position': 'P5', 'qualifying': 6, 'sprint': 4}, {'position': 'P6', 'qualifying': 5, 'sprint': 3},
+    {'position': 'P7', 'qualifying': 4, 'sprint': 2}, {'position': 'P8', 'qualifying': 3, 'sprint': 1},
+    {'position': 'P9', 'qualifying': 2, 'sprint': 0}, {'position': 'P10', 'qualifying': 1, 'sprint': 0},
+]
+
+grand_prix_points_data = [
+    {'position': 'P1', 'points': 25}, {'position': 'P2', 'points': 18},
+    {'position': 'P3', 'points': 15}, {'position': 'P4', 'points': 12},
+    {'position': 'P5', 'points': 10}, {'position': 'P6', 'points': 8},
+    {'position': 'P7', 'points': 6}, {'position': 'P8', 'points': 4},
+    {'position': 'P9', 'points': 2}, {'position': 'P10', 'points': 1},
+]
+
+other_driver_points_data = [
+    {'action': 'Overtake Made', 'points': '+1'},
+    {'action': 'Fastest Lap', 'points': '+5'},
+    {'action': 'Driver of the Day', 'points': '+5'},
+    {'action': 'Not Classified (DNF)', 'points': '-15'},
+    {'action': 'Disqualified', 'points': '-20'},
+]
+
+constructor_points_data = [
+    {'action': 'Fastest Pit Stop', 'points': '+5'},
+    {'action': 'Fastest Pit Stop (World Record)', 'points': '+15 (Bonus)'},
+    {'action': 'Disqualified (per driver)', 'points': '-20'},
+]
+
+# This is the main layout variable for the fantasy rules tab
+tab_fantasy_rules_content = dbc.Card(
+    dbc.CardBody([
+        dbc.Container([
+            dbc.Row(dbc.Col(html.H2("Official F1 Fantasy Rules (2025)"), className="mb-4 text-center")),
+            
+            # --- Team & Budget ---
+            dbc.Card([
+                dbc.CardHeader(html.H4("Team Setup & Budget")),
+                dbc.CardBody([
+                    html.P("Build your dream team with a set budget to score points based on real-life race results."),
+                    html.Ul([
+                        html.Li(["Your team must consist of ", html.B("5 Drivers"), " and ", html.B("2 Constructors"),"."]),
+                        html.Li(["You have an initial budget of ", html.B("$100.0M"), " to spend."]),
+                        html.Li("You can make free transfers between race weeks. Additional transfers cost points."),
+                    ])
+                ])
+            ], className="mb-4"),
+
+            # --- Scoring System ---
+            dbc.Card([
+                dbc.CardHeader(html.H4("Scoring System")),
+                dbc.CardBody([
+                    dbc.Row([
+                        dbc.Col([
+                            html.H5("Qualifying & Sprint Points (Drivers)"),
+                            dbc.Table.from_dataframe(pd.DataFrame(qualifying_sprint_points_data), striped=True, bordered=True, hover=True)
+                        ], md=6),
+                        dbc.Col([
+                            html.H5("Grand Prix Finishing Points (Drivers)"),
+                            dbc.Table.from_dataframe(pd.DataFrame(grand_prix_points_data), striped=True, bordered=True, hover=True)
+                        ], md=6),
+                    ]),
+                    html.Hr(),
+                    dbc.Row([
+                        dbc.Col([
+                            html.H5("Other Driver Points"),
+                            dbc.Table.from_dataframe(pd.DataFrame(other_driver_points_data), striped=True, bordered=True, hover=True)
+                        ], md=6),
+                        dbc.Col([
+                            html.H5("Constructor-Specific Points"),
+                            dbc.Table.from_dataframe(pd.DataFrame(constructor_points_data), striped=True, bordered=True, hover=True),
+                            html.P("Constructors also score the combined total of their drivers' points from all sessions.", className="mt-2 fst-italic")
+                        ], md=6),
+                    ])
+                ])
+            ], className="mb-4"),
+
+            # --- Chips & Power-ups ---
+            dbc.Card([
+                dbc.CardHeader(html.H4("Chips (Power-ups)")),
+                dbc.CardBody([
+                    html.P("Use chips to gain a strategic advantage. Each can only be used once per season."),
+                    html.Ul([
+                        html.Li([html.B("Wildcard:"), " Make unlimited free transfers for one race week."]),
+                        html.Li([html.B("Triple Captain:"), " The selected driver's score for the race week is tripled."]),
+                        html.Li([html.B("Final Fix:"), " Make one driver substitution between qualifying and the race."]),
+                    ])
+                ])
+            ], className="mb-4"),
+            
+            # --- Team Budget and Values ---
+            dbc.Card([
+                dbc.CardHeader(html.H4("Team Budget and Values")),
+                dbc.CardBody([
+                    html.P([
+                        "Total team budget: ", html.B("$113.7M"), 
+                        ". Current driver and constructor values are shown below."
+                    ]),
+                    
+                    dbc.Row([
+                        # Drivers Table
+                        dbc.Col([
+                            html.H5("Driver Values", className="mb-3"),
+                            dbc.Table([
+                                html.Thead([
+                                    html.Tr([
+                                        html.Th("", style={"width": "50px"}),  # Image column
+                                        html.Th("Driver"),
+                                        html.Th("Value")
+                                    ])
+                                ]),
+                                html.Tbody([
+                                    html.Tr([
+                                        html.Td(html.Img(src=app.get_asset_url("images/drivers/nor.png"), style={"width": "40px", "height": "40px", "border-radius": "50%"})),
+                                        html.Td("Lando Norris"),
+                                        html.Td("$30.9M")
+                                    ]),
+                                    html.Tr([
+                                        html.Td(html.Img(src=app.get_asset_url("images/drivers/pia.png"), style={"width": "40px", "height": "40px", "border-radius": "50%"})),
+                                        html.Td("Oscar Piastri"),
+                                        html.Td("$26.9M")
+                                    ]),
+                                    html.Tr([
+                                        html.Td(html.Img(src=app.get_asset_url("images/drivers/ver.png"), style={"width": "40px", "height": "40px", "border-radius": "50%"})),
+                                        html.Td("Max Verstappen"),
+                                        html.Td("$28.5M")
+                                    ]),
+                                    html.Tr([
+                                        html.Td(html.Img(src=app.get_asset_url("images/drivers/rus.png"), style={"width": "40px", "height": "40px", "border-radius": "50%"})),
+                                        html.Td("George Russell"),
+                                        html.Td("$22.7M")
+                                    ]),
+                                    html.Tr([
+                                        html.Td(html.Img(src=app.get_asset_url("images/drivers/ham.png"), style={"width": "40px", "height": "40px", "border-radius": "50%"})),
+                                        html.Td("Lewis Hamilton"),
+                                        html.Td("$22.9M")
+                                    ]),
+                                    html.Tr([
+                                        html.Td(html.Img(src=app.get_asset_url("images/drivers/lec.png"), style={"width": "40px", "height": "40px", "border-radius": "50%"})),
+                                        html.Td("Charles Leclerc"),
+                                        html.Td("$23.0M")
+                                    ]),
+                                    html.Tr([
+                                        html.Td(html.Img(src=app.get_asset_url("images/drivers/ant.png"), style={"width": "40px", "height": "40px", "border-radius": "50%"})),
+                                        html.Td("Kimi Antonelli"),
+                                        html.Td("$14.9M")
+                                    ]),
+                                    html.Tr([
+                                        html.Td(html.Img(src=app.get_asset_url("images/drivers/hul.png"), style={"width": "40px", "height": "40px", "border-radius": "50%"})),
+                                        html.Td("Nico Hulkenberg"),
+                                        html.Td("$8.6M")
+                                    ]),
+                                    html.Tr([
+                                        html.Td(html.Img(src=app.get_asset_url("images/drivers/alb.png"), style={"width": "40px", "height": "40px", "border-radius": "50%"})),
+                                        html.Td("Alexander Albon"),
+                                        html.Td("$13.0M")
+                                    ]),
+                                    html.Tr([
+                                        html.Td(html.Img(src=app.get_asset_url("images/drivers/str.png"), style={"width": "40px", "height": "40px", "border-radius": "50%"})),
+                                        html.Td("Lance Stroll"),
+                                        html.Td("$9.9M")
+                                    ]),
+                                    html.Tr([
+                                        html.Td(html.Img(src=app.get_asset_url("images/drivers/bea.png"), style={"width": "40px", "height": "40px", "border-radius": "50%"})),
+                                        html.Td("Oliver Bearman"),
+                                        html.Td("$7.3M")
+                                    ]),
+                                    html.Tr([
+                                        html.Td(html.Img(src=app.get_asset_url("images/drivers/oco.png"), style={"width": "40px", "height": "40px", "border-radius": "50%"})),
+                                        html.Td("Esteban Ocon"),
+                                        html.Td("$8.3M")
+                                    ]),
+                                    html.Tr([
+                                        html.Td(html.Img(src=app.get_asset_url("images/drivers/tsu.png"), style={"width": "40px", "height": "40px", "border-radius": "50%"})),
+                                        html.Td("Yuki Tsunoda"),
+                                        html.Td("$9.8M")
+                                    ]),
+                                    html.Tr([
+                                        html.Td(html.Img(src=app.get_asset_url("images/drivers/had.png"), style={"width": "40px", "height": "40px", "border-radius": "50%"})),
+                                        html.Td("Isack Hadjar"),
+                                        html.Td("$6.9M")
+                                    ]),
+                                    html.Tr([
+                                        html.Td(html.Img(src=app.get_asset_url("images/drivers/sai.png"), style={"width": "40px", "height": "40px", "border-radius": "50%"})),
+                                        html.Td("Carlos Sainz"),
+                                        html.Td("$5.7M")
+                                    ]),
+                                    html.Tr([
+                                        html.Td(html.Img(src=app.get_asset_url("images/drivers/bor.png"), style={"width": "40px", "height": "40px", "border-radius": "50%"})),
+                                        html.Td("Gabriel Bortoleto"),
+                                        html.Td("$5.9M")
+                                    ]),
+                                    html.Tr([
+                                        html.Td(html.Img(src=app.get_asset_url("images/drivers/law.png"), style={"width": "40px", "height": "40px", "border-radius": "50%"})),
+                                        html.Td("Liam Lawson"),
+                                        html.Td("$5.9M")
+                                    ]),
+                                    html.Tr([
+                                        html.Td(html.Img(src=app.get_asset_url("images/drivers/alo.png"), style={"width": "40px", "height": "40px", "border-radius": "50%"})),
+                                        html.Td("Fernando Alonso"),
+                                        html.Td("$7.3M")
+                                    ]),
+                                    html.Tr([
+                                        html.Td(html.Img(src=app.get_asset_url("images/drivers/gas.png"), style={"width": "40px", "height": "40px", "border-radius": "50%"})),
+                                        html.Td("Pierre Gasly"),
+                                        html.Td("$4.5M")
+                                    ]),
+                                    html.Tr([
+                                        html.Td(html.Img(src=app.get_asset_url("images/drivers/col.png"), style={"width": "40px", "height": "40px", "border-radius": "50%"})),
+                                        html.Td("Franco Colapinto"),
+                                        html.Td("$4.5M")
+                                    ])
+                                ])
+                            ], striped=True, hover=True, size="sm")
+                        ], md=6),
+                        
+                        # Constructors Table
+                        dbc.Col([
+                            html.H5("Constructor Values", className="mb-3"),
+                            dbc.Table([
+                                html.Thead([
+                                    html.Tr([
+                                        html.Th("", style={"width": "50px"}),  # Logo column
+                                        html.Th("Constructor"),
+                                        html.Th("Value")
+                                    ])
+                                ]),
+                                html.Tbody([
+                                    html.Tr([
+                                        html.Td(html.Img(src=app.get_asset_url("images/teams/mclaren.png"), style={"width": "40px", "height": "30px"})),
+                                        html.Td("McLaren"),
+                                        html.Td("$35.1M")
+                                    ]),
+                                    html.Tr([
+                                        html.Td(html.Img(src=app.get_asset_url("images/teams/ferrari.png"), style={"width": "40px", "height": "30px"})),
+                                        html.Td("Ferrari"),
+                                        html.Td("$30.6M")
+                                    ]),
+                                    html.Tr([
+                                        html.Td(html.Img(src=app.get_asset_url("images/teams/red_bull_racing.png"), style={"width": "40px", "height": "30px"})),
+                                        html.Td("Red Bull Racing"),
+                                        html.Td("$29.3M")
+                                    ]),
+                                    html.Tr([
+                                        html.Td(html.Img(src=app.get_asset_url("images/teams/mercedes.png"), style={"width": "40px", "height": "30px"})),
+                                        html.Td("Mercedes"),
+                                        html.Td("$26.6M")
+                                    ]),
+                                    html.Tr([
+                                        html.Td(html.Img(src=app.get_asset_url("images/teams/alpine.png"), style={"width": "40px", "height": "30px"})),
+                                        html.Td("Alpine"),
+                                        html.Td("$8.1M")
+                                    ]),
+                                    html.Tr([
+                                        html.Td(html.Img(src=app.get_asset_url("images/teams/haas_f1_team.png"), style={"width": "40px", "height": "30px"})),
+                                        html.Td("Haas"),
+                                        html.Td("$13.2M")
+                                    ]),
+                                    html.Tr([
+                                        html.Td(html.Img(src=app.get_asset_url("images/teams/racing_bulls.png"), style={"width": "40px", "height": "30px"})),
+                                        html.Td("Racing Bulls"),
+                                        html.Td("$13.0M")
+                                    ]),
+                                    html.Tr([
+                                        html.Td(html.Img(src=app.get_asset_url("images/teams/kick_sauber.png"), style={"width": "40px", "height": "30px"})),
+                                        html.Td("Kick Sauber"),
+                                        html.Td("$10.7M")
+                                    ]),
+                                    html.Tr([
+                                        html.Td(html.Img(src=app.get_asset_url("images/teams/aston_martin.png"), style={"width": "40px", "height": "30px"})),
+                                        html.Td("Aston Martin"),
+                                        html.Td("$12.3M")
+                                    ]),
+                                    html.Tr([
+                                        html.Td(html.Img(src=app.get_asset_url("images/teams/williams.png"), style={"width": "40px", "height": "30px"})),
+                                        html.Td("Williams"),
+                                        html.Td("$17.3M")
+                                    ])
+                                ])
+                            ], striped=True, hover=True, size="sm")
+                        ], md=6)
+                    ])
+                ])
+            ], className="mb-4")
+
+        
+        ], fluid=True, className="mt-4")
+    ])
+)
+# --- END: NEW FANTASY RULES LAYOUT ---
+
 
 # --- Main App Layout ---
 app.layout = dbc.Container([
@@ -1066,7 +1405,7 @@ def update_hist_main_content(selected_year, selected_event, selected_session_typ
         if not fl_driver_row_hist.empty: summary_parts_hist.append(f"Fastest Lap: {fl_driver_row_hist.iloc[0]['Driver']}.")
         dnfs_hist = raw_results_df[ (raw_results_df['Status'] != 'Finished') & (~raw_results_df['Status'].str.contains(r'\+', na=False)) & (raw_results_df['GridPosition'] <= 10) ]
         if not dnfs_hist.empty: summary_parts_hist.append("Notable DNFs (from top 10 grid):"); [summary_parts_hist.append(f"  - {dnf_row['DriverName']} ({dnf_row['TeamName']}), Status: {dnf_row['Status']}") for _, dnf_row in dnfs_hist.head(2).iterrows()]
-        race_data_summary_hist_str = "\n".join(summary_parts_hist); ai_highlights_hist_md = get_race_highlights_from_gemini(race_data_summary_hist_str)
+        race_data_summary_hist_str = "\n".join(summary_parts_hist); ai_highlights_hist_md = get_race_highlights_from_perplexity(race_data_summary_hist_str)
     elif selected_session_type != 'R': ai_highlights_hist_md = "AI Race highlights are available for Race sessions only on this tab."
     fig = {} 
     team_color_map = {}
@@ -1289,7 +1628,7 @@ def update_cs_season_so_far_content(stored_selection, active_main_tab):
             if podium_data_list: summary_parts.append("Podium:"); [summary_parts.append(f"  {p['Position']}. {p['DriverName']} ({p['TeamName']})") for p in podium_data_list]
             if 'is_fastest_lap_holder' in display_df.columns: fl_dr_row = display_df[display_df['is_fastest_lap_holder']==True]; 
             if not fl_dr_row.empty: summary_parts.append(f"Fastest Lap: {fl_dr_row.iloc[0]['Driver']}.")
-        if selected_session_type in ['Q','R','S']: data_summary_str = "\n".join(summary_parts); ai_highlights_md = get_race_highlights_from_gemini(data_summary_str)
+        if selected_session_type in ['Q','R','S']: data_summary_str = "\n".join(summary_parts); ai_highlights_md = get_race_highlights_from_perplexity(data_summary_str)
     else: ai_highlights_md = "Not enough data for AI summary."
     team_color_map_cs = {}
     if not raw_results_for_graph.empty and 'TeamName' in raw_results_for_graph.columns:
@@ -1528,7 +1867,7 @@ def render_cs_sub_tab(n_clicks_so_far, n_clicks_next_race, n_clicks_calendar, ma
                     sc_count = next_race_data.get('SafetyCarsLastYear', 0); sc_summary = f"Safety Cars Last Year: There were {sc_count} safety car deployments."
                     ai_prompt_data = "\n".join(strategy_summary_list) + "\n\n" + "\n".join(weather_summary_list) + "\n" + sc_summary
                     ai_prompt = (f"You are an expert F1 strategist analyzing {next_race_data['EventName']}.\n\n{ai_prompt_data}\n\nBased ONLY on this data, provide 2-3 concise bullet points on potential tyre strategy considerations for this year's race.")
-                    ai_tyre_insights = dcc.Markdown(get_race_highlights_from_gemini(ai_prompt))
+                    ai_tyre_insights = dcc.Markdown(get_race_highlights_from_perplexity(ai_prompt))
             
             tyre_strategy_section = dbc.Row([dbc.Col([dbc.Card([dbc.CardHeader("Tyre Strategy Analysis"), dbc.CardBody(dcc.Graph(figure=tyre_fig))]), dbc.Card([dbc.CardHeader("AI Tyre Strategy Insights"), dbc.CardBody(dcc.Loading(ai_tyre_insights))], className="mt-3")])], className="mb-4")
             
