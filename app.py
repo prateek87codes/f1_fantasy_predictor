@@ -1017,11 +1017,575 @@ tab_predictions_content = dbc.Card(
     ])
 )
 
-# --- Placeholder content for other tabs ---
+# --- FANTASY TEAM CREATOR LAYOUT WITH SUB-NAVIGATION (MATCHING CURRENT SEASON STYLE) ---
 
-tab_fantasy_creator_content = dbc.Card(dbc.CardBody([html.P("Content for Fantasy Team Creator tool will be built here.")]), className="mt-3")
+# Default values from Fantasy Rules page
+default_driver_values = {
+    "Lando Norris": 30.9, "Oscar Piastri": 26.9, "Max Verstappen": 28.5,
+    "George Russell": 22.7, "Lewis Hamilton": 22.9, "Charles Leclerc": 23.0,
+    "Kimi Antonelli": 14.9, "Nico Hulkenberg": 8.6, "Alexander Albon": 13.0,
+    "Lance Stroll": 9.9, "Oliver Bearman": 7.3, "Esteban Ocon": 8.3,
+    "Yuki Tsunoda": 9.8, "Isack Hadjar": 6.9, "Carlos Sainz": 5.7,
+    "Gabriel Bortoleto": 5.9, "Liam Lawson": 5.9, "Fernando Alonso": 7.3,
+    "Pierre Gasly": 4.5, "Franco Colapinto": 4.5
+}
 
-# --- START: NEW FANTASY RULES LAYOUT ---
+default_constructor_values = {
+    "McLaren": 35.1, "Ferrari": 30.6, "Red Bull Racing": 29.3,
+    "Mercedes": 26.6, "Alpine": 8.1, "Haas": 13.2,
+    "Racing Bulls": 13.0, "Kick Sauber": 10.7, "Aston Martin": 12.3,
+    "Williams": 17.3
+}
+
+# Sub-navigation for Fantasy Team Creator (matching Current Season style)
+fantasy_sub_navbar = dbc.Nav([
+    dbc.NavLink("Fantasy Team Inputs", active=True, href="#fantasy-inputs", id="fantasy-navlink-inputs"),
+    dbc.NavLink("Fantasy Team Creation", href="#fantasy-creation", id="fantasy-navlink-creation")
+], pills=True, id="fantasy-sub-nav", className="mb-3 justify-content-center")
+
+# Main content layout
+tab_fantasy_team_creator_content = dbc.Card([
+    dbc.CardBody([
+        html.H4("Fantasy Team Creator", className="mb-3 text-center"),
+        fantasy_sub_navbar,
+        html.Div(id="fantasy-sub-tab-content-area", className="mt-3")
+    ])
+])
+
+# --- SUB-TAB CONTENT LAYOUTS ---
+
+# Fantasy Team Inputs Layout - COMPLETE VERSION WITH ALL DRIVERS & CONSTRUCTORS
+fantasy_inputs_layout = dbc.Container([
+    # Section 1: Updated Driver Values
+    dbc.Card([
+        dbc.CardHeader(html.H4("Updated Driver Values")),
+        dbc.CardBody([
+            html.P("Adjust driver values from their default amounts. Use +/- buttons to modify in $0.1M increments."),
+            dbc.Row([
+                # Left column - drivers 1-10
+                dbc.Col([
+                    html.Div([
+                        # Lando Norris
+                        dbc.Row([
+                            dbc.Col([html.Img(src=app.get_asset_url("images/drivers/Nor.png"), style={"width": "35px", "height": "35px", "border-radius": "50%"})], width=2),
+                            dbc.Col([html.Span("Lando Norris", className="fw-bold")], width=5),
+                            dbc.Col([
+                                dbc.ButtonGroup([
+                                    dbc.Button("-", id="norris-minus", size="sm", color="outline-danger"),
+                                    dbc.Input(id="norris-value", type="text", value=30.9, step=0.1, style={"textAlign": "center", "border": "none", "background": "transparent"}, size="sm", readonly=True),
+                                    dbc.Button("+", id="norris-plus", size="sm", color="outline-success")
+                                ], size="sm")
+                            ], width=5)
+                        ], className="align-items-center mb-2"),
+                        
+                        # Oscar Piastri
+                        dbc.Row([
+                            dbc.Col([html.Img(src=app.get_asset_url("images/drivers/Pia.png"), style={"width": "35px", "height": "35px", "border-radius": "50%"})], width=2),
+                            dbc.Col([html.Span("Oscar Piastri", className="fw-bold")], width=5),
+                            dbc.Col([
+                                dbc.ButtonGroup([
+                                    dbc.Button("-", id="piastri-minus", size="sm", color="outline-danger"),
+                                    dbc.Input(id="piastri-value", type="text", value=26.9, step=0.1, style={"textAlign": "center", "border": "none", "background": "transparent"}, size="sm", readonly=True),
+                                    dbc.Button("+", id="piastri-plus", size="sm", color="outline-success")
+                                ], size="sm")
+                            ], width=5)
+                        ], className="align-items-center mb-2"),
+                        
+                        # Max Verstappen
+                        dbc.Row([
+                            dbc.Col([html.Img(src=app.get_asset_url("images/drivers/Ver.png"), style={"width": "35px", "height": "35px", "border-radius": "50%"})], width=2),
+                            dbc.Col([html.Span("Max Verstappen", className="fw-bold")], width=5),
+                            dbc.Col([
+                                dbc.ButtonGroup([
+                                    dbc.Button("-", id="verstappen-minus", size="sm", color="outline-danger"),
+                                    dbc.Input(id="verstappen-value", type="text", value=28.5, step=0.1, style={"textAlign": "center", "border": "none", "background": "transparent"}, size="sm", readonly=True),
+                                    dbc.Button("+", id="verstappen-plus", size="sm", color="outline-success")
+                                ], size="sm")
+                            ], width=5)
+                        ], className="align-items-center mb-2"),
+                        
+                        # George Russell
+                        dbc.Row([
+                            dbc.Col([html.Img(src=app.get_asset_url("images/drivers/Rus.png"), style={"width": "35px", "height": "35px", "border-radius": "50%"})], width=2),
+                            dbc.Col([html.Span("George Russell", className="fw-bold")], width=5),
+                            dbc.Col([
+                                dbc.ButtonGroup([
+                                    dbc.Button("-", id="russell-minus", size="sm", color="outline-danger"),
+                                    dbc.Input(id="russell-value", type="text", value=22.7, step=0.1, style={"textAlign": "center", "border": "none", "background": "transparent"}, size="sm", readonly=True),
+                                    dbc.Button("+", id="russell-plus", size="sm", color="outline-success")
+                                ], size="sm")
+                            ], width=5)
+                        ], className="align-items-center mb-2"),
+                        
+                        # Lewis Hamilton
+                        dbc.Row([
+                            dbc.Col([html.Img(src=app.get_asset_url("images/drivers/Ham.png"), style={"width": "35px", "height": "35px", "border-radius": "50%"})], width=2),
+                            dbc.Col([html.Span("Lewis Hamilton", className="fw-bold")], width=5),
+                            dbc.Col([
+                                dbc.ButtonGroup([
+                                    dbc.Button("-", id="hamilton-minus", size="sm", color="outline-danger"),
+                                    dbc.Input(id="hamilton-value", type="text", value=22.9, step=0.1, style={"textAlign": "center", "border": "none", "background": "transparent"}, size="sm", readonly=True),
+                                    dbc.Button("+", id="hamilton-plus", size="sm", color="outline-success")
+                                ], size="sm")
+                            ], width=5)
+                        ], className="align-items-center mb-2"),
+                        
+                        # Charles Leclerc
+                        dbc.Row([
+                            dbc.Col([html.Img(src=app.get_asset_url("images/drivers/Lec.png"), style={"width": "35px", "height": "35px", "border-radius": "50%"})], width=2),
+                            dbc.Col([html.Span("Charles Leclerc", className="fw-bold")], width=5),
+                            dbc.Col([
+                                dbc.ButtonGroup([
+                                    dbc.Button("-", id="leclerc-minus", size="sm", color="outline-danger"),
+                                    dbc.Input(id="leclerc-value", type="text", value=23.0, step=0.1, style={"textAlign": "center", "border": "none", "background": "transparent"}, size="sm", readonly=True),
+                                    dbc.Button("+", id="leclerc-plus", size="sm", color="outline-success")
+                                ], size="sm")
+                            ], width=5)
+                        ], className="align-items-center mb-2"),
+                        
+                        # Kimi Antonelli
+                        dbc.Row([
+                            dbc.Col([html.Img(src=app.get_asset_url("images/drivers/Ant.png"), style={"width": "35px", "height": "35px", "border-radius": "50%"})], width=2),
+                            dbc.Col([html.Span("Kimi Antonelli", className="fw-bold")], width=5),
+                            dbc.Col([
+                                dbc.ButtonGroup([
+                                    dbc.Button("-", id="antonelli-minus", size="sm", color="outline-danger"),
+                                    dbc.Input(id="antonelli-value", type="text", value=14.9, step=0.1, style={"textAlign": "center", "border": "none", "background": "transparent"}, size="sm", readonly=True),
+                                    dbc.Button("+", id="antonelli-plus", size="sm", color="outline-success")
+                                ], size="sm")
+                            ], width=5)
+                        ], className="align-items-center mb-2"),
+                        
+                        # Nico Hulkenberg
+                        dbc.Row([
+                            dbc.Col([html.Img(src=app.get_asset_url("images/drivers/Hul.png"), style={"width": "35px", "height": "35px", "border-radius": "50%"})], width=2),
+                            dbc.Col([html.Span("Nico Hulkenberg", className="fw-bold")], width=5),
+                            dbc.Col([
+                                dbc.ButtonGroup([
+                                    dbc.Button("-", id="hulkenberg-minus", size="sm", color="outline-danger"),
+                                    dbc.Input(id="hulkenberg-value", type="text", value=8.6, step=0.1, style={"textAlign": "center", "border": "none", "background": "transparent"}, size="sm", readonly=True),
+                                    dbc.Button("+", id="hulkenberg-plus", size="sm", color="outline-success")
+                                ], size="sm")
+                            ], width=5)
+                        ], className="align-items-center mb-2"),
+                        
+                        # Alexander Albon
+                        dbc.Row([
+                            dbc.Col([html.Img(src=app.get_asset_url("images/drivers/Alb.png"), style={"width": "35px", "height": "35px", "border-radius": "50%"})], width=2),
+                            dbc.Col([html.Span("Alexander Albon", className="fw-bold")], width=5),
+                            dbc.Col([
+                                dbc.ButtonGroup([
+                                    dbc.Button("-", id="albon-minus", size="sm", color="outline-danger"),
+                                    dbc.Input(id="albon-value", type="text", value=13.0, step=0.1, style={"textAlign": "center", "border": "none", "background": "transparent"}, size="sm", readonly=True),
+                                    dbc.Button("+", id="albon-plus", size="sm", color="outline-success")
+                                ], size="sm")
+                            ], width=5)
+                        ], className="align-items-center mb-2"),
+                        
+                        # Lance Stroll
+                        dbc.Row([
+                            dbc.Col([html.Img(src=app.get_asset_url("images/drivers/Str.png"), style={"width": "35px", "height": "35px", "border-radius": "50%"})], width=2),
+                            dbc.Col([html.Span("Lance Stroll", className="fw-bold")], width=5),
+                            dbc.Col([
+                                dbc.ButtonGroup([
+                                    dbc.Button("-", id="stroll-minus", size="sm", color="outline-danger"),
+                                    dbc.Input(id="stroll-value", type="text", value=9.9, step=0.1, style={"textAlign": "center", "border": "none", "background": "transparent"}, size="sm", readonly=True),
+                                    dbc.Button("+", id="stroll-plus", size="sm", color="outline-success")
+                                ], size="sm")
+                            ], width=5)
+                        ], className="align-items-center mb-2"),
+                    ])
+                ], md=6),
+                
+                # Right column - remaining drivers
+                dbc.Col([
+                    html.Div([
+                        # Oliver Bearman
+                        dbc.Row([
+                            dbc.Col([html.Img(src=app.get_asset_url("images/drivers/Bea.png"), style={"width": "35px", "height": "35px", "border-radius": "50%"})], width=2),
+                            dbc.Col([html.Span("Oliver Bearman", className="fw-bold")], width=5),
+                            dbc.Col([
+                                dbc.ButtonGroup([
+                                    dbc.Button("-", id="bearman-minus", size="sm", color="outline-danger"),
+                                    dbc.Input(id="bearman-value", type="text", value=7.3, step=0.1, style={"textAlign": "center", "border": "none", "background": "transparent"}, size="sm", readonly=True),
+                                    dbc.Button("+", id="bearman-plus", size="sm", color="outline-success")
+                                ], size="sm")
+                            ], width=5)
+                        ], className="align-items-center mb-2"),
+                        
+                        # Esteban Ocon
+                        dbc.Row([
+                            dbc.Col([html.Img(src=app.get_asset_url("images/drivers/Oco.png"), style={"width": "35px", "height": "35px", "border-radius": "50%"})], width=2),
+                            dbc.Col([html.Span("Esteban Ocon", className="fw-bold")], width=5),
+                            dbc.Col([
+                                dbc.ButtonGroup([
+                                    dbc.Button("-", id="ocon-minus", size="sm", color="outline-danger"),
+                                    dbc.Input(id="ocon-value", type="text", value=8.3, step=0.1, style={"textAlign": "center", "border": "none", "background": "transparent"}, size="sm", readonly=True),
+                                    dbc.Button("+", id="ocon-plus", size="sm", color="outline-success")
+                                ], size="sm")
+                            ], width=5)
+                        ], className="align-items-center mb-2"),
+                        
+                        # Yuki Tsunoda
+                        dbc.Row([
+                            dbc.Col([html.Img(src=app.get_asset_url("images/drivers/Tsu.png"), style={"width": "35px", "height": "35px", "border-radius": "50%"})], width=2),
+                            dbc.Col([html.Span("Yuki Tsunoda", className="fw-bold")], width=5),
+                            dbc.Col([
+                                dbc.ButtonGroup([
+                                    dbc.Button("-", id="tsunoda-minus", size="sm", color="outline-danger"),
+                                    dbc.Input(id="tsunoda-value", type="text", value=9.8, step=0.1, style={"textAlign": "center", "border": "none", "background": "transparent"}, size="sm", readonly=True),
+                                    dbc.Button("+", id="tsunoda-plus", size="sm", color="outline-success")
+                                ], size="sm")
+                            ], width=5)
+                        ], className="align-items-center mb-2"),
+                        
+                        # Isack Hadjar
+                        dbc.Row([
+                            dbc.Col([html.Img(src=app.get_asset_url("images/drivers/Had.png"), style={"width": "35px", "height": "35px", "border-radius": "50%"})], width=2),
+                            dbc.Col([html.Span("Isack Hadjar", className="fw-bold")], width=5),
+                            dbc.Col([
+                                dbc.ButtonGroup([
+                                    dbc.Button("-", id="hadjar-minus", size="sm", color="outline-danger"),
+                                    dbc.Input(id="hadjar-value", type="text", value=6.9, step=0.1, style={"textAlign": "center", "border": "none", "background": "transparent"}, size="sm", readonly=True),
+                                    dbc.Button("+", id="hadjar-plus", size="sm", color="outline-success")
+                                ], size="sm")
+                            ], width=5)
+                        ], className="align-items-center mb-2"),
+                        
+                        # Carlos Sainz
+                        dbc.Row([
+                            dbc.Col([html.Img(src=app.get_asset_url("images/drivers/Sai.png"), style={"width": "35px", "height": "35px", "border-radius": "50%"})], width=2),
+                            dbc.Col([html.Span("Carlos Sainz", className="fw-bold")], width=5),
+                            dbc.Col([
+                                dbc.ButtonGroup([
+                                    dbc.Button("-", id="sainz-minus", size="sm", color="outline-danger"),
+                                    dbc.Input(id="sainz-value", type="text", value=5.7, step=0.1, style={"textAlign": "center", "border": "none", "background": "transparent"}, size="sm", readonly=True),
+                                    dbc.Button("+", id="sainz-plus", size="sm", color="outline-success")
+                                ], size="sm")
+                            ], width=5)
+                        ], className="align-items-center mb-2"),
+                        
+                        # Gabriel Bortoleto
+                        dbc.Row([
+                            dbc.Col([html.Img(src=app.get_asset_url("images/drivers/Bor.png"), style={"width": "35px", "height": "35px", "border-radius": "50%"})], width=2),
+                            dbc.Col([html.Span("Gabriel Bortoleto", className="fw-bold")], width=5),
+                            dbc.Col([
+                                dbc.ButtonGroup([
+                                    dbc.Button("-", id="bortoleto-minus", size="sm", color="outline-danger"),
+                                    dbc.Input(id="bortoleto-value", type="text", value=5.9, step=0.1, style={"textAlign": "center", "border": "none", "background": "transparent"}, size="sm", readonly=True),
+                                    dbc.Button("+", id="bortoleto-plus", size="sm", color="outline-success")
+                                ], size="sm")
+                            ], width=5)
+                        ], className="align-items-center mb-2"),
+                        
+                        # Liam Lawson
+                        dbc.Row([
+                            dbc.Col([html.Img(src=app.get_asset_url("images/drivers/Law.png"), style={"width": "35px", "height": "35px", "border-radius": "50%"})], width=2),
+                            dbc.Col([html.Span("Liam Lawson", className="fw-bold")], width=5),
+                            dbc.Col([
+                                dbc.ButtonGroup([
+                                    dbc.Button("-", id="lawson-minus", size="sm", color="outline-danger"),
+                                    dbc.Input(id="lawson-value", type="text", value=5.9, step=0.1, style={"textAlign": "center", "border": "none", "background": "transparent"}, size="sm", readonly=True),
+                                    dbc.Button("+", id="lawson-plus", size="sm", color="outline-success")
+                                ], size="sm")
+                            ], width=5)
+                        ], className="align-items-center mb-2"),
+                        
+                        # Fernando Alonso
+                        dbc.Row([
+                            dbc.Col([html.Img(src=app.get_asset_url("images/drivers/Alo.png"), style={"width": "35px", "height": "35px", "border-radius": "50%"})], width=2),
+                            dbc.Col([html.Span("Fernando Alonso", className="fw-bold")], width=5),
+                            dbc.Col([
+                                dbc.ButtonGroup([
+                                    dbc.Button("-", id="alonso-minus", size="sm", color="outline-danger"),
+                                    dbc.Input(id="alonso-value", type="text", value=7.3, step=0.1, style={"textAlign": "center", "border": "none", "background": "transparent"}, size="sm", readonly=True),
+                                    dbc.Button("+", id="alonso-plus", size="sm", color="outline-success")
+                                ], size="sm")
+                            ], width=5)
+                        ], className="align-items-center mb-2"),
+                        
+                        # Pierre Gasly
+                        dbc.Row([
+                            dbc.Col([html.Img(src=app.get_asset_url("images/drivers/Gas.png"), style={"width": "35px", "height": "35px", "border-radius": "50%"})], width=2),
+                            dbc.Col([html.Span("Pierre Gasly", className="fw-bold")], width=5),
+                            dbc.Col([
+                                dbc.ButtonGroup([
+                                    dbc.Button("-", id="gasly-minus", size="sm", color="outline-danger"),
+                                    dbc.Input(id="gasly-value", type="text", value=4.5, step=0.1, style={"textAlign": "center", "border": "none", "background": "transparent"}, size="sm", readonly=True),
+                                    dbc.Button("+", id="gasly-plus", size="sm", color="outline-success")
+                                ], size="sm")
+                            ], width=5)
+                        ], className="align-items-center mb-2"),
+                        
+                        # Franco Colapinto
+                        dbc.Row([
+                            dbc.Col([html.Img(src=app.get_asset_url("images/drivers/Col.png"), style={"width": "35px", "height": "35px", "border-radius": "50%"})], width=2),
+                            dbc.Col([html.Span("Franco Colapinto", className="fw-bold")], width=5),
+                            dbc.Col([
+                                dbc.ButtonGroup([
+                                    dbc.Button("-", id="colapinto-minus", size="sm", color="outline-danger"),
+                                    dbc.Input(id="colapinto-value", type="text", value=4.5, step=0.1, style={"textAlign": "center", "border": "none", "background": "transparent"}, size="sm", readonly=True),
+                                    dbc.Button("+", id="colapinto-plus", size="sm", color="outline-success")
+                                ], size="sm")
+                            ], width=5)
+                        ], className="align-items-center mb-2"),
+                    ])
+                ], md=6)
+            ])
+        ])
+    ], className="mb-4"),
+    
+    # Section 2: Constructor Values (Complete)
+    dbc.Card([
+        dbc.CardHeader(html.H4("Updated Constructor Values")),
+        dbc.CardBody([
+            html.P("Adjust constructor values from their default amounts."),
+            dbc.Row([
+                dbc.Col([
+                    # McLaren
+                    dbc.Row([
+                        dbc.Col([html.Img(src=app.get_asset_url("images/teams/mclaren.png"), style={"width": "40px", "height": "30px"})], width=2),
+                        dbc.Col([html.Span("McLaren", className="fw-bold")], width=4),
+                        dbc.Col([
+                            dbc.ButtonGroup([
+                                dbc.Button("-", id="mclaren-minus", size="sm", color="outline-danger"),
+                                dbc.Input(id="mclaren-value", type="text", value=35.1, step=0.1, style={"textAlign": "center", "border": "none", "background": "transparent"}, size="sm", readonly=True),
+                                dbc.Button("+", id="mclaren-plus", size="sm", color="outline-success")
+                            ], size="sm")
+                        ], width=6)
+                    ], className="align-items-center mb-3"),
+                    
+                    # Ferrari
+                    dbc.Row([
+                        dbc.Col([html.Img(src=app.get_asset_url("images/teams/ferrari.png"), style={"width": "40px", "height": "30px"})], width=2),
+                        dbc.Col([html.Span("Ferrari", className="fw-bold")], width=4),
+                        dbc.Col([
+                            dbc.ButtonGroup([
+                                dbc.Button("-", id="ferrari-minus", size="sm", color="outline-danger"),
+                                dbc.Input(id="ferrari-value", type="text", value=30.6, step=0.1, style={"textAlign": "center", "border": "none", "background": "transparent"}, size="sm", readonly=True),
+                                dbc.Button("+", id="ferrari-plus", size="sm", color="outline-success")
+                            ], size="sm")
+                        ], width=6)
+                    ], className="align-items-center mb-3"),
+                    
+                    # Red Bull Racing
+                    dbc.Row([
+                        dbc.Col([html.Img(src=app.get_asset_url("images/teams/red_bull_racing.png"), style={"width": "40px", "height": "30px"})], width=2),
+                        dbc.Col([html.Span("Red Bull Racing", className="fw-bold")], width=4),
+                        dbc.Col([
+                            dbc.ButtonGroup([
+                                dbc.Button("-", id="redbull-minus", size="sm", color="outline-danger"),
+                                dbc.Input(id="redbull-value", type="text", value=29.3, step=0.1, style={"textAlign": "center", "border": "none", "background": "transparent"}, size="sm", readonly=True),
+                                dbc.Button("+", id="redbull-plus", size="sm", color="outline-success")
+                            ], size="sm")
+                        ], width=6)
+                    ], className="align-items-center mb-3"),
+                    
+                    # Mercedes
+                    dbc.Row([
+                        dbc.Col([html.Img(src=app.get_asset_url("images/teams/mercedes.png"), style={"width": "40px", "height": "30px"})], width=2),
+                        dbc.Col([html.Span("Mercedes", className="fw-bold")], width=4),
+                        dbc.Col([
+                            dbc.ButtonGroup([
+                                dbc.Button("-", id="mercedes-minus", size="sm", color="outline-danger"),
+                                dbc.Input(id="mercedes-value", type="text", value=26.6, step=0.1, style={"textAlign": "center", "border": "none", "background": "transparent"}, size="sm", readonly=True),
+                                dbc.Button("+", id="mercedes-plus", size="sm", color="outline-success")
+                            ], size="sm")
+                        ], width=6)
+                    ], className="align-items-center mb-3"),
+                    
+                    # Alpine
+                    dbc.Row([
+                        dbc.Col([html.Img(src=app.get_asset_url("images/teams/alpine.png"), style={"width": "40px", "height": "30px"})], width=2),
+                        dbc.Col([html.Span("Alpine", className="fw-bold")], width=4),
+                        dbc.Col([
+                            dbc.ButtonGroup([
+                                dbc.Button("-", id="alpine-minus", size="sm", color="outline-danger"),
+                                dbc.Input(id="alpine-value", type="text", value=8.1, step=0.1, style={"textAlign": "center", "border": "none", "background": "transparent"}, size="sm", readonly=True),
+                                dbc.Button("+", id="alpine-plus", size="sm", color="outline-success")
+                            ], size="sm")
+                        ], width=6)
+                    ], className="align-items-center mb-3"),
+                ], md=6),
+                
+                dbc.Col([
+                    # Haas
+                    dbc.Row([
+                        dbc.Col([html.Img(src=app.get_asset_url("images/teams/haas_f1_team.png"), style={"width": "40px", "height": "30px"})], width=2),
+                        dbc.Col([html.Span("Haas", className="fw-bold")], width=4),
+                        dbc.Col([
+                            dbc.ButtonGroup([
+                                dbc.Button("-", id="haas-minus", size="sm", color="outline-danger"),
+                                dbc.Input(id="haas-value", type="text", value=13.2, step=0.1, style={"textAlign": "center", "border": "none", "background": "transparent"}, size="sm", readonly=True),
+                                dbc.Button("+", id="haas-plus", size="sm", color="outline-success")
+                            ], size="sm")
+                        ], width=6)
+                    ], className="align-items-center mb-3"),
+                    
+                    # Racing Bulls
+                    dbc.Row([
+                        dbc.Col([html.Img(src=app.get_asset_url("images/teams/racing_bulls.png"), style={"width": "40px", "height": "30px"})], width=2),
+                        dbc.Col([html.Span("Racing Bulls", className="fw-bold")], width=4),
+                        dbc.Col([
+                            dbc.ButtonGroup([
+                                dbc.Button("-", id="racingbulls-minus", size="sm", color="outline-danger"),
+                                dbc.Input(id="racingbulls-value", type="text", value=13.0, step=0.1, style={"textAlign": "center", "border": "none", "background": "transparent"}, size="sm", readonly=True),
+                                dbc.Button("+", id="racingbulls-plus", size="sm", color="outline-success")
+                            ], size="sm")
+                        ], width=6)
+                    ], className="align-items-center mb-3"),
+                    
+                    # Kick Sauber
+                    dbc.Row([
+                        dbc.Col([html.Img(src=app.get_asset_url("images/teams/kick_sauber.png"), style={"width": "40px", "height": "30px"})], width=2),
+                        dbc.Col([html.Span("Kick Sauber", className="fw-bold")], width=4),
+                        dbc.Col([
+                            dbc.ButtonGroup([
+                                dbc.Button("-", id="sauber-minus", size="sm", color="outline-danger"),
+                                dbc.Input(id="sauber-value", type="text", value=10.7, step=0.1, style={"textAlign": "center", "border": "none", "background": "transparent"}, size="sm", readonly=True),
+                                dbc.Button("+", id="sauber-plus", size="sm", color="outline-success")
+                            ], size="sm")
+                        ], width=6)
+                    ], className="align-items-center mb-3"),
+                    
+                    # Aston Martin
+                    dbc.Row([
+                        dbc.Col([html.Img(src=app.get_asset_url("images/teams/aston_martin.png"), style={"width": "40px", "height": "30px"})], width=2),
+                        dbc.Col([html.Span("Aston Martin", className="fw-bold")], width=4),
+                        dbc.Col([
+                            dbc.ButtonGroup([
+                                dbc.Button("-", id="astonmartin-minus", size="sm", color="outline-danger"),
+                                dbc.Input(id="astonmartin-value", type="text", value=12.3, step=0.1, style={"textAlign": "center", "border": "none", "background": "transparent"}, size="sm", readonly=True),
+                                dbc.Button("+", id="astonmartin-plus", size="sm", color="outline-success")
+                            ], size="sm")
+                        ], width=6)
+                    ], className="align-items-center mb-3"),
+                    
+                    # Williams
+                    dbc.Row([
+                        dbc.Col([html.Img(src=app.get_asset_url("images/teams/williams.png"), style={"width": "40px", "height": "30px"})], width=2),
+                        dbc.Col([html.Span("Williams", className="fw-bold")], width=4),
+                        dbc.Col([
+                            dbc.ButtonGroup([
+                                dbc.Button("-", id="williams-minus", size="sm", color="outline-danger"),
+                                dbc.Input(id="williams-value", type="text", value=17.3, step=0.1, style={"textAlign": "center", "border": "none", "background": "transparent"}, size="sm", readonly=True),
+                                dbc.Button("+", id="williams-plus", size="sm", color="outline-success")
+                            ], size="sm")
+                        ], width=6)
+                    ], className="align-items-center mb-3"),
+                ], md=6)
+            ])
+        ])
+    ], className="mb-4"),
+    
+    # Section: Total Budget Input
+    dbc.Card([
+        dbc.CardHeader(html.H4("Total Budget")),
+        dbc.CardBody([
+            html.P("Adjust the total budget available for your fantasy team:"),
+            dbc.Row([
+                dbc.Col([
+                    html.Label("Total Budget ($M):", className="fw-bold mb-2"),
+                    dbc.InputGroup([
+                        dbc.InputGroupText("$"),
+                        dbc.Input(
+                            id="total-budget-value",
+                            type="number",
+                            value=113.7,
+                            step=0.1,
+                            min=0,
+                            style={"textAlign": "center"}
+                        ),
+                        dbc.InputGroupText("M")
+                    ], size="lg")
+                ], width=6)
+            ])
+        ])
+    ], className="mb-4"),
+
+
+    # Section 3: All Three Wildcards
+    dbc.Card([
+        dbc.CardHeader(html.H4("Wildcard & Chips Status")),
+        dbc.CardBody([
+            html.P("Track which chips have been used this season:"),
+            dbc.Row([
+                dbc.Col([
+                    html.Label("Wildcard:", className="fw-bold mb-2"),
+                    dbc.Switch(id="wildcard-switch", value=False, label="Used", className="mb-3"),
+                    html.Small("Make unlimited free transfers for one race week", className="text-muted d-block mb-3")
+                ], width=4),
+                dbc.Col([
+                    html.Label("Triple Captain:", className="fw-bold mb-2"),
+                    dbc.Switch(id="triple-captain-switch", value=False, label="Used", className="mb-3"),
+                    html.Small("Selected driver's score is tripled", className="text-muted d-block mb-3")
+                ], width=4),
+                dbc.Col([
+                    html.Label("Final Fix:", className="fw-bold mb-2"),
+                    dbc.Switch(id="final-fix-switch", value=False, label="Used", className="mb-3"),
+                    html.Small("Make one substitution between qualifying and race", className="text-muted d-block mb-3")
+                ], width=4)
+            ])
+        ])
+    ], className="mb-4"),
+    
+    # Section 4: Next Race Predictions
+    dbc.Card([
+        dbc.CardHeader(html.H4("Next Race Top 10 Predictions")),
+        dbc.CardBody([
+            html.P("These predictions help identify drivers likely to score points:"),
+            html.Div(id="next-race-predictions-display", children=[
+                dbc.Alert("Click 'Update Predictions' to load the latest race predictions.", color="info")
+            ]),
+            dbc.Button("Update Predictions", id="update-predictions-btn", color="primary", className="mt-2")
+        ])
+    ])
+], fluid=True)
+
+# Fantasy Team Creation Layout (placeholder for now)
+# Fantasy Team Creation Layout - COMPLETE VERSION
+fantasy_creation_layout = dbc.Container([
+    html.H3("Optimal Fantasy Team Builder", className="mb-4 text-center"),
+    
+    # Instructions Card
+    dbc.Card([
+        dbc.CardHeader(html.H4("How It Works")),
+        dbc.CardBody([
+            html.P("This tool creates your optimal fantasy team based on:"),
+            html.Ul([
+                html.Li("Updated driver and constructor values from the Inputs tab"),
+                html.Li("Top 10 predictions from the Predictions tab"),
+                html.Li("Your wildcard/chips status"),
+                html.Li("Total budget constraint ($113.7M)")
+            ]),
+            html.P("The algorithm prioritizes drivers predicted to finish in the top 10 while staying within budget.", className="mb-0")
+        ])
+    ], className="mb-4"),
+    
+    # Generate Team Button
+    dbc.Row([
+        dbc.Col([
+            dbc.Button(
+                "Generate Optimal Team", 
+                id="generate-team-btn", 
+                color="success", 
+                size="lg", 
+                className="w-100"
+            )
+        ], width={"size": 6, "offset": 3})
+    ], className="mb-4"),
+    
+    # Team Output Area
+    html.Div(id="fantasy-team-output", children=[
+        dbc.Alert(
+            "Click 'Generate Optimal Team' to build your fantasy team based on your inputs.",
+            color="info"
+        )
+    ])
+], fluid=True)
+
+
+# --- START: FANTASY RULES LAYOUT ---
 
 # Data for the scoring tables, based on the F1 Fantasy rules PDF
 qualifying_sprint_points_data = [
@@ -1320,6 +1884,8 @@ tab_fantasy_rules_content = dbc.Card(
 # --- Main App Layout ---
 app.layout = dbc.Container([
     dcc.Store(id='cs-active-selection-store'),
+    dcc.Store(id='predictions-store'),
+    dcc.Store(id='fantasy-values-store'),
     dbc.Row(dbc.Col(html.H1("F1 Insights & Fantasy Predictor", className="page-main-title"), width=12), className="mb-3 mt-3 text-center"),
     dbc.Tabs([
         dbc.Tab(tab_historical_content, label="Past Seasons", tab_id="tab-historical"),
@@ -1327,7 +1893,7 @@ app.layout = dbc.Container([
         dbc.Tab(tab_teams_drivers_content, label="Teams & Drivers", tab_id="tab-teams-drivers"),
         dbc.Tab(tab_predictions_content, label="Predictions", tab_id="tab-predictions"),
         dbc.Tab(tab_fantasy_rules_content, label="Fantasy Rules", tab_id="tab-fantasy-rules"),
-        dbc.Tab(tab_fantasy_creator_content, label="Fantasy Team Creator", tab_id="tab-fantasy-creator"),
+        dbc.Tab(tab_fantasy_team_creator_content, label="Fantasy Team Creator", tab_id="tab-fantasy-creator"),
     ], id="app-main-tabs", active_tab="tab-current-season"),
     html.Hr(className="my-4"),
     dbc.Row(dbc.Col(html.A("Data sourced using FastF1", href="https://theoehrly.github.io/Fast-F1/", target="_blank"), className="text-center text-muted mb-4"))
@@ -1990,36 +2556,71 @@ def update_predictions_tab(active_tab):
     sim_results_df = run_reinforcement_simulation(cs_year, 'f1_historical_data.csv', 'f1_prediction_model.joblib')
 
     if sim_results_df is None or sim_results_df.empty:
-        return dbc.Alert("Could not run prediction simulation.", color="danger")
+        return dbc.Alert("Could not run prediction simulation.", color="danger"), None
     
-    # Build the visualizations
+    # Build the visualizations (same as before)
     race_prediction_cards = []
     for _, race_result in sim_results_df.iterrows():
-        comparison_df = pd.DataFrame({'P': range(1, 11), 'Predicted Driver': race_result['PredictedTop10'], 'Actual Driver': race_result['ActualTop10']})
-        comparison_df['Correct'] = comparison_df.apply(lambda row: "✔️" if row['Predicted Driver'] == row['Actual Driver'] else "❌", axis=1)
-        race_card = dbc.Card([dbc.CardHeader(f"Round {race_result['Round']}: {race_result['Race']}"),
+        comparison_df = pd.DataFrame({
+            'P': range(1, 11), 
+            'Predicted Driver': race_result['PredictedTop10'], 
+            'Actual Driver': race_result['ActualTop10']
+        })
+        comparison_df['Correct'] = comparison_df.apply(
+            lambda row: "✔️" if row['Predicted Driver'] == row['Actual Driver'] else "❌", 
+            axis=1
+        )
+        race_card = dbc.Card([
+            dbc.CardHeader(f"Round {race_result['Round']}: {race_result['Race']}"),
             dbc.CardBody(dash_table.DataTable(
                 data=comparison_df.to_dict('records'),
                 columns=[{'name': i, 'id': i} for i in comparison_df.columns],
                 style_cell={'textAlign': 'center'},
-                style_data_conditional=[{'if': {'column_id': 'Correct'}, 'backgroundColor': 'rgba(40, 167, 69, 0.2)', 'fontWeight': 'bold'}]
+                style_data_conditional=[{
+                    'if': {'column_id': 'Correct'}, 
+                    'backgroundColor': 'rgba(40, 167, 69, 0.2)', 
+                    'fontWeight': 'bold'
+                }]
             ))
         ], className="mb-3")
         race_prediction_cards.append(race_card)
 
-    mae_fig = px.line(sim_results_df, x='Round', y='MAE', title='Model Prediction Error (MAE) Over Season', markers=True)
+    mae_fig = px.line(
+        sim_results_df, 
+        x='Round', 
+        y='MAE', 
+        title='Model Prediction Error (MAE) Over Season', 
+        markers=True
+    )
     mae_fig.update_layout(yaxis_title="Prediction Error (+/- positions)")
     
     last_importances = sim_results_df['FeatureImportances'].iloc[-1]
-    imp_df = pd.DataFrame(list(last_importances.items()), columns=['Feature', 'Importance']).sort_values(by='Importance', ascending=False).head(10)
-    imp_fig = px.bar(imp_df, x='Importance', y='Feature', orientation='h', title=f"Top 10 Feature Importances (after Round {sim_results_df['Round'].max()})")
+    imp_df = pd.DataFrame(
+        list(last_importances.items()), 
+        columns=['Feature', 'Importance']
+    ).sort_values(by='Importance', ascending=False).head(10)
+    
+    imp_fig = px.bar(
+        imp_df, 
+        x='Importance', 
+        y='Feature', 
+        orientation='h', 
+        title=f"Top 10 Feature Importances (after Round {sim_results_df['Round'].max()})"
+    )
     imp_fig.update_layout(yaxis={'categoryorder':'total ascending'})
 
-    return html.Div([
+    display_content = html.Div([
         dbc.Row(dbc.Col(html.H5("2025 Race-by-Race Prediction Simulation"), width=12), className="mb-2"),
         dbc.Row(dbc.Col(race_prediction_cards, width=12), className="mb-4"),
-        dbc.Row([dbc.Col(dcc.Graph(figure=mae_fig), md=6), dbc.Col(dcc.Graph(figure=imp_fig), md=6)], className="mb-4")
+        dbc.Row([
+            dbc.Col(dcc.Graph(figure=mae_fig), md=6), 
+            dbc.Col(dcc.Graph(figure=imp_fig), md=6)
+        ], className="mb-4")
     ])
+    
+    # Don't store anything here - let the manual prediction button handle storage
+    return display_content  # Return None for storage from this callback
+
 
 @app.callback(
     Output('predict-race-dropdown', 'options'),
@@ -2111,53 +2712,472 @@ def get_features_for_prediction(year, round_number, historical_df):
 
 # --- REPLACE your existing predict_next_race callback in app.py ---
 @app.callback(
-    Output('next-race-prediction-output', 'children'),
+    [Output('next-race-prediction-output', 'children'),
+     Output('predictions-store', 'data')],
     Input('predict-race-button', 'n_clicks'),
     State('predict-race-dropdown', 'value'),
     prevent_initial_call=True
 )
 def predict_next_race(n_clicks, selected_race_round):
     if not selected_race_round:
-        return dbc.Alert("Please select an upcoming race from the dropdown.", color="warning")
+        return dbc.Alert("Please select an upcoming race from the dropdown.", color="warning"), None
 
     print(f"[predict_next_race] Generating prediction for round {selected_race_round}...")
     cs_year = datetime.now().year
     
     try:
-        # 1. Load the trained model and the original training data (to get column structure)
+        # 1. Load the trained model and the original training data
         model = joblib.load('f1_prediction_model.joblib')
         historical_df = pd.read_csv('f1_historical_data.csv')
         
-        # 2. Get features for ONLY the current drivers for the upcoming race
+        # 2. Get features for ALL current drivers for the upcoming race
         predict_df = get_features_for_prediction(cs_year, selected_race_round, historical_df)
         
         if predict_df.empty:
-            return dbc.Alert("Could not gather necessary data to make a prediction. A race may need to be completed in the current season first.", color="danger")
+            return dbc.Alert("Could not gather necessary data to make a prediction. A race may need to be completed in the current season first.", color="danger"), None
 
-        # 3. Pre-process the prediction data to match the training data format
+        # 3. Pre-process the prediction data
         X_predict_numerical = predict_df[['QualifyingPosition', 'ChampionshipStanding', 'ChampionshipPoints', 'RecentFormPoints']]
         X_predict_categorical = pd.get_dummies(predict_df[['DriverTeamID', 'TrackID']])
         X_predict = pd.concat([X_predict_numerical, X_predict_categorical], axis=1)
 
-        # Align columns: Ensure the prediction data has the exact same columns as the training data
+        # Align columns
         training_cols = model.get_booster().feature_names
         X_predict_aligned = X_predict.reindex(columns=training_cols, fill_value=0)
         
-        # 4. Make Predictions
+        # 4. Make Predictions for ALL drivers
         predictions = model.predict(X_predict_aligned)
         predict_df['PredictedPosition'] = predictions
         
-        # 5. Display Results
+        # 5. Sort by predicted position
         final_prediction = predict_df.sort_values(by='PredictedPosition').loc[:, ['DriverID', 'TeamID']]
         final_prediction.insert(0, 'P', range(1, len(final_prediction) + 1))
         
-        return html.Div([
+        # Display top 10 in the UI
+        display_output = html.Div([
             html.H5(f"Predicted Top 10 Finishers", className="mt-3"),
             dbc.Table.from_dataframe(final_prediction.head(10), striped=True, bordered=True, hover=True, className="mt-2")
         ])
+        
+        # Store ALL 20 drivers for Fantasy Team Creation (not just top 10)
+        prediction_data = final_prediction.to_dict('records')  # Store all drivers
+        
+        return display_output, prediction_data
+        
     except Exception as e:
         print(f"Error during prediction: {e}")
-        return dbc.Alert("An error occurred while generating the prediction.", color="danger")
+        import traceback
+        traceback.print_exc()
+        return dbc.Alert("An error occurred while generating the prediction.", color="danger"), None
+
+# --- FANTASY TEAM CREATOR SUB-TAB NAVIGATION CALLBACK ---
+
+@app.callback(
+    [Output('fantasy-sub-tab-content-area', 'children'),
+     Output('fantasy-navlink-inputs', 'active'),
+     Output('fantasy-navlink-creation', 'active')],
+    [Input('fantasy-navlink-inputs', 'n_clicks'),
+     Input('fantasy-navlink-creation', 'n_clicks')],
+    prevent_initial_call=False
+)
+def render_fantasy_subtab(inputs_clicks, creation_clicks):
+    ctx = dash.callback_context
+    
+    # Default to inputs tab on first load
+    if not ctx.triggered:
+        return fantasy_inputs_layout, True, False
+    
+    trigger = ctx.triggered[0]['prop_id'].split('.')[0]
+    
+    if trigger == 'fantasy-navlink-creation':
+        return fantasy_creation_layout, False, True
+    else:
+        return fantasy_inputs_layout, True, False
+
+
+# Complete callback for ALL +/- buttons for drivers and constructors
+@app.callback(
+    # Driver outputs
+    [Output('norris-value', 'value'), Output('piastri-value', 'value'), Output('verstappen-value', 'value'),
+     Output('russell-value', 'value'), Output('hamilton-value', 'value'), Output('leclerc-value', 'value'),
+     Output('antonelli-value', 'value'), Output('hulkenberg-value', 'value'), Output('albon-value', 'value'),
+     Output('stroll-value', 'value'), Output('bearman-value', 'value'), Output('ocon-value', 'value'),
+     Output('tsunoda-value', 'value'), Output('hadjar-value', 'value'), Output('sainz-value', 'value'),
+     Output('bortoleto-value', 'value'), Output('lawson-value', 'value'), Output('alonso-value', 'value'),
+     Output('gasly-value', 'value'), Output('colapinto-value', 'value'),
+     # Constructor outputs
+     Output('mclaren-value', 'value'), Output('ferrari-value', 'value'), Output('redbull-value', 'value'),
+     Output('mercedes-value', 'value'), Output('alpine-value', 'value'), Output('haas-value', 'value'),
+     Output('racingbulls-value', 'value'), Output('sauber-value', 'value'), Output('astonmartin-value', 'value'),
+     Output('williams-value', 'value')],
+    
+    # All driver inputs
+    [Input('norris-plus', 'n_clicks'), Input('norris-minus', 'n_clicks'),
+     Input('piastri-plus', 'n_clicks'), Input('piastri-minus', 'n_clicks'),
+     Input('verstappen-plus', 'n_clicks'), Input('verstappen-minus', 'n_clicks'),
+     Input('russell-plus', 'n_clicks'), Input('russell-minus', 'n_clicks'),
+     Input('hamilton-plus', 'n_clicks'), Input('hamilton-minus', 'n_clicks'),
+     Input('leclerc-plus', 'n_clicks'), Input('leclerc-minus', 'n_clicks'),
+     Input('antonelli-plus', 'n_clicks'), Input('antonelli-minus', 'n_clicks'),
+     Input('hulkenberg-plus', 'n_clicks'), Input('hulkenberg-minus', 'n_clicks'),
+     Input('albon-plus', 'n_clicks'), Input('albon-minus', 'n_clicks'),
+     Input('stroll-plus', 'n_clicks'), Input('stroll-minus', 'n_clicks'),
+     Input('bearman-plus', 'n_clicks'), Input('bearman-minus', 'n_clicks'),
+     Input('ocon-plus', 'n_clicks'), Input('ocon-minus', 'n_clicks'),
+     Input('tsunoda-plus', 'n_clicks'), Input('tsunoda-minus', 'n_clicks'),
+     Input('hadjar-plus', 'n_clicks'), Input('hadjar-minus', 'n_clicks'),
+     Input('sainz-plus', 'n_clicks'), Input('sainz-minus', 'n_clicks'),
+     Input('bortoleto-plus', 'n_clicks'), Input('bortoleto-minus', 'n_clicks'),
+     Input('lawson-plus', 'n_clicks'), Input('lawson-minus', 'n_clicks'),
+     Input('alonso-plus', 'n_clicks'), Input('alonso-minus', 'n_clicks'),
+     Input('gasly-plus', 'n_clicks'), Input('gasly-minus', 'n_clicks'),
+     Input('colapinto-plus', 'n_clicks'), Input('colapinto-minus', 'n_clicks'),
+     # Constructor inputs
+     Input('mclaren-plus', 'n_clicks'), Input('mclaren-minus', 'n_clicks'),
+     Input('ferrari-plus', 'n_clicks'), Input('ferrari-minus', 'n_clicks'),
+     Input('redbull-plus', 'n_clicks'), Input('redbull-minus', 'n_clicks'),
+     Input('mercedes-plus', 'n_clicks'), Input('mercedes-minus', 'n_clicks'),
+     Input('alpine-plus', 'n_clicks'), Input('alpine-minus', 'n_clicks'),
+     Input('haas-plus', 'n_clicks'), Input('haas-minus', 'n_clicks'),
+     Input('racingbulls-plus', 'n_clicks'), Input('racingbulls-minus', 'n_clicks'),
+     Input('sauber-plus', 'n_clicks'), Input('sauber-minus', 'n_clicks'),
+     Input('astonmartin-plus', 'n_clicks'), Input('astonmartin-minus', 'n_clicks'),
+     Input('williams-plus', 'n_clicks'), Input('williams-minus', 'n_clicks')],
+    
+    # All current states
+    [State('norris-value', 'value'), State('piastri-value', 'value'), State('verstappen-value', 'value'),
+     State('russell-value', 'value'), State('hamilton-value', 'value'), State('leclerc-value', 'value'),
+     State('antonelli-value', 'value'), State('hulkenberg-value', 'value'), State('albon-value', 'value'),
+     State('stroll-value', 'value'), State('bearman-value', 'value'), State('ocon-value', 'value'),
+     State('tsunoda-value', 'value'), State('hadjar-value', 'value'), State('sainz-value', 'value'),
+     State('bortoleto-value', 'value'), State('lawson-value', 'value'), State('alonso-value', 'value'),
+     State('gasly-value', 'value'), State('colapinto-value', 'value'),
+     State('mclaren-value', 'value'), State('ferrari-value', 'value'), State('redbull-value', 'value'),
+     State('mercedes-value', 'value'), State('alpine-value', 'value'), State('haas-value', 'value'),
+     State('racingbulls-value', 'value'), State('sauber-value', 'value'), State('astonmartin-value', 'value'),
+     State('williams-value', 'value')],
+    prevent_initial_call=True
+)
+def update_all_values(*args):
+    ctx = dash.callback_context
+    if not ctx.triggered:
+        return dash.no_update
+    
+    trigger = ctx.triggered[0]['prop_id'].split('.')[0]
+    
+    # Get all current values (last 30 arguments are states)
+    current_values = list(args[-30:])
+    
+    # Map button to index and operation
+    value_map = {
+        'norris': 0, 'piastri': 1, 'verstappen': 2, 'russell': 3, 'hamilton': 4, 'leclerc': 5,
+        'antonelli': 6, 'hulkenberg': 7, 'albon': 8, 'stroll': 9, 'bearman': 10, 'ocon': 11,
+        'tsunoda': 12, 'hadjar': 13, 'sainz': 14, 'bortoleto': 15, 'lawson': 16, 'alonso': 17,
+        'gasly': 18, 'colapinto': 19, 'mclaren': 20, 'ferrari': 21, 'redbull': 22, 'mercedes': 23,
+        'alpine': 24, 'haas': 25, 'racingbulls': 26, 'sauber': 27, 'astonmartin': 28, 'williams': 29
+    }
+    
+    for name, idx in value_map.items():
+        if trigger == f'{name}-plus':
+            current_values[idx] = round(current_values[idx] + 0.1, 1)
+            break
+        elif trigger == f'{name}-minus':
+            current_values[idx] = round(max(0, current_values[idx] - 0.1), 1)  # Prevent negative values
+            break
+    
+    return current_values
+
+# Callback for Update Predictions button - Uses actual prediction algorithm
+# Callback for Update Predictions button - Reads from stored predictions
+@app.callback(
+    Output('next-race-predictions-display', 'children'),
+    Input('update-predictions-btn', 'n_clicks'),
+    State('predictions-store', 'data'),
+    prevent_initial_call=True
+)
+def update_predictions_from_store(n_clicks, stored_predictions):
+    if not n_clicks:
+        return dash.no_update
+    
+    if not stored_predictions:
+        return dbc.Alert(
+            "No predictions available. Please go to the Predictions tab and generate predictions first.",
+            color="warning"
+        )
+    
+    # Convert stored data back to DataFrame
+    predictions_df = pd.DataFrame(stored_predictions)
+    
+    # Create display table matching your Predictions tab format
+    prediction_table = dbc.Table([
+        html.Thead([
+            html.Tr([
+                html.Th("P", style={"width": "10%"}),
+                html.Th("DRIVERID", style={"width": "45%"}),
+                html.Th("TEAMID", style={"width": "45%"})
+            ])
+        ]),
+        html.Tbody([
+            html.Tr([
+                html.Td(str(row['P'])),
+                html.Td(row['DriverID']),
+                html.Td(row['TeamID'])
+            ], style={"backgroundColor": "#f8f9fa" if i % 2 == 0 else "white"})
+            for i, row in predictions_df.iterrows()
+        ])
+    ], bordered=True, hover=True, striped=False, className="mt-3")
+    
+    return html.Div([
+        html.H5("Predicted Top 10 Finishers", className="mb-3"),
+        prediction_table
+    ])
+
+# Callback to store fantasy team input values
+@app.callback(
+    Output('fantasy-values-store', 'data'),
+    [Input('total-budget-value', 'value'),  # ADD THIS
+     # All driver inputs
+     Input('norris-value', 'value'), Input('piastri-value', 'value'), Input('verstappen-value', 'value'),
+     Input('russell-value', 'value'), Input('hamilton-value', 'value'), Input('leclerc-value', 'value'),
+     Input('antonelli-value', 'value'), Input('hulkenberg-value', 'value'), Input('albon-value', 'value'),
+     Input('stroll-value', 'value'), Input('bearman-value', 'value'), Input('ocon-value', 'value'),
+     Input('tsunoda-value', 'value'), Input('hadjar-value', 'value'), Input('sainz-value', 'value'),
+     Input('bortoleto-value', 'value'), Input('lawson-value', 'value'), Input('alonso-value', 'value'),
+     Input('gasly-value', 'value'), Input('colapinto-value', 'value'),
+     # All constructor inputs
+     Input('mclaren-value', 'value'), Input('ferrari-value', 'value'), Input('redbull-value', 'value'),
+     Input('mercedes-value', 'value'), Input('alpine-value', 'value'), Input('haas-value', 'value'),
+     Input('racingbulls-value', 'value'), Input('sauber-value', 'value'), 
+     Input('astonmartin-value', 'value'), Input('williams-value', 'value')],
+    prevent_initial_call=True
+)
+def store_fantasy_values(budget_val, norris_val, piastri_val, verstappen_val, russell_val, hamilton_val,
+                        leclerc_val, antonelli_val, hulkenberg_val, albon_val, stroll_val,
+                        bearman_val, ocon_val, tsunoda_val, hadjar_val, sainz_val,
+                        bortoleto_val, lawson_val, alonso_val, gasly_val, colapinto_val,
+                        mclaren_val, ferrari_val, redbull_val, mercedes_val, alpine_val,
+                        haas_val, racingbulls_val, sauber_val, astonmartin_val, williams_val):
+    
+    return {
+        'budget': budget_val,  # ADD THIS
+        'drivers': {
+            'NOR': norris_val, 'PIA': piastri_val, 'VER': verstappen_val,
+            'RUS': russell_val, 'HAM': hamilton_val, 'LEC': leclerc_val,
+            'ANT': antonelli_val, 'HUL': hulkenberg_val, 'ALB': albon_val,
+            'STR': stroll_val, 'BEA': bearman_val, 'OCO': ocon_val,
+            'TSU': tsunoda_val, 'HAD': hadjar_val, 'SAI': sainz_val,
+            'BOR': bortoleto_val, 'LAW': lawson_val, 'ALO': alonso_val,
+            'GAS': gasly_val, 'COL': colapinto_val
+        },
+        'constructors': {
+            'McLaren': mclaren_val, 'Ferrari': ferrari_val, 'Red Bull Racing': redbull_val,
+            'Mercedes': mercedes_val, 'Alpine': alpine_val, 'Haas': haas_val,
+            'Racing Bulls': racingbulls_val, 'Kick Sauber': sauber_val,
+            'Aston Martin': astonmartin_val, 'Williams': williams_val
+        }
+    }
+
+from itertools import combinations
+
+# Fantasy Team Creation Callback - OPTIMIZED WITH COMBINATORIAL SEARCH
+@app.callback(
+    Output('fantasy-team-output', 'children'),
+    Input('generate-team-btn', 'n_clicks'),
+    [State('predictions-store', 'data'),
+     State('fantasy-values-store', 'data')],
+    prevent_initial_call=True
+)
+def generate_optimal_team(n_clicks, predictions, fantasy_values):
+    
+    if not n_clicks:
+        return dash.no_update
+    
+    # Check prerequisites
+    if not predictions:
+        return dbc.Alert([
+            html.H4("Missing Prerequisites", className="alert-heading"),
+            html.P("To generate your optimal fantasy team, please complete these steps:"),
+            html.Ol([
+                html.Li([html.Strong("Step 1: "), "Go to Predictions tab and generate predictions"]),
+                html.Li([html.Strong("Step 2: "), "Go to Fantasy Team Inputs tab and adjust values"]),
+                html.Li([html.Strong("Step 3: "), "Come back here and click 'Generate Optimal Team'"])
+            ]),
+            html.Hr(),
+            html.P("Once complete, the algorithm will create your optimal team!", className="mb-0")
+        ], color="warning")
+    
+    if not fantasy_values or 'drivers' not in fantasy_values:
+        return dbc.Alert([
+            html.H4("Missing Values", className="alert-heading"),
+            html.P("Please visit the 'Fantasy Team Inputs' tab first."),
+        ], color="warning")
+    
+    try:
+        driver_values = {k: float(v) for k, v in fantasy_values['drivers'].items()}
+        constructor_values = {k: float(v) for k, v in fantasy_values['constructors'].items()}
+        total_budget = float(fantasy_values.get('budget', 113.7))
+    except (ValueError, TypeError, KeyError) as e:
+        return dbc.Alert(f"Error reading values. Error: {str(e)}", color="danger")
+    
+    # Create prediction dictionary
+    prediction_dict = {p['DriverID']: {'Position': p['P'], 'TeamID': p.get('TeamID', '')} for p in predictions}
+    
+    # Calculate constructor performance
+    constructor_performance = {}
+    for team_name in constructor_values.keys():
+        team_drivers = [d_id for d_id, info in prediction_dict.items() if info['TeamID'] == team_name]
+        if team_drivers:
+            team_position_sum = sum([prediction_dict[d_id]['Position'] for d_id in team_drivers])
+            constructor_performance[team_name] = team_position_sum
+        else:
+            constructor_performance[team_name] = 999
+    
+    # Prepare driver data
+    driver_list = []
+    for driver_id, cost in driver_values.items():
+        predicted_pos = prediction_dict.get(driver_id, {}).get('Position', 20)
+        team_id = prediction_dict.get(driver_id, {}).get('TeamID', '')
+        driver_list.append({
+            'id': driver_id,
+            'cost': cost,
+            'predicted_pos': predicted_pos,
+            'team_id': team_id
+        })
+    
+    # Prepare constructor data
+    constructor_list = []
+    for team_name, cost in constructor_values.items():
+        perf_score = constructor_performance.get(team_name, 999)
+        constructor_list.append({
+            'id': team_name,
+            'cost': cost,
+            'perf_score': perf_score
+        })
+    
+    # Find optimal team using combinatorial search
+    best_solution = find_optimal_team_combination(driver_list, constructor_list, total_budget)
+    
+    if not best_solution:
+        return dbc.Alert([
+            html.H4("Unable to Create Valid Team", className="alert-heading"),
+            html.P(f"Could not find valid combination within ${total_budget}M budget."),
+            html.P("Try increasing budget or adjusting values.")
+        ], color="danger")
+    
+    # Format output
+    drivers_display = []
+    for d in best_solution['drivers']:
+        drivers_display.append({
+            'DriverID': d['id'],
+            'Team': d['team_id'],
+            'Value': f"${d['cost']}M",
+            'Predicted Position': d['predicted_pos']
+        })
+    
+    constructors_display = []
+    for c in best_solution['constructors']:
+        constructors_display.append({
+            'Constructor': c['id'],
+            'Value': f"${c['cost']}M",
+            'Performance Score': f"{c['perf_score']:.0f}"
+        })
+    
+    drivers_df = pd.DataFrame(drivers_display)
+    constructors_df = pd.DataFrame(constructors_display)
+    
+    total_cost = best_solution['total_cost']
+    remaining = total_budget - total_cost
+    budget_used_pct = (total_cost / total_budget) * 100
+    
+    driver_quality = best_solution['driver_quality']
+    constructor_quality = best_solution['constructor_quality']
+    
+    return html.Div([
+        dbc.Card([
+            dbc.CardHeader(html.H4("Your Optimal Fantasy Team 🏆", className="text-success")),
+            dbc.CardBody([
+                dbc.Row([
+                    dbc.Col([
+                        html.H5("Budget Summary"),
+                        html.P([
+                            html.Strong("Total Budget: "), f"${total_budget}M", html.Br(),
+                            html.Strong("Total Spent: "), f"${total_cost:.1f}M", html.Br(),
+                            html.Strong("Remaining: "), f"${remaining:.1f}M", html.Br(),
+                            html.Strong("Budget Used: "), f"{budget_used_pct:.1f}%"
+                        ])
+                    ], md=6),
+                    dbc.Col([
+                        html.H5("Team Quality"),
+                        html.P([
+                            html.Strong("Driver Quality: "), f"{driver_quality:.0f}", html.Br(),
+                            html.Strong("Constructor Quality: "), f"{constructor_quality:.0f}", html.Br(),
+                            html.Small("(Lower = Better)", className="text-muted")
+                        ])
+                    ], md=6)
+                ], className="mb-4"),
+                
+                html.Hr(),
+                
+                html.H5("Selected Drivers (5)", className="mt-3"),
+                dbc.Table.from_dataframe(drivers_df, striped=True, bordered=True, hover=True, className="mt-2"),
+                
+                html.H5("Selected Constructors (2)", className="mt-4"),
+                dbc.Table.from_dataframe(constructors_df, striped=True, bordered=True, hover=True, className="mt-2"),
+                
+                html.Hr(),
+                
+                dbc.Alert([
+                    html.Strong("⚡ Optimization Algorithm: "),
+                    "Uses exhaustive combinatorial search to find the mathematically optimal team within budget!"
+                ], color="info", className="mt-3")
+            ])
+        ])
+    ])
+
+
+# Helper function for optimal team search
+def find_optimal_team_combination(drivers, constructors, budget):
+    """Find best team with exactly 5 drivers and 2 constructors within budget"""
+    
+    best_solution = None
+    best_quality = float('inf')
+    
+    # Try all combinations of 5 drivers and 2 constructors
+    for driver_combo in combinations(drivers, 5):
+        driver_cost = sum([d['cost'] for d in driver_combo])
+        
+        if driver_cost > budget:
+            continue
+        
+        remaining_budget = budget - driver_cost
+        
+        for constructor_combo in combinations(constructors, 2):
+            constructor_cost = sum([c['cost'] for c in constructor_combo])
+            
+            if constructor_cost <= remaining_budget:
+                # Calculate total quality score (lower is better)
+                driver_quality = sum([d['predicted_pos'] for d in driver_combo])
+                constructor_quality = sum([c['perf_score'] for c in constructor_combo])
+                total_quality = driver_quality + (constructor_quality * 0.1)  # Weight constructors less
+                
+                total_cost = driver_cost + constructor_cost
+                
+                # Prefer solutions that use more budget with similar quality
+                # Add small bonus for using more budget
+                budget_usage_bonus = (total_cost / budget) * 0.1
+                adjusted_quality = total_quality - budget_usage_bonus
+                
+                if adjusted_quality < best_quality:
+                    best_quality = adjusted_quality
+                    best_solution = {
+                        'drivers': list(driver_combo),
+                        'constructors': list(constructor_combo),
+                        'total_cost': total_cost,
+                        'driver_quality': driver_quality,
+                        'constructor_quality': constructor_quality
+                    }
+    
+    return best_solution
 
 # --- Run the App ---
 if __name__ == '__main__':
