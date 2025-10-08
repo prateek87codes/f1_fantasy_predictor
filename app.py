@@ -289,57 +289,102 @@ def run_reinforcement_simulation(year, historical_data_path, initial_model_path)
         import traceback; traceback.print_exc()
         return None
 
-# REPLACE your get_weather_forecast function with this OpenWeatherMap version
-def get_weather_forecast(lat, lon, api_key, race_date_obj):
-    if not api_key or api_key == "YOUR_OPENWEATHER_API_KEY_HERE":
-        print("[Weather] OpenWeather API key not provided. Skipping forecast fetch.")
-        return []
+# REPLACE your get_weather_forecast function with this open_meteo version
+def get_weather_forecast_open_meteo(lat, lon, race_date_obj, days=14):
+    """
+    Get weather forecast using Open-Meteo API and filter to race weekend days
+    """
+    import requests
+    from datetime import datetime, timedelta
+    
+    url = "https://api.open-meteo.com/v1/forecast"
+    
+    params = {
+        'latitude': lat,
+        'longitude': lon,
+        'daily': 'temperature_2m_max,temperature_2m_min,precipitation_probability_max,weathercode,windspeed_10m_max',
+        'timezone': 'auto',
+        'forecast_days': days
+    }
     
     try:
-        # OpenWeatherMap One Call API provides an 8-day daily forecast, which is perfect
-        url = f"https://api.openweathermap.org/data/3.0/onecall?lat={lat}&lon={lon}&exclude=current,minutely,hourly,alerts&appid={api_key}&units=metric"
+        response = requests.get(url, params=params, timeout=10)
+        response.raise_for_status()
+        data = response.json()
         
-        print(f"[Weather] Fetching forecast from OpenWeatherMap...")
-        response = requests.get(url, timeout=10)
-        response.raise_for_status() 
+        daily = data['daily']
+        forecasts = []
         
-        weather_data = response.json()
-        forecast_list = []
+        # Calculate race weekend dates (Friday, Saturday, Sunday before race)
+        race_date = race_date_obj.date() if hasattr(race_date_obj, 'date') else race_date_obj
         
-        # Determine the dates for Friday, Saturday, and Sunday of the race weekend
-        race_sunday = race_date_obj
-        race_saturday = race_sunday - pd.Timedelta(days=1)
-        race_friday = race_sunday - pd.Timedelta(days=2)
-        race_weekend_dates = [race_friday.date(), race_saturday.date(), race_sunday.date()]
+        # Find Friday before the race (race is typically Sunday)
+        days_until_sunday = (6 - race_date.weekday()) % 7  # Days until next Sunday
+        if days_until_sunday == 0:  # If race_date is already Sunday
+            race_sunday = race_date
+        else:
+            race_sunday = race_date + timedelta(days=days_until_sunday)
         
-        # Go through the daily forecast and find the matching days
-        for day_data in weather_data.get('daily', []):
-            forecast_date = datetime.fromtimestamp(day_data['dt']).date()
+        race_friday = race_sunday - timedelta(days=2)
+        race_saturday = race_sunday - timedelta(days=1)
+        
+        race_weekend_dates = [race_friday, race_saturday, race_sunday]
+        
+        for i in range(len(daily['time'])):
+            forecast_date = datetime.strptime(daily['time'][i], '%Y-%m-%d').date()
             
+            # Only include race weekend days
             if forecast_date in race_weekend_dates:
-                # Format the date to show the day of the week (e.g., "Friday")
-                day_name = datetime.fromtimestamp(day_data['dt']).strftime('%A')
-                
                 forecast = {
-                    "Date": day_name, # Show "Friday", "Saturday", "Sunday"
-                    "Temp": f"{day_data.get('temp', {}).get('day', 'N/A'):.0f}°C",
-                    "Description": day_data.get('weather', [{}])[0].get('description', 'No description').title(),
-                    "Icon": f"http://openweathermap.org/img/wn/{day_data.get('weather', [{}])[0].get('icon', '01d')}@2x.png"
+                    'Date': datetime.strptime(daily['time'][i], '%Y-%m-%d').strftime('%a, %b %d'),
+                    'Temp': f"{round(daily['temperature_2m_max'][i])}°C / {round(daily['temperature_2m_min'][i])}°C",
+                    'Description': get_weather_description(daily['weathercode'][i]),
+                    'Icon': get_weather_icon_svg(daily['weathercode'][i]),
+                    'Precipitation': f"{daily['precipitation_probability_max'][i]}%",
+                    'WindSpeed': f"{round(daily['windspeed_10m_max'][i])} km/h"
                 }
-                forecast_list.append(forecast)
+                forecasts.append(forecast)
         
-        print(f"[Weather] Successfully extracted {len(forecast_list)} days of forecast for the race weekend.")
-        return forecast_list
-
-    except requests.exceptions.HTTPError as http_err:
-        print(f"--- WEATHER API HTTP ERROR --- (Status: {http_err.response.status_code})")
-        if http_err.response.status_code == 401:
-            print("-> This is an Authentication error. Please check that your OpenWeatherMap API key is correct and active.")
-        else: print(f"-> Response Body: {http_err.response.text}")
-        return []
+        return forecasts[:3]  # Return max 3 days (Fri, Sat, Sun)
+    
     except Exception as e:
-        print(f"[Weather] General error fetching forecast: {e}")
+        print(f"Error fetching weather from Open-Meteo: {e}")
         return []
+
+def get_weather_description(code):
+    """Convert Open-Meteo weather code to description"""
+    weather_codes = {
+        0: "Clear sky", 1: "Mainly clear", 2: "Partly cloudy", 3: "Overcast",
+        45: "Foggy", 48: "Rime fog",
+        51: "Light drizzle", 53: "Moderate drizzle", 55: "Dense drizzle",
+        61: "Slight rain", 63: "Moderate rain", 65: "Heavy rain",
+        71: "Slight snow", 73: "Moderate snow", 75: "Heavy snow",
+        80: "Rain showers", 81: "Moderate rain showers", 82: "Violent rain showers",
+        95: "Thunderstorm", 96: "Thunderstorm with hail", 99: "Thunderstorm with heavy hail"
+    }
+    return weather_codes.get(code, "Unknown")
+
+
+def get_weather_icon_svg(code):
+    """Get weather icon URL from Open-Meteo's icon set"""
+    # Map weather codes to icon names
+    icon_map = {
+        0: "01d",  # Clear sky
+        1: "02d",  # Mainly clear
+        2: "03d",  # Partly cloudy
+        3: "04d",  # Overcast
+        45: "50d", 48: "50d",  # Fog
+        51: "09d", 53: "09d", 55: "09d",  # Drizzle
+        61: "10d", 63: "10d", 65: "10d",  # Rain
+        71: "13d", 73: "13d", 75: "13d",  # Snow
+        80: "09d", 81: "09d", 82: "09d",  # Rain showers
+        95: "11d", 96: "11d", 99: "11d"   # Thunderstorm
+    }
+    
+    icon_code = icon_map.get(code, "01d")
+    # Use OpenWeatherMap icons (they're free and work without API key)
+    return f"https://openweathermap.org/img/wn/{icon_code}@2x.png"
+
 
 @lru_cache(maxsize=32)
 def get_championship_standings_progression(year, event_round):
@@ -767,7 +812,11 @@ def get_next_race_info(year):
                     lat, lon = circuit_details['Latitude'].iloc[0], circuit_details['Longitude'].iloc[0]
         
         if lat and lon and 'race_date_obj' in locals() and pd.notna(race_date_obj):
-            data['WeatherData'] = get_weather_forecast(lat, lon, OPENWEATHER_API_KEY, race_date_obj)
+            print(f"[get_next_race_info] Fetching race weekend weather forecast for coordinates: {lat}, {lon}")
+            data['WeatherData'] = get_weather_forecast_open_meteo(lat, lon, race_date_obj, days=14)
+            print(f"[get_next_race_info] Weather forecast retrieved: {len(data['WeatherData'])} race days")
+        else:
+            print("[get_next_race_info] WARNING: No coordinates available for weather forecast")
         
         try:
             last_year_session = ff1.get_session(year - 1, event_name, 'R'); last_year_session.load(laps=True, telemetry=False, weather=False, messages=False)
