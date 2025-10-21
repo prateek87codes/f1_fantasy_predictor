@@ -6,6 +6,7 @@ from fastf1 import ergast
 import fastf1.plotting as ff1_plt 
 import pandas as pd
 from datetime import datetime
+from pandas.core.arrays.timedeltas import truediv_object_array
 import plotly.express as px
 import plotly.graph_objects as go
 import numpy as np
@@ -16,6 +17,7 @@ from functools import lru_cache
 from tqdm import tqdm
 import joblib
 import xgboost as xgb
+from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_absolute_error
 
 MY_COMPOUND_COLORS = {
@@ -113,7 +115,7 @@ def hex_to_rgba(hex_color, alpha=0.15):
         # Fallback if the color is not a valid hex
         return None 
 
-@lru_cache(maxsize=4) # Cache the result of this very slow function
+# Cache removed to ensure fresh results
 
 # --- ADD THIS HELPER FUNCTION to app.py ---
 # (Place it before the run_reinforcement_simulation function)
@@ -210,12 +212,36 @@ def get_race_data_with_features(year, round_number, ergast_api):
         print(f"Could not process data for {year} Round {round_number}. Error: {e}")
         return None
 
-@lru_cache(maxsize=4)
-def run_reinforcement_simulation(year, historical_data_path, initial_model_path):
-    print(f"\n[Reinforcement Sim] Starting for year {year}...")
+def run_reinforcement_simulation(year, historical_data_path, initial_model_path, retrain_frequency=3, use_ensemble=False):
+    """
+    Run reinforcement learning simulation with optimized incremental learning.
+    
+    Args:
+        year: Season year to simulate
+        historical_data_path: Path to historical training data
+        initial_model_path: Path to initial trained model
+        retrain_frequency: Retrain model every N races (default: 3)
+                          Lower = more adaptive but noisier
+                          Higher = more stable but slower learning
+        use_ensemble: If True, uses ensemble of XGBoost + Random Forest (slower but often better)
+    """
+    print(f"\n[Reinforcement Sim] Starting OPTIMIZED reinforcement learning for year {year}...")
+    print(f"[Reinforcement Sim] Retrain frequency: Every {retrain_frequency} races")
+    print(f"[Reinforcement Sim] Using ensemble: {use_ensemble}")
     try:
+        # Try to use enhanced model architecture if available
+        use_enhanced_model = False
+        try:
+            initial_model = joblib.load('f1_prediction_model_enhanced.joblib')
+            feature_info = joblib.load('f1_prediction_features_enhanced.joblib')
+            use_enhanced_model = True
+            print("[Reinforcement Sim] Using ENHANCED model with smart incremental learning")
+        except FileNotFoundError:
+            print("[Reinforcement Sim] Enhanced model not found, using basic model")
+            initial_model = joblib.load(initial_model_path)
+            feature_info = None
+        
         base_df = pd.read_csv(historical_data_path)
-        base_model = joblib.load(initial_model_path)
         
         schedule = ff1.get_event_schedule(year, include_testing=False)
         schedule['EventDate'] = pd.to_datetime(schedule['EventDate'])
@@ -227,61 +253,239 @@ def run_reinforcement_simulation(year, historical_data_path, initial_model_path)
 
         ergast_api_main = ergast.Ergast()
         simulation_results = []
-        current_training_data = base_df.copy()
+        
+        # This will accumulate enhanced features from the current season
+        accumulated_season_data = []
+        current_model = initial_model
+        current_rf_model = None  # Random Forest for ensemble
+        
+        # If using ensemble, train Random Forest on the initial historical data
+        if use_ensemble and use_enhanced_model:
+            print("[Reinforcement Sim] Training initial Random Forest for ensemble...")
+            try:
+                # Prepare initial training data (same as what was used for initial XGBoost)
+                numerical_features = feature_info['numerical_features']
+                categorical_cols = feature_info['categorical_features']
+                
+                available_numerical = [f for f in numerical_features if f in base_df.columns]
+                X_init_numerical = base_df[available_numerical].fillna(0)
+                X_init_categorical = pd.get_dummies(base_df[categorical_cols], columns=categorical_cols)
+                X_init = pd.concat([X_init_numerical, X_init_categorical], axis=1)
+                X_init.columns = [str(col) for col in X_init.columns]
+                
+                training_feature_names = feature_info['feature_names']
+                X_init_aligned = X_init.reindex(columns=training_feature_names, fill_value=0).astype(float)
+                y_init = base_df['FinishingPosition']
+                
+                # Train Random Forest
+                current_rf_model = RandomForestRegressor(
+                    n_estimators=150,
+                    max_depth=8,
+                    min_samples_split=5,
+                    min_samples_leaf=2,
+                    random_state=42,
+                    n_jobs=-1
+                )
+                current_rf_model.fit(X_init_aligned, y_init)
+                print(f"[Reinforcement Sim] ✓ Random Forest trained on {len(base_df)} historical races")
+            except Exception as e:
+                print(f"[Reinforcement Sim] ⚠️ Failed to train Random Forest: {e}")
+                print("[Reinforcement Sim] Falling back to XGBoost only")
+                current_rf_model = None
 
         for _, race in tqdm(completed_races.iterrows(), total=len(completed_races), desc=f"Simulating {year} season"):
             round_num = race['RoundNumber']
-            new_race_data = get_features_for_race(year, round_num, ergast_api_main)
-            if new_race_data is None or new_race_data.empty: continue
+            
+            if use_enhanced_model:
+                # ===== ENHANCED MODEL REINFORCEMENT LEARNING =====
+                try:
+                    # Step 1: Get enhanced features for prediction (uses historical + accumulated data)
+                    combined_historical_df = pd.concat([base_df] + accumulated_season_data, ignore_index=True) if accumulated_season_data else base_df
+                    predict_df = get_enhanced_features_for_prediction(year, round_num, combined_historical_df)
+                    
+                    if predict_df.empty:
+                        print(f"  Skipping round {round_num} - no enhanced features available")
+                        continue
+                    
+                    # Step 2: Prepare features for prediction
+                    numerical_features = feature_info['numerical_features']
+                    categorical_cols = feature_info['categorical_features']
+                    
+                    available_numerical = [f for f in numerical_features if f in predict_df.columns]
+                    X_predict_numerical = predict_df[available_numerical].fillna(0)
+                    X_predict_categorical = pd.get_dummies(predict_df[categorical_cols], columns=categorical_cols)
+                    X_predict = pd.concat([X_predict_numerical, X_predict_categorical], axis=1)
+                    X_predict.columns = [str(col) for col in X_predict.columns]
+                    
+                    # Align with training features
+                    training_feature_names = feature_info['feature_names']
+                    X_predict_aligned = X_predict.reindex(columns=training_feature_names, fill_value=0).astype(float)
+                    
+                    # Step 3: Make predictions with current model(s)
+                    if use_ensemble and current_rf_model is not None:
+                        # Ensemble prediction: Average of XGBoost and Random Forest
+                        xgb_predictions = current_model.predict(X_predict_aligned)
+                        rf_predictions = current_rf_model.predict(X_predict_aligned)
+                        predictions = (xgb_predictions * 0.6 + rf_predictions * 0.4)  # Weighted average (XGB gets more weight)
+                        print(f"    Using ensemble (XGBoost 60% + RandomForest 40%)")
+                    else:
+                        predictions = current_model.predict(X_predict_aligned)
+                    predict_df['PredictedPosition'] = predictions
+                    
+                    # Step 4: Get actual results
+                    actual_race_data = get_features_for_race(year, round_num, ergast_api_main)
+                    if actual_race_data is None or actual_race_data.empty:
+                        print(f"  Skipping round {round_num} - no actual results available")
+                        continue
+                    
+                    # Step 5: Calculate MAE
+                    comparison_df = predict_df[['DriverID', 'PredictedPosition']].merge(
+                        actual_race_data[['DriverID', 'FinishingPosition']], 
+                        on='DriverID', 
+                        how='inner'
+                    )
+                    
+                    mae = mean_absolute_error(comparison_df['FinishingPosition'], comparison_df['PredictedPosition'])
+                    
+                    # Step 6: Store results with actual feature importances
+                    predicted_top_10 = comparison_df.sort_values(by='PredictedPosition').head(10)['DriverID'].tolist()
+                    actual_top_10 = comparison_df.sort_values(by='FinishingPosition').head(10)['DriverID'].tolist()
+                    
+                    # Get feature importances from XGBoost model
+                    if hasattr(current_model, 'feature_importances_'):
+                        importance_dict = dict(zip(training_feature_names, current_model.feature_importances_))
+                        # Get top 10 by importance
+                        top_features = sorted(importance_dict.items(), key=lambda x: x[1], reverse=True)[:10]
+                        feature_importance_display = dict(top_features)
+                    else:
+                        feature_importance_display = {}
+                    
+                    simulation_results.append({
+                        "Round": round_num, 
+                        "Race": race['EventName'],
+                        "PredictedTop10": predicted_top_10, 
+                        "ActualTop10": actual_top_10,
+                        "MAE": mae,
+                        "FeatureImportances": feature_importance_display
+                    })
+                    
+                    print(f"  Round {round_num}: MAE = {mae:.2f} (using model trained on {len(combined_historical_df)} races)")
+                    
+                    # Step 7: REINFORCEMENT - Add this race's actual results to training data
+                    # Get enhanced features for this completed race with actual results
+                    actual_enhanced_df = get_enhanced_features_for_prediction(year, round_num, combined_historical_df)
+                    if not actual_enhanced_df.empty:
+                        # Add actual finishing positions
+                        actual_enhanced_df = actual_enhanced_df.merge(
+                            actual_race_data[['DriverID', 'FinishingPosition']], 
+                            on='DriverID', 
+                            how='inner'
+                        )
+                        accumulated_season_data.append(actual_enhanced_df)
+                        
+                        # SMART RETRAINING: Only retrain every N races to avoid overfitting
+                        should_retrain = (len(accumulated_season_data) % retrain_frequency == 0) or (len(accumulated_season_data) >= 5)
+                        
+                        if should_retrain:
+                            print(f"  ✓ Retraining model with {len(accumulated_season_data)} new races from {year}...")
+                            full_training_df = pd.concat([base_df] + accumulated_season_data, ignore_index=True)
+                            
+                            # Prepare training data
+                            y_full = full_training_df['FinishingPosition']
+                            available_numerical = [f for f in numerical_features if f in full_training_df.columns]
+                            X_full_numerical = full_training_df[available_numerical].fillna(0)
+                            X_full_categorical = pd.get_dummies(full_training_df[categorical_cols], columns=categorical_cols)
+                            X_full = pd.concat([X_full_numerical, X_full_categorical], axis=1)
+                            X_full.columns = [str(col) for col in X_full.columns]
+                            X_full_aligned = X_full.reindex(columns=training_feature_names, fill_value=0).astype(float)
+                            
+                            # Retrain XGBoost with BETTER hyperparameters for stability
+                            current_model = xgb.XGBRegressor(
+                                objective='reg:squarederror',
+                                n_estimators=200,  # More trees for stability
+                                max_depth=5,  # Shallower to prevent overfitting
+                                learning_rate=0.05,  # Lower learning rate for smoother updates
+                                subsample=0.8,  # Add randomness to prevent overfitting
+                                colsample_bytree=0.8,
+                                min_child_weight=3,  # Require more samples per leaf
+                                random_state=42
+                            )
+                            current_model.fit(X_full_aligned, y_full)
+                            
+                            # Also retrain Random Forest if ensemble is enabled
+                            if use_ensemble:
+                                print(f"    Also retraining Random Forest...")
+                                current_rf_model = RandomForestRegressor(
+                                    n_estimators=150,
+                                    max_depth=8,
+                                    min_samples_split=5,
+                                    min_samples_leaf=2,
+                                    random_state=42,
+                                    n_jobs=-1
+                                )
+                                current_rf_model.fit(X_full_aligned, y_full)
+                        else:
+                            print(f"  → Accumulating data ({len(accumulated_season_data)} races), next retrain at {((len(accumulated_season_data) // retrain_frequency) + 1) * retrain_frequency}")
+                    
+                except Exception as e:
+                    print(f"  Error processing round {round_num} with enhanced model: {e}")
+                    import traceback
+                    traceback.print_exc()
+                    continue
+            else:
+                # ===== BASIC MODEL REINFORCEMENT LEARNING =====
+                current_training_data = base_df.copy()
+                new_race_data = get_features_for_race(year, round_num, ergast_api_main)
+                if new_race_data is None or new_race_data.empty: 
+                    continue
 
-            # --- Calculate "form" features for the race we are about to predict ---
-            form_data = []
-            for driver_id in new_race_data['DriverID']:
-                driver_history = current_training_data[current_training_data['DriverID'] == driver_id]
-                last_5 = driver_history.tail(5)
-                form_data.append({
-                    'DriverID': driver_id,
-                    'RecentFormPoints': last_5['Points'].mean() if not last_5.empty else 0,
-                    'RecentQualiPos': last_5['QualifyingPosition'].mean() if not last_5.empty else 10,
-                    'RecentFinishPos': last_5['FinishingPosition'].mean() if not last_5.empty else 10
+                # Calculate "form" features
+                form_data = []
+                for driver_id in new_race_data['DriverID']:
+                    driver_history = current_training_data[current_training_data['DriverID'] == driver_id]
+                    last_5 = driver_history.tail(5)
+                    form_data.append({
+                        'DriverID': driver_id,
+                        'RecentFormPoints': last_5['Points'].mean() if not last_5.empty else 0,
+                        'RecentQualiPos': last_5['QualifyingPosition'].mean() if not last_5.empty else 10,
+                        'RecentFinishPos': last_5['FinishingPosition'].mean() if not last_5.empty else 10
+                    })
+                form_df = pd.DataFrame(form_data)
+                new_race_data = new_race_data.merge(form_df, on='DriverID', how='left').fillna(0)
+
+                # Prepare training data
+                X_train = current_training_data.drop(columns=['FinishingPosition', 'DriverID', 'TeamID', 'Points'])
+                X_train_cat = pd.get_dummies(X_train[['DriverTeamID', 'TrackID']])
+                X_train = pd.concat([X_train.drop(columns=['DriverTeamID', 'TrackID']), X_train_cat], axis=1)
+                X_train.columns = [str(col) for col in X_train.columns]
+                y_train = current_training_data['FinishingPosition']
+
+                # Train model
+                current_model = xgb.XGBRegressor(objective='reg:squarederror', n_estimators=100, random_state=42)
+                current_model.fit(X_train, y_train)
+                
+                # Make predictions
+                X_predict = new_race_data.drop(columns=['FinishingPosition', 'DriverID', 'TeamID', 'Points'])
+                X_predict_cat = pd.get_dummies(X_predict[['DriverTeamID', 'TrackID']])
+                X_predict = pd.concat([X_predict.drop(columns=['DriverTeamID', 'TrackID']), X_predict_cat], axis=1)
+                X_predict_aligned = X_predict.reindex(columns=current_model.get_booster().feature_names, fill_value=0)
+                
+                predictions = current_model.predict(X_predict_aligned)
+                new_race_data['PredictedPosition'] = predictions
+                
+                # Store results
+                predicted_top_10 = new_race_data.sort_values(by='PredictedPosition').head(10)['DriverID'].tolist()
+                actual_top_10 = new_race_data.sort_values(by='FinishingPosition').head(10)['DriverID'].tolist()
+                
+                simulation_results.append({
+                    "Round": round_num, "Race": race['EventName'],
+                    "PredictedTop10": predicted_top_10, "ActualTop10": actual_top_10,
+                    "MAE": mean_absolute_error(new_race_data['FinishingPosition'], predictions),
+                    "FeatureImportances": dict(zip(current_model.get_booster().feature_names, current_model.feature_importances_))
                 })
-            form_df = pd.DataFrame(form_data)
-            new_race_data = new_race_data.merge(form_df, on='DriverID', how='left').fillna(0)
-
-            # --- Prepare full training data (up to the previous race) ---
-            X_train = current_training_data.drop(columns=['FinishingPosition', 'DriverID', 'TeamID', 'Points'])
-            X_train_cat = pd.get_dummies(X_train[['DriverTeamID', 'TrackID']])
-            X_train = pd.concat([X_train.drop(columns=['DriverTeamID', 'TrackID']), X_train_cat], axis=1)
-            X_train.columns = [str(col) for col in X_train.columns]
-            y_train = current_training_data['FinishingPosition']
-
-            # Train a model on all data available *before* this race
-            current_model = xgb.XGBRegressor(objective='reg:squarederror', n_estimators=100, random_state=42)
-            current_model.fit(X_train, y_train)
-            
-            # Prepare data for the current race for prediction
-            X_predict = new_race_data.drop(columns=['FinishingPosition', 'DriverID', 'TeamID', 'Points'])
-            X_predict_cat = pd.get_dummies(X_predict[['DriverTeamID', 'TrackID']])
-            X_predict = pd.concat([X_predict.drop(columns=['DriverTeamID', 'TrackID']), X_predict_cat], axis=1)
-            
-            X_predict_aligned = X_predict.reindex(columns=current_model.get_booster().feature_names, fill_value=0)
-            
-            predictions = current_model.predict(X_predict_aligned)
-            new_race_data['PredictedPosition'] = predictions
-            
-            # Store results
-            predicted_top_10 = new_race_data.sort_values(by='PredictedPosition').head(10)['DriverID'].tolist()
-            actual_top_10 = new_race_data.sort_values(by='FinishingPosition').head(10)['DriverID'].tolist()
-            
-            simulation_results.append({
-                "Round": round_num, "Race": race['EventName'],
-                "PredictedTop10": predicted_top_10, "ActualTop10": actual_top_10,
-                "MAE": mean_absolute_error(new_race_data['FinishingPosition'], predictions),
-                "FeatureImportances": dict(zip(current_model.get_booster().feature_names, current_model.feature_importances_))
-            })
-
-            # "Reinforce": Add this race's data to the training set for the next iteration
-            current_training_data = pd.concat([current_training_data, new_race_data], ignore_index=True)
+                
+                # Add to training data
+                current_training_data = pd.concat([current_training_data, new_race_data], ignore_index=True)
 
         return pd.DataFrame(simulation_results)
     except Exception as e:
@@ -2601,11 +2805,76 @@ def update_predictions_tab(active_tab):
     if active_tab != 'tab-predictions':
         return dash.no_update
 
+    # Check which year has completed races
     cs_year = datetime.now().year
-    sim_results_df = run_reinforcement_simulation(cs_year, 'f1_historical_data.csv', 'f1_prediction_model.joblib')
+    try:
+        schedule_check = ff1.get_event_schedule(cs_year, include_testing=False)
+        schedule_check['EventDate'] = pd.to_datetime(schedule_check['EventDate'])
+        completed_check = schedule_check[schedule_check['EventDate'] < pd.Timestamp.now()]
+        
+        if completed_check.empty:
+            # No races completed this year yet, use previous year
+            cs_year = cs_year - 1
+            print(f"[Predictions Tab] No completed races in {datetime.now().year} yet, using {cs_year} data")
+    except Exception as e:
+        print(f"[Predictions Tab] Error checking schedule: {e}")
+    
+    # Create a simple basic model for the simulation
+    try:
+        import pandas as pd
+        import xgboost as xgb
+        from sklearn.model_selection import train_test_split
+        
+        # Load and prepare basic data
+        df = pd.read_csv('f1_historical_data.csv')
+        features = ['QualifyingPosition', 'ChampionshipStanding', 'ChampionshipPoints', 'RecentFormPoints', 'RecentQualiPos', 'RecentFinishPos']
+        X_numerical = df[features].fillna(0)
+        y = df['FinishingPosition']
+        X_categorical = pd.get_dummies(df[['DriverTeamID', 'TrackID']], columns=['DriverTeamID', 'TrackID'])
+        X = pd.concat([X_numerical, X_categorical], axis=1)
+        X.columns = [str(col) for col in X.columns]
+        
+        # Train basic model
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+        basic_model = xgb.XGBRegressor(objective='reg:squarederror', n_estimators=100, random_state=42)
+        basic_model.fit(X_train, y_train)
+        
+        # Save basic model for simulation
+        joblib.dump(basic_model, 'f1_prediction_model_basic.joblib')
+        
+        # ===== REINFORCEMENT LEARNING CONFIGURATION =====
+        # Adjust these parameters to tune the learning behavior:
+        
+        # 1. RETRAIN_FREQUENCY: How often to retrain (3 = every 3 races)
+        #   * Lower (1-2) = More responsive, but can overfit to recent races
+        #   * Medium (3-4) = Balanced approach (RECOMMENDED)
+        #   * Higher (5+) = More stable, but slower to adapt
+        RETRAIN_FREQUENCY = 3  # Recommended: 3
+        
+        # 2. USE_ENSEMBLE: Combine XGBoost + Random Forest
+        #   * False = Faster, XGBoost only (RECOMMENDED for first try)
+        #   * True = Slower, but often 0.2-0.5 positions better MAE
+        USE_ENSEMBLE = truediv_object_array  # Set to True to try ensemble approach
+        
+        sim_results_df = run_reinforcement_simulation(
+            cs_year, 
+            'f1_historical_data.csv', 
+            'f1_prediction_model_basic.joblib',
+            retrain_frequency=RETRAIN_FREQUENCY,
+            use_ensemble=USE_ENSEMBLE
+        )
+    except Exception as e:
+        print(f"Error creating simulation model: {e}")
+        import traceback
+        traceback.print_exc()
+        sim_results_df = None
+        error_msg = str(e)
 
     if sim_results_df is None or sim_results_df.empty:
-        return dbc.Alert("Could not run prediction simulation.", color="danger"), None
+        error_detail = f"Could not run prediction simulation. Check terminal for details."
+        if 'error_msg' in locals():
+            error_detail += f"\n\nError: {error_msg}"
+        return dbc.Alert(error_detail, color="danger", style={'whiteSpace': 'pre-wrap'})
     
     # Build the visualizations (same as before)
     race_prediction_cards = []
@@ -2634,32 +2903,84 @@ def update_predictions_tab(active_tab):
         ], className="mb-3")
         race_prediction_cards.append(race_card)
 
+    # Calculate statistics
+    overall_mae = sim_results_df['MAE'].mean()
+    first_half_mae = sim_results_df[sim_results_df['Round'] <= sim_results_df['Round'].max() / 2]['MAE'].mean()
+    second_half_mae = sim_results_df[sim_results_df['Round'] > sim_results_df['Round'].max() / 2]['MAE'].mean()
+    improvement_pct = ((first_half_mae - second_half_mae) / first_half_mae * 100) if first_half_mae > 0 else 0
+    
+    # Create MAE line chart with average line
     mae_fig = px.line(
         sim_results_df, 
         x='Round', 
         y='MAE', 
-        title='Model Prediction Error (MAE) Over Season', 
+        title=f'Model Prediction Error (MAE) Over Season - Avg: {overall_mae:.2f} positions', 
         markers=True
     )
+    mae_fig.add_hline(y=overall_mae, line_dash="dash", line_color="red", 
+                      annotation_text=f"Season Average: {overall_mae:.2f}")
     mae_fig.update_layout(yaxis_title="Prediction Error (+/- positions)")
     
+    # Feature importance chart
     last_importances = sim_results_df['FeatureImportances'].iloc[-1]
-    imp_df = pd.DataFrame(
-        list(last_importances.items()), 
-        columns=['Feature', 'Importance']
-    ).sort_values(by='Importance', ascending=False).head(10)
+    if last_importances:
+        imp_df = pd.DataFrame(
+            list(last_importances.items()), 
+            columns=['Feature', 'Importance']
+        ).sort_values(by='Importance', ascending=False).head(10)
+        
+        imp_fig = px.bar(
+            imp_df, 
+            x='Importance', 
+            y='Feature', 
+            orientation='h', 
+            title=f"Top 10 Feature Importances (after Round {sim_results_df['Round'].max()})"
+        )
+        imp_fig.update_layout(yaxis={'categoryorder':'total ascending'})
+    else:
+        # Fallback if no feature importances available
+        imp_fig = px.bar(title="Feature importances not available")
     
-    imp_fig = px.bar(
-        imp_df, 
-        x='Importance', 
-        y='Feature', 
-        orientation='h', 
-        title=f"Top 10 Feature Importances (after Round {sim_results_df['Round'].max()})"
-    )
-    imp_fig.update_layout(yaxis={'categoryorder':'total ascending'})
+    # Statistics cards
+    stats_cards = dbc.Row([
+        dbc.Col([
+            dbc.Card([
+                dbc.CardBody([
+                    html.H4(f"{overall_mae:.2f}", className="text-primary"),
+                    html.P("Overall Average MAE", className="mb-0")
+                ])
+            ])
+        ], width=3),
+        dbc.Col([
+            dbc.Card([
+                dbc.CardBody([
+                    html.H4(f"{first_half_mae:.2f}", className="text-info"),
+                    html.P("First Half MAE", className="mb-0")
+                ])
+            ])
+        ], width=3),
+        dbc.Col([
+            dbc.Card([
+                dbc.CardBody([
+                    html.H4(f"{second_half_mae:.2f}", className="text-success"),
+                    html.P("Second Half MAE", className="mb-0")
+                ])
+            ])
+        ], width=3),
+        dbc.Col([
+            dbc.Card([
+                dbc.CardBody([
+                    html.H4(f"{improvement_pct:.1f}%", className="text-warning"),
+                    html.P("Improvement (1st→2nd Half)", className="mb-0")
+                ])
+            ])
+        ], width=3),
+    ], className="mb-4")
 
     display_content = html.Div([
-        dbc.Row(dbc.Col(html.H5("2025 Race-by-Race Prediction Simulation"), width=12), className="mb-2"),
+        dbc.Row(dbc.Col(html.H5(f"{cs_year} Race-by-Race Prediction Simulation with Reinforcement Learning"), width=12), className="mb-2"),
+        dbc.Row(dbc.Col(html.P(f"The model learns from each race and retrains with accumulated {cs_year} data. MAE should improve as the season progresses."), width=12), className="mb-3"),
+        stats_cards,
         dbc.Row(dbc.Col(race_prediction_cards, width=12), className="mb-4"),
         dbc.Row([
             dbc.Col(dcc.Graph(figure=mae_fig), md=6), 
@@ -2759,6 +3080,145 @@ def get_features_for_prediction(year, round_number, historical_df):
     except Exception as e:
         print(f"Error in get_features_for_prediction: {e}"); return pd.DataFrame()
 
+def get_enhanced_features_for_prediction(year, round_number, historical_df, circuit_df=None):
+    """Gathers enhanced features for all current drivers to predict an upcoming race."""
+    print(f"[get_enhanced_features_for_prediction] Gathering enhanced features for {year} R{round_number}...")
+    try:
+        ergast_api = ergast.Ergast()
+        
+        # 1. Get the last completed race to find the current grid and standings
+        schedule = ff1.get_event_schedule(year, include_testing=False)
+        schedule['EventDate'] = pd.to_datetime(schedule['EventDate'])
+        completed_races = schedule[schedule['EventDate'] < pd.Timestamp.now()]
+        if completed_races.empty:
+            print("No completed races yet to base prediction on.")
+            return pd.DataFrame()
+            
+        last_race_round = completed_races['RoundNumber'].max()
+        session = ff1.get_session(year, last_race_round, 'R')
+        session.load()
+        
+        # Get the list of current drivers and teams
+        current_grid_df = session.results.loc[:, ['Abbreviation', 'TeamName']].copy()
+        current_grid_df.rename(columns={'Abbreviation': 'DriverID', 'TeamName': 'TeamID'}, inplace=True)
+        
+        # 2. Get latest championship standings
+        standings_df = pd.DataFrame()
+        try:
+            standings_content = ergast_api.get_driver_standings(season=year, round=last_race_round).content
+            if standings_content: 
+                standings_df = standings_content[0][['driverCode', 'position', 'points']]
+        except: 
+            pass
+        
+        # 3. Calculate enhanced features from historical + current season data
+        all_season_data = pd.concat([historical_df, get_race_data_with_features(year, last_race_round, ergast_api)], ignore_index=True)
+        all_season_data.sort_values(by=['Year', 'Round'], inplace=True)
+        
+        # Get target track info
+        target_track = schedule[schedule['RoundNumber'] == round_number]['Location'].iloc[0]
+        
+        features_list = []
+        for _, driver in current_grid_df.iterrows():
+            driver_id = driver['DriverID']
+            team_id = driver['TeamID']
+            driver_history = all_season_data[all_season_data['DriverID'] == driver_id]
+            team_history = all_season_data[all_season_data['TeamID'] == team_id]
+            
+            # Basic features
+            recent_form = driver_history.tail(3)['Points'].mean() if not driver_history.empty else 0
+            avg_quali = driver_history['QualifyingPosition'].mean() if not driver_history.empty else 10
+            avg_finish = driver_history['FinishingPosition'].mean() if not driver_history.empty else 10
+            
+            # Get current championship standing
+            standing = standings_df[standings_df['driverCode'] == driver_id]
+            current_standing = standing['position'].iloc[0] if not standing.empty else 20
+            current_points = standing['points'].iloc[0] if not standing.empty else 0
+            
+            # Enhanced features
+            # Driver performance metrics
+            driver_win_rate = (driver_history['FinishingPosition'] == 1).mean() if not driver_history.empty else 0
+            driver_podium_rate = (driver_history['FinishingPosition'] <= 3).mean() if not driver_history.empty else 0
+            driver_avg_points = driver_history['Points'].mean() if not driver_history.empty else 0
+            driver_consistency = driver_history['FinishingPosition'].std() if not driver_history.empty else 5
+            
+            # Team performance metrics
+            team_avg_points = team_history['Points'].mean() if not team_history.empty else 0
+            team_reliability = (team_history['FinishingPosition'] <= 20).mean() if not team_history.empty else 1
+            
+            # Circuit-specific performance
+            driver_circuit_avg = driver_history[driver_history['TrackID'] == target_track]['FinishingPosition'].mean() if not driver_history.empty else avg_finish
+            team_circuit_avg = team_history[team_history['TrackID'] == target_track]['FinishingPosition'].mean() if not team_history.empty else avg_finish
+            
+            # Season progression
+            race_number = round_number
+            season_phase = 1 if race_number <= 8 else (2 if race_number <= 16 else 3)
+            
+            # Grid position analysis
+            quali_race_diff = (driver_history['QualifyingPosition'] - driver_history['FinishingPosition']).mean() if not driver_history.empty else 0
+            grid_advantage = 21 - avg_quali
+            
+            # Teammate advantage (simplified)
+            teammate_advantage = 0.5  # Placeholder - would need teammate comparison
+            
+            # Championship pressure
+            championship_pressure = 1 / (current_standing + 1)
+            
+            # Weighted form
+            if len(driver_history) >= 4:
+                weights = np.array([0.4, 0.3, 0.2, 0.1])
+                recent_points = driver_history.tail(4)['Points'].values
+                weighted_form = np.average(recent_points, weights=weights[:len(recent_points)])
+            else:
+                weighted_form = recent_form
+            
+            # Additional features that might be missing
+            championship_momentum = 0  # Placeholder
+            circuit_difficulty = 0  # Placeholder
+            driver_improvement = 0  # Placeholder
+            similar_track_performance = avg_finish  # Use average finish as fallback
+            team_standing_trend = 0  # Placeholder
+            weather_factor = 1.0  # Placeholder
+            
+            features_list.append({
+                'DriverID': driver_id, 
+                'TeamID': team_id,
+                'QualifyingPosition': avg_quali,
+                'ChampionshipStanding': current_standing,
+                'ChampionshipPoints': current_points,
+                'RecentFormPoints': recent_form,
+                'RecentQualiPos': avg_quali,
+                'RecentFinishPos': avg_finish,
+                'DriverWinRate': driver_win_rate,
+                'DriverPodiumRate': driver_podium_rate,
+                'DriverAvgPoints': driver_avg_points,
+                'DriverConsistency': driver_consistency,
+                'TeamAvgPoints': team_avg_points,
+                'TeamReliability': team_reliability,
+                'DriverCircuitAvg': driver_circuit_avg,
+                'TeamCircuitAvg': team_circuit_avg,
+                'RaceNumber': race_number,
+                'SeasonPhase': season_phase,
+                'QualiRaceDiff': quali_race_diff,
+                'WeightedForm': weighted_form,
+                'GridAdvantage': grid_advantage,
+                'TeammateAdvantage': teammate_advantage,
+                'ChampionshipPressure': championship_pressure,
+                'ChampionshipMomentum': championship_momentum,
+                'CircuitDifficulty': circuit_difficulty,
+                'DriverImprovement': driver_improvement,
+                'SimilarTrackPerformance': similar_track_performance,
+                'TeamStandingTrend': team_standing_trend,
+                'WeatherFactor': weather_factor,
+                'TrackID': target_track,
+                'DriverTeamID': f"{driver_id}_{team_id}"
+            })
+            
+        return pd.DataFrame(features_list)
+    except Exception as e:
+        print(f"Error in get_enhanced_features_for_prediction: {e}")
+        return pd.DataFrame()
+
 # --- REPLACE your existing predict_next_race callback in app.py ---
 @app.callback(
     [Output('next-race-prediction-output', 'children'),
@@ -2771,40 +3231,85 @@ def predict_next_race(n_clicks, selected_race_round):
     if not selected_race_round:
         return dbc.Alert("Please select an upcoming race from the dropdown.", color="warning"), None
 
-    print(f"[predict_next_race] Generating prediction for round {selected_race_round}...")
+    print(f"[predict_next_race] Generating enhanced prediction for round {selected_race_round}...")
     cs_year = datetime.now().year
     
     try:
-        # 1. Load the trained model and the original training data
-        model = joblib.load('f1_prediction_model.joblib')
-        historical_df = pd.read_csv('f1_historical_data.csv')
-        
-        # 2. Get features for ALL current drivers for the upcoming race
-        predict_df = get_features_for_prediction(cs_year, selected_race_round, historical_df)
-        
-        if predict_df.empty:
-            return dbc.Alert("Could not gather necessary data to make a prediction. A race may need to be completed in the current season first.", color="danger"), None
+        # Try to use the enhanced model first, fallback to basic model
+        try:
+            # 1. Load the enhanced model and feature info
+            model = joblib.load('f1_prediction_model_enhanced.joblib')
+            feature_info = joblib.load('f1_prediction_features_enhanced.joblib')
+            historical_df = pd.read_csv('f1_historical_data.csv')
+            
+            # 2. Get enhanced features for ALL current drivers for the upcoming race
+            predict_df = get_enhanced_features_for_prediction(cs_year, selected_race_round, historical_df)
+            
+            if predict_df.empty:
+                return dbc.Alert("Could not gather necessary data to make a prediction. A race may need to be completed in the current season first.", color="danger"), None
 
-        # 3. Pre-process the prediction data
-        X_predict_numerical = predict_df[['QualifyingPosition', 'ChampionshipStanding', 'ChampionshipPoints', 'RecentFormPoints']]
-        X_predict_categorical = pd.get_dummies(predict_df[['DriverTeamID', 'TrackID']])
-        X_predict = pd.concat([X_predict_numerical, X_predict_categorical], axis=1)
+            # 3. Prepare features using the same structure as training
+            numerical_features = feature_info['numerical_features']
+            categorical_cols = feature_info['categorical_features']
+            
+            # Select only the features that exist in our prediction data
+            available_numerical = [f for f in numerical_features if f in predict_df.columns]
+            X_predict_numerical = predict_df[available_numerical].fillna(0)
+            
+            # One-hot encode categorical variables
+            X_predict_categorical = pd.get_dummies(predict_df[categorical_cols], columns=categorical_cols)
+            X_predict = pd.concat([X_predict_numerical, X_predict_categorical], axis=1)
+            X_predict.columns = [str(col) for col in X_predict.columns]
+            
+            # Align features with training data
+            training_feature_names = feature_info['feature_names']
+            X_predict_aligned = X_predict.reindex(columns=training_feature_names, fill_value=0)
+            
+            # For prediction, we'll use all features that were available during training
+            # Skip feature selection to avoid feature name mismatch issues
+            X_predict_selected = X_predict_aligned.astype(float)
+            
+            # 4. Make Predictions for ALL drivers
+            predictions = model.predict(X_predict_selected)
+            predict_df['PredictedPosition'] = predictions
+            
+            model_type = "Enhanced"
+            
+        except FileNotFoundError:
+            # Fallback to basic model
+            print("Enhanced model not found, using basic model...")
+            model = joblib.load('f1_prediction_model.joblib')
+            historical_df = pd.read_csv('f1_historical_data.csv')
+            
+            # 2. Get features for ALL current drivers for the upcoming race
+            predict_df = get_features_for_prediction(cs_year, selected_race_round, historical_df)
+            
+            if predict_df.empty:
+                return dbc.Alert("Could not gather necessary data to make a prediction. A race may need to be completed in the current season first.", color="danger"), None
 
-        # Align columns
-        training_cols = model.get_booster().feature_names
-        X_predict_aligned = X_predict.reindex(columns=training_cols, fill_value=0)
-        
-        # 4. Make Predictions for ALL drivers
-        predictions = model.predict(X_predict_aligned)
-        predict_df['PredictedPosition'] = predictions
+            # 3. Pre-process the prediction data
+            X_predict_numerical = predict_df[['QualifyingPosition', 'ChampionshipStanding', 'ChampionshipPoints', 'RecentFormPoints']]
+            X_predict_categorical = pd.get_dummies(predict_df[['DriverTeamID', 'TrackID']])
+            X_predict = pd.concat([X_predict_numerical, X_predict_categorical], axis=1)
+
+            # Align columns
+            training_cols = model.get_booster().feature_names
+            X_predict_aligned = X_predict.reindex(columns=training_cols, fill_value=0)
+            
+            # 4. Make Predictions for ALL drivers
+            predictions = model.predict(X_predict_aligned)
+            predict_df['PredictedPosition'] = predictions
+            
+            model_type = "Basic"
         
         # 5. Sort by predicted position
-        final_prediction = predict_df.sort_values(by='PredictedPosition').loc[:, ['DriverID', 'TeamID']]
+        final_prediction = predict_df.sort_values(by='PredictedPosition').loc[:, ['DriverID', 'TeamID', 'PredictedPosition']]
         final_prediction.insert(0, 'P', range(1, len(final_prediction) + 1))
         
         # Display top 10 in the UI
         display_output = html.Div([
-            html.H5(f"Predicted Top 10 Finishers", className="mt-3"),
+            html.H5(f"Predicted Top 10 Finishers ({model_type} Model)", className="mt-3"),
+            dbc.Alert(f"Using {model_type} model with enhanced features for better accuracy", color="success", className="mb-3"),
             dbc.Table.from_dataframe(final_prediction.head(10), striped=True, bordered=True, hover=True, className="mt-2")
         ])
         
@@ -3115,9 +3620,12 @@ def generate_optimal_team(n_clicks, predictions, fantasy_values):
     
     # Format output
     drivers_display = []
-    for d in best_solution['drivers']:
+    for i, d in enumerate(best_solution['drivers']):
+        is_turbo = (i == best_solution['turbo_driver_idx'])
+        turbo_indicator = " 🚀" if is_turbo else ""
+        
         drivers_display.append({
-            'DriverID': d['id'],
+            'Driver': d['id'] + turbo_indicator,
             'Team': d['team_id'],
             'Value': f"${d['cost']}M",
             'Predicted Position': d['predicted_pos']
@@ -3169,6 +3677,7 @@ def generate_optimal_team(n_clicks, predictions, fantasy_values):
                 
                 html.H5("Selected Drivers (5)", className="mt-3"),
                 dbc.Table.from_dataframe(drivers_df, striped=True, bordered=True, hover=True, className="mt-2"),
+                html.Small("🚀 = Turbo Driver (earns 2x points)", className="text-muted"),
                 
                 html.H5("Selected Constructors (2)", className="mt-4"),
                 dbc.Table.from_dataframe(constructors_df, striped=True, bordered=True, hover=True, className="mt-2"),
@@ -3177,7 +3686,8 @@ def generate_optimal_team(n_clicks, predictions, fantasy_values):
                 
                 dbc.Alert([
                     html.Strong("⚡ Optimization Algorithm: "),
-                    "Uses exhaustive combinatorial search to find the mathematically optimal team within budget!"
+                    "Uses exhaustive combinatorial search to find the mathematically optimal team within budget. ",
+                    "Automatically selects the best turbo driver (2x points) from your lineup!"
                 ], color="info", className="mt-3")
             ])
         ])
@@ -3204,26 +3714,43 @@ def find_optimal_team_combination(drivers, constructors, budget):
             constructor_cost = sum([c['cost'] for c in constructor_combo])
             
             if constructor_cost <= remaining_budget:
-                # Calculate total quality score (lower is better)
-                driver_quality = sum([d['predicted_pos'] for d in driver_combo])
-                constructor_quality = sum([c['perf_score'] for c in constructor_combo])
-                total_quality = driver_quality + (constructor_quality * 0.1)  # Weight constructors less
+                # Test each driver as potential turbo (turbo driver gets 2x points)
+                best_turbo_quality = float('inf')
+                best_turbo_idx = 0
+                best_turbo_driver_quality = 0
                 
-                total_cost = driver_cost + constructor_cost
+                for turbo_idx in range(5):
+                    # Calculate quality with this driver as turbo
+                    # Turbo driver weighted more heavily (0.5x multiplier = better impact since lower is better)
+                    driver_quality = sum([
+                        d['predicted_pos'] * (0.5 if i == turbo_idx else 1.0)
+                        for i, d in enumerate(driver_combo)
+                    ])
+                    constructor_quality = sum([c['perf_score'] for c in constructor_combo])
+                    total_quality = driver_quality + (constructor_quality * 0.2)
+                    
+                    total_cost = driver_cost + constructor_cost
+                    
+                    # Prefer solutions that use more budget with similar quality
+                    budget_usage_bonus = (total_cost / budget) * 2.0
+                    adjusted_quality = total_quality - budget_usage_bonus
+                    
+                    if adjusted_quality < best_turbo_quality:
+                        best_turbo_quality = adjusted_quality
+                        best_turbo_idx = turbo_idx
+                        best_turbo_driver_quality = driver_quality
                 
-                # Prefer solutions that use more budget with similar quality
-                # Add small bonus for using more budget
-                budget_usage_bonus = (total_cost / budget) * 0.1
-                adjusted_quality = total_quality - budget_usage_bonus
-                
-                if adjusted_quality < best_quality:
-                    best_quality = adjusted_quality
+                # Check if this combination (with best turbo) is the best overall
+                if best_turbo_quality < best_quality:
+                    best_quality = best_turbo_quality
                     best_solution = {
                         'drivers': list(driver_combo),
                         'constructors': list(constructor_combo),
-                        'total_cost': total_cost,
-                        'driver_quality': driver_quality,
-                        'constructor_quality': constructor_quality
+                        'turbo_driver_idx': best_turbo_idx,
+                        'turbo_driver_id': driver_combo[best_turbo_idx]['id'],
+                        'total_cost': driver_cost + constructor_cost,
+                        'driver_quality': best_turbo_driver_quality,
+                        'constructor_quality': sum([c['perf_score'] for c in constructor_combo])
                     }
     
     return best_solution

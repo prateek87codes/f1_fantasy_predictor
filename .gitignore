@@ -6,4 +6,5 @@ venv/
 __pycache__/
 
 # macOS specific
-.DS_Store.env
+.DS_Store
+.env
