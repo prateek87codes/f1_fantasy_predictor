@@ -21,5 +21,8 @@ COPY . .
 # Expose the port your app runs on
 EXPOSE 8080
 
-# Command to run the app using a production-ready WSGI server (Gunicorn)
-CMD ["gunicorn", "--bind", "0.0.0.0:8080", "wsgi:application"]
+# Command to run the app using a tuned Gunicorn server for Cloud Run
+# - gthread worker class with multiple threads improves concurrency for I/O-bound Dash callbacks
+# - preload reduces per-worker import time; ensure imports do not perform heavy network calls
+# - increased timeout helps first-time cache fills
+CMD ["gunicorn", "-k", "gthread", "--threads", "4", "--workers", "2", "--timeout", "180", "--preload", "--bind", "0.0.0.0:8080", "wsgi:application"]

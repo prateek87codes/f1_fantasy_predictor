@@ -76,11 +76,16 @@ CONSTRUCTOR_NAME_TO_COLOR_MAP = {
 }
 
 # --- 1. Configure FastF1 Caching ---
-cache_dir = 'cache'
+import tempfile
+cache_dir = os.path.join(tempfile.gettempdir(), 'ff1_cache')
 # Create the cache directory on the server if it does not exist
-if not os.path.exists(cache_dir):
-    os.makedirs(cache_dir)
-    print(f"Cache directory '{cache_dir}' created.")
+try:
+    if not os.path.exists(cache_dir):
+        os.makedirs(cache_dir, exist_ok=True)
+    print(f"Cache directory '{cache_dir}' ready.")
+except Exception as e:
+    print(f"Warning: Could not create cache directory: {e}")
+    cache_dir = tempfile.gettempdir()
 
 # Now that we know the folder exists, enable the cache
 try:
@@ -95,6 +100,32 @@ try:
 except FileNotFoundError:
     print("Warning: circuit_data.csv not found. Circuit specific data will be missing.")
     circuit_data_df = pd.DataFrame() # Create an empty DataFrame if file is missing
+
+# --- Lightweight in-process caches for heavy loaders ---
+_joblib_cache = {}
+_csv_cache = {}
+_schedule_cache = {}
+
+def load_joblib_cached(file_path):
+    cached = _joblib_cache.get(file_path)
+    if cached is None:
+        cached = joblib.load(file_path)
+        _joblib_cache[file_path] = cached
+    return cached
+
+def read_csv_cached(file_path):
+    cached = _csv_cache.get(file_path)
+    if cached is None:
+        cached = pd.read_csv(file_path)
+        _csv_cache[file_path] = cached
+    return cached
+
+def get_event_schedule_cached(year):
+    cached = _schedule_cache.get(year)
+    if cached is None:
+        cached = ff1.get_event_schedule(year, include_testing=False)
+        _schedule_cache[year] = cached
+    return cached
 
 # --- HELPER FUNCTION DEFINITIONS ---
 def format_timedelta(td_object):
@@ -232,18 +263,18 @@ def run_reinforcement_simulation(year, historical_data_path, initial_model_path,
         # Try to use enhanced model architecture if available
         use_enhanced_model = False
         try:
-            initial_model = joblib.load('f1_prediction_model_enhanced.joblib')
-            feature_info = joblib.load('f1_prediction_features_enhanced.joblib')
+            initial_model = load_joblib_cached('f1_prediction_model_enhanced.joblib')
+            feature_info = load_joblib_cached('f1_prediction_features_enhanced.joblib')
             use_enhanced_model = True
             print("[Reinforcement Sim] Using ENHANCED model with smart incremental learning")
         except FileNotFoundError:
             print("[Reinforcement Sim] Enhanced model not found, using basic model")
-            initial_model = joblib.load(initial_model_path)
+            initial_model = load_joblib_cached(initial_model_path)
             feature_info = None
         
-        base_df = pd.read_csv(historical_data_path)
+        base_df = read_csv_cached(historical_data_path)
         
-        schedule = ff1.get_event_schedule(year, include_testing=False)
+        schedule = get_event_schedule_cached(year)
         schedule['EventDate'] = pd.to_datetime(schedule['EventDate'])
         completed_races = schedule[schedule['EventDate'] < pd.Timestamp.now()].sort_values(by='RoundNumber')
 
@@ -1108,6 +1139,33 @@ app = dash.Dash(__name__,
                )
 server = app.server
 assets_folder = os.path.join(os.path.dirname(__file__), "assets")
+
+# --- Warmup endpoint to prime caches on cold start ---
+@server.route('/_warmup')
+def _warmup():
+    try:
+        year_now = datetime.now().year
+        # Prime schedules
+        _ = get_event_schedule_cached(year_now)
+        _ = get_event_schedule_cached(year_now - 1)
+        # Prime models (if available)
+        for path in [
+            'f1_prediction_model_enhanced.joblib',
+            'f1_prediction_features_enhanced.joblib',
+            'f1_prediction_model.joblib',
+        ]:
+            try:
+                _ = load_joblib_cached(path)
+            except Exception:
+                pass
+        # Prime historical data
+        try:
+            _ = read_csv_cached('f1_historical_data.csv')
+        except Exception:
+            pass
+        return {"status": "ok"}, 200
+    except Exception:
+        return {"status": "error"}, 200
 
 # --- Define the App Layout ---
 current_year = datetime.now().year
@@ -3238,9 +3296,9 @@ def predict_next_race(n_clicks, selected_race_round):
         # Try to use the enhanced model first, fallback to basic model
         try:
             # 1. Load the enhanced model and feature info
-            model = joblib.load('f1_prediction_model_enhanced.joblib')
-            feature_info = joblib.load('f1_prediction_features_enhanced.joblib')
-            historical_df = pd.read_csv('f1_historical_data.csv')
+            model = load_joblib_cached('f1_prediction_model_enhanced.joblib')
+            feature_info = load_joblib_cached('f1_prediction_features_enhanced.joblib')
+            historical_df = read_csv_cached('f1_historical_data.csv')
             
             # 2. Get enhanced features for ALL current drivers for the upcoming race
             predict_df = get_enhanced_features_for_prediction(cs_year, selected_race_round, historical_df)
@@ -3278,8 +3336,8 @@ def predict_next_race(n_clicks, selected_race_round):
         except FileNotFoundError:
             # Fallback to basic model
             print("Enhanced model not found, using basic model...")
-            model = joblib.load('f1_prediction_model.joblib')
-            historical_df = pd.read_csv('f1_historical_data.csv')
+            model = load_joblib_cached('f1_prediction_model.joblib')
+            historical_df = read_csv_cached('f1_historical_data.csv')
             
             # 2. Get features for ALL current drivers for the upcoming race
             predict_df = get_features_for_prediction(cs_year, selected_race_round, historical_df)
