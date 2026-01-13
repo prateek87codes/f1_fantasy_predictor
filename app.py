@@ -34,12 +34,7 @@ MY_COMPOUND_COLORS = {
 # --- API Key and Global Configs ---
 
 
-# --- NEW: OPENWEATHERMAP API KEY ---
-OPENWEATHER_API_KEY = os.environ.get("OPENWEATHER_API_KEY")
-
-if OPENWEATHER_API_KEY == "YOUR_NEW_OPENWEATHERMAP_API_KEY_HERE" or OPENWEATHER_API_KEY == "":
-    print("Warning: OPENWEATHER_API_KEY is not set. Weather features will be disabled.")
-    OPENWEATHER_API_KEY = None
+# Note: Weather forecast uses Open-Meteo API (free, no API key required)
 
 
 ERGAS_CONSTRUCTOR_NAME_TO_KNOWN_TEAM_ID_OR_COLOR = {

@@ -50,18 +50,20 @@ Make sure you have all required files:
 
 ## Step 3: Set Up Environment Variables
 
-You'll need to set environment variables in Vercel:
+You'll need to set environment variables in Vercel (if using AI features):
 
-1. **OPENWEATHER_API_KEY** (if you're using weather features)
+1. **PERPLEXITY_API_KEY** (for AI-generated race highlights and team summaries)
+
+**Note:** Weather forecast uses Open-Meteo API which is free and doesn't require an API key.
 
 ### Via Vercel Dashboard:
 1. Go to your project settings
 2. Navigate to "Environment Variables"
-3. Add `OPENWEATHER_API_KEY` with your API key value
+3. Add `PERPLEXITY_API_KEY` with your API key value (if using AI features)
 
 ### Via CLI:
 ```bash
-vercel env add OPENWEATHER_API_KEY
+vercel env add PERPLEXITY_API_KEY
 ```
 
 ## Step 4: Deploy to Vercel

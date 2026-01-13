@@ -45,15 +45,17 @@ When prompted:
 - **Project name?** → f1-fantasy-predictor (or any name)
 - **Directory?** → ./
 
-### Step 4: Set Environment Variables
+### Step 4: Set Environment Variables (Optional)
+
+If you use Perplexity AI for race highlights:
 ```bash
-vercel env add OPENWEATHER_API_KEY
+vercel env add PERPLEXITY_API_KEY
 # Enter your API key when prompted
 ```
 
 Or via Dashboard:
 1. Go to your project → Settings → Environment Variables
-2. Add `OPENWEATHER_API_KEY` with your key
+2. Add `PERPLEXITY_API_KEY` with your key (if using AI features)
 
 ### Step 5: Deploy to Production
 ```bash
