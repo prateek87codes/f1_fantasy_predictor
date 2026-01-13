@@ -18,3 +18,9 @@ __pycache__/
 
 # Google Cloud specific (not needed for Vercel)
 # Keeping for reference but can be removed if desired
+.vercel
+.env*.local
+
+# Large model file - excluded to stay under Vercel's 300MB limit
+# Store externally or use smaller fallback model
+f1_prediction_model_enhanced.joblib
