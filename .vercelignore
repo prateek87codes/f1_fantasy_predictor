@@ -1,0 +1,13 @@
+# Vercel ignore file
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+venv/
+env/
+.venv
+.DS_Store
+*.log
+.cache/
+cache/

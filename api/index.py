@@ -10,10 +10,6 @@ import sys
 parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, parent_dir)
 
-# Import the Dash app
-from app import app
-
-# Vercel's Python runtime expects a WSGI application
-# Dash apps are built on Flask, so we expose the underlying Flask server
-# Vercel will automatically handle the WSGI interface
-application = app.server
+# Import the Dash app's Flask server
+# Vercel expects the WSGI app to be named 'app'
+from app import server as app
