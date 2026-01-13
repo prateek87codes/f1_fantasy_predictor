@@ -1,13 +1,44 @@
-# Vercel ignore file
+# Vercel ignore file - excludes large files from deployment
+# Python cache and compiled files
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
 .Python
+*.py[cod]
+*$py.class
+
+# Virtual environments
 venv/
 env/
 .venv
+ENV/
+env.bak/
+
+# Cache directories (VERY LARGE - 7.7GB+)
+cache/
+.cache/
+*.ff1pkl
+*.sqlite
+
+# System files
 .DS_Store
 *.log
-.cache/
-cache/
+*.dylib
+*.so
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Documentation (optional - can remove if needed)
+*.md
+!README.md
+
+# Training scripts (not needed for deployment)
+train_model_enhanced.py
+data_gathering.py
+precache_season.py
+start_app.sh
