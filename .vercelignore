@@ -42,3 +42,7 @@ train_model_enhanced.py
 data_gathering.py
 precache_season.py
 start_app.sh
+
+# Large model files - exclude from deployment to stay under 300MB limit
+# Models will need to be loaded from external storage or downloaded at runtime
+f1_prediction_model_enhanced.joblib
