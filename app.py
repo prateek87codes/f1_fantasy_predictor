@@ -13,7 +13,10 @@ import numpy as np
 import os
 import traceback 
 import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 from functools import lru_cache
+import time
 from tqdm import tqdm
 import joblib
 import xgboost as xgb
@@ -75,12 +78,27 @@ CONSTRUCTOR_NAME_TO_COLOR_MAP = {
     "Williams": "#64C4FF",
 }
 
-# --- 1. Configure FastF1 Caching ---
+# --- 1. Configure FastF1 Caching (PERSISTENT DIRECTORY) ---
+# Use persistent cache directory for local, temp directory for GCP (read-only filesystem)
 cache_dir = 'cache'
-# Create the cache directory on the server if it does not exist
-if not os.path.exists(cache_dir):
-    os.makedirs(cache_dir)
-    print(f"Cache directory '{cache_dir}' created.")
+try:
+    # Check if we're running in Google App Engine (read-only filesystem)
+    if os.path.exists('/tmp') and not os.access('cache', os.W_OK):
+        # Use /tmp for GCP App Engine
+        cache_dir = '/tmp/ff1_cache'
+        os.makedirs(cache_dir, exist_ok=True)
+        print(f"FastF1 cache directory '{cache_dir}' ready (using /tmp for GCP).")
+    elif not os.path.exists(cache_dir):
+        os.makedirs(cache_dir, exist_ok=True)
+        print(f"FastF1 cache directory '{cache_dir}' ready.")
+    else:
+        print(f"FastF1 cache directory '{cache_dir}' ready.")
+except Exception as e:
+    print(f"Warning: Could not create cache directory: {e}")
+    import tempfile
+    cache_dir = os.path.join(tempfile.gettempdir(), 'ff1_cache')
+    os.makedirs(cache_dir, exist_ok=True)
+    print(f"Using fallback cache directory: {cache_dir}")
 
 # Now that we know the folder exists, enable the cache
 try:
@@ -89,12 +107,83 @@ try:
 except Exception as e:
     print(f"An unexpected error occurred while enabling FastF1 cache: {e}")
 
-try:
-    circuit_data_df = pd.read_csv("circuit_data.csv")
-    print("Successfully loaded circuit_data.csv")
-except FileNotFoundError:
-    print("Warning: circuit_data.csv not found. Circuit specific data will be missing.")
-    circuit_data_df = pd.DataFrame() # Create an empty DataFrame if file is missing
+# --- GLOBAL CACHE FOR MODELS AND DATA (Preloaded at startup) ---
+GLOBAL_CACHE = {
+    'models': {},
+    'data': {},
+    'simulation_results': {},  # Cache for reinforcement learning simulation results
+    'ai': {},  # Cache only successful AI responses
+    'initialized': False
+}
+
+def initialize_global_cache():
+    """Preload all expensive resources at startup to avoid repeated disk I/O."""
+    if GLOBAL_CACHE['initialized']:
+        print("[Cache] Already initialized, skipping...")
+        return
+    
+    print("[Cache] Initializing global cache...")
+    
+    # Load circuit data (optimized CSV reading)
+    try:
+        GLOBAL_CACHE['data']['circuit_data'] = pd.read_csv("circuit_data.csv", engine='c', low_memory=False)
+        print("[Cache] ✓ Loaded circuit_data.csv")
+    except FileNotFoundError:
+        print("[Cache] ⚠ circuit_data.csv not found, using empty DataFrame")
+        GLOBAL_CACHE['data']['circuit_data'] = pd.DataFrame()
+    
+    # Load historical data (optimized CSV reading)
+    try:
+        GLOBAL_CACHE['data']['historical_data'] = pd.read_csv('f1_historical_data.csv', engine='c', low_memory=False)
+        print("[Cache] ✓ Loaded f1_historical_data.csv")
+    except FileNotFoundError:
+        print("[Cache] ⚠ f1_historical_data.csv not found")
+        GLOBAL_CACHE['data']['historical_data'] = pd.DataFrame()
+    
+    # Load enhanced model (preferred)
+    try:
+        GLOBAL_CACHE['models']['enhanced_model'] = joblib.load('f1_prediction_model_enhanced.joblib')
+        GLOBAL_CACHE['models']['enhanced_features'] = joblib.load('f1_prediction_features_enhanced.joblib')
+        print("[Cache] ✓ Loaded enhanced model and features")
+    except FileNotFoundError:
+        print("[Cache] ⚠ Enhanced model not found")
+        GLOBAL_CACHE['models']['enhanced_model'] = None
+        GLOBAL_CACHE['models']['enhanced_features'] = None
+    
+    # Load basic model as fallback
+    try:
+        GLOBAL_CACHE['models']['basic_model'] = joblib.load('f1_prediction_model.joblib')
+        print("[Cache] ✓ Loaded basic model")
+    except FileNotFoundError:
+        print("[Cache] ⚠ Basic model not found")
+        GLOBAL_CACHE['models']['basic_model'] = None
+    
+    GLOBAL_CACHE['initialized'] = True
+    print("[Cache] ✓ Global cache initialization complete")
+
+# Initialize cache immediately
+initialize_global_cache()
+
+# Set circuit_data_df from cache
+circuit_data_df = GLOBAL_CACHE['data'].get('circuit_data', pd.DataFrame())
+
+# --- PERFORMANCE OPTIMIZATION: Create HTTP session with connection pooling ---
+# This reduces latency for API calls by reusing connections
+http_session = requests.Session()
+retry_strategy = Retry(
+    total=3,
+    backoff_factor=1,
+    status_forcelist=[429, 500, 502, 503, 504],
+    allowed_methods=["GET", "POST"]
+)
+adapter = HTTPAdapter(
+    max_retries=retry_strategy,
+    pool_connections=10,
+    pool_maxsize=10
+)
+http_session.mount("http://", adapter)
+http_session.mount("https://", adapter)
+print("[Performance] ✓ HTTP session with connection pooling initialized")
 
 # --- HELPER FUNCTION DEFINITIONS ---
 def format_timedelta(td_object):
@@ -229,19 +318,27 @@ def run_reinforcement_simulation(year, historical_data_path, initial_model_path,
     print(f"[Reinforcement Sim] Retrain frequency: Every {retrain_frequency} races")
     print(f"[Reinforcement Sim] Using ensemble: {use_ensemble}")
     try:
-        # Try to use enhanced model architecture if available
+        # Try to use enhanced model architecture if available (from cache)
         use_enhanced_model = False
-        try:
-            initial_model = joblib.load('f1_prediction_model_enhanced.joblib')
-            feature_info = joblib.load('f1_prediction_features_enhanced.joblib')
+        if GLOBAL_CACHE['models'].get('enhanced_model') is not None:
+            initial_model = GLOBAL_CACHE['models']['enhanced_model']
+            feature_info = GLOBAL_CACHE['models']['enhanced_features']
             use_enhanced_model = True
-            print("[Reinforcement Sim] Using ENHANCED model with smart incremental learning")
-        except FileNotFoundError:
-            print("[Reinforcement Sim] Enhanced model not found, using basic model")
-            initial_model = joblib.load(initial_model_path)
+            print("[Reinforcement Sim] Using ENHANCED model with smart incremental learning (from cache)")
+        else:
+            print("[Reinforcement Sim] Enhanced model not found, trying basic model")
+            if GLOBAL_CACHE['models'].get('basic_model') is not None:
+                initial_model = GLOBAL_CACHE['models']['basic_model']
+            else:
+                initial_model = joblib.load(initial_model_path)
             feature_info = None
         
-        base_df = pd.read_csv(historical_data_path)
+        # Use cached historical data if available
+        if historical_data_path == 'f1_historical_data.csv' and not GLOBAL_CACHE['data'].get('historical_data', pd.DataFrame()).empty:
+            base_df = GLOBAL_CACHE['data']['historical_data'].copy()
+            print("[Reinforcement Sim] Using cached historical data")
+        else:
+            base_df = pd.read_csv(historical_data_path)
         
         schedule = ff1.get_event_schedule(year, include_testing=False)
         schedule['EventDate'] = pd.to_datetime(schedule['EventDate'])
@@ -498,7 +595,6 @@ def get_weather_forecast_open_meteo(lat, lon, race_date_obj, days=14):
     """
     Get weather forecast using Open-Meteo API and filter to race weekend days
     """
-    import requests
     from datetime import datetime, timedelta
     
     url = "https://api.open-meteo.com/v1/forecast"
@@ -512,7 +608,8 @@ def get_weather_forecast_open_meteo(lat, lon, race_date_obj, days=14):
     }
     
     try:
-        response = requests.get(url, params=params, timeout=10)
+        # Use global http_session with connection pooling for better performance
+        response = http_session.get(url, params=params, timeout=10)
         response.raise_for_status()
         data = response.json()
         
@@ -590,7 +687,7 @@ def get_weather_icon_svg(code):
     return f"https://openweathermap.org/img/wn/{icon_code}@2x.png"
 
 
-@lru_cache(maxsize=32)
+@lru_cache(maxsize=128)  # Increased cache size significantly
 def get_championship_standings_progression(year, event_round):
     print(f"[get_championship_standings_progression] Called for Year: {year}, up to Round: {event_round}")
     ergast_api = ergast.Ergast(); print(f"[get_championship_standings_progression] Ergast client initialized.")
@@ -650,7 +747,7 @@ def get_race_highlights_from_perplexity(race_summary_data_str):
     }
 
     json_payload = {
-        "model": "sonar-pro",   # Example model name, check your Perplexity docs or dashboard for available models
+        "model": "sonar-pro",
         "messages": [
             {"role": "system", "content": "Be precise and concise."},
             {"role": "user", "content": prompt}
@@ -659,27 +756,31 @@ def get_race_highlights_from_perplexity(race_summary_data_str):
         "temperature": 0.7
     }
 
-    try:
-        response = requests.post(
-            "https://api.perplexity.ai/chat/completions",
-            headers=headers,
-            json=json_payload,
-            timeout=10
-        )
-        response.raise_for_status()
-        data = response.json()
-        # Extracting response text from the 'choices' list as in OpenAI-style APIs
-        if "choices" in data and len(data["choices"]) > 0:
-            return data["choices"][0]["message"]["content"].strip()
-        else:
-            return "AI highlights currently unavailable."
-    except Exception as e:
-        print(f"Perplexity API error for race highlights: {e}")
-        return "Could not generate AI highlights due to an API error."
+    # Retry with exponential backoff for resiliency
+    for attempt in range(3):
+        try:
+            # Use global http_session with connection pooling for better performance
+            response = http_session.post(
+                "https://api.perplexity.ai/chat/completions",
+                headers=headers,
+                json=json_payload,
+                timeout=15
+            )
+            response.raise_for_status()
+            data = response.json()
+            if "choices" in data and len(data["choices"]) > 0:
+                return data["choices"][0]["message"]["content"].strip()
+            else:
+                return "AI highlights currently unavailable."
+        except Exception as e:
+            print(f"Perplexity API error for race highlights (attempt {attempt+1}/3): {e}")
+            if attempt < 2:
+                time.sleep(2 ** attempt)
+            else:
+                return "Could not generate AI highlights due to an API error."
 
 
 
-# --- REPLACE your existing get_ai_team_summary function with this one ---
 def get_ai_team_summary(team_name, summary_type, context=""):
     api_key = os.environ.get("PERPLEXITY_API_KEY")
     if not api_key:
@@ -690,7 +791,7 @@ def get_ai_team_summary(team_name, summary_type, context=""):
     "Do not include citations, reference numbers, or source links in your answer.")
     elif summary_type == "performance":
         user_prompt = (f"You are an F1 expert analyst. Based on the following data about the {team_name} team performance, "
-    "provide a concise 1-2 sentence summary. Do not include citations, reference numbers, or source links in your answer. "f"{context}")
+    "provide a concise 1-2 sentence summary. Do not include citations, reference numbers, or source links in your answer. {context}")
     else:
         return "Information unavailable."
 
@@ -704,34 +805,38 @@ def get_ai_team_summary(team_name, summary_type, context=""):
         "model": "sonar-pro",  # Adjust if you have access to other models
         "messages": [
             {"role": "system", "content": "You are an F1 data analyst. Provide a concise, factual summary with NO citations, NO reference numbers, "
-    "and NO source links—just clear narrative text."
-    "\n\n[existing prompt content here]\n\n"},
+    "and NO source links—just clear narrative text."},
             {"role": "user", "content": user_prompt}
         ],
         "max_tokens": 100,
         "temperature": 0.7
     }
 
-    try:
-        response = requests.post(
-            "https://api.perplexity.ai/chat/completions",
-            headers=headers,
-            json=json_payload,
-            timeout=10
-        )
-        response.raise_for_status()
-        data = response.json()
-        if "choices" in data and len(data["choices"]) > 0:
-            return data["choices"][0]["message"]["content"].strip()
-        else:
-            return "AI summary currently unavailable."
-    except Exception as e:
-        print(f"Perplexity API error for {team_name}: {e}")
-        return "Could not generate AI summary due to an API error."
+    for attempt in range(3):
+        try:
+            # Use global http_session with connection pooling for better performance
+            response = http_session.post(
+                "https://api.perplexity.ai/chat/completions",
+                headers=headers,
+                json=json_payload,
+                timeout=15
+            )
+            response.raise_for_status()
+            data = response.json()
+            if "choices" in data and len(data["choices"]) > 0:
+                return data["choices"][0]["message"]["content"].strip()
+            else:
+                return "AI summary currently unavailable."
+        except Exception as e:
+            print(f"Perplexity API error for {team_name} (attempt {attempt+1}/3): {e}")
+            if attempt < 2:
+                time.sleep(2 ** attempt)
+            else:
+                return "Could not generate AI summary due to an API error."
 
 
 
-@lru_cache(maxsize=2)
+@lru_cache(maxsize=128)  # Increased cache size significantly
 def get_all_teams_data(year):
     print(f"[get_all_teams_data] Fetching data for all {year} teams...")
     try:
@@ -812,7 +917,7 @@ def get_all_teams_data(year):
         return []
 
 # --- MAIN DATA FETCHING FUNCTION (get_session_results) --- (MODIFIED for P_OVERVIEW table)
-@lru_cache(maxsize=32)
+@lru_cache(maxsize=512)  # Increased cache size significantly for session results
 def get_session_results(year, event_name_or_round, session_type='Q'):
     event_round_num = None; podium_data = []; fastest_lap_driver_name_for_table = None
     # Initialize with empty DataFrames
@@ -974,7 +1079,7 @@ def get_session_results(year, event_name_or_round, session_type='Q'):
     except Exception as e: print(f"Error in get_session_results for {session_type}: {e}"); return pd.DataFrame(), pd.DataFrame(), f"{session_type} (Error)", event_round_num, []
 
 # --- REPLACE your existing get_next_race_info function with this FINAL version ---
-@lru_cache(maxsize=32)
+@lru_cache(maxsize=128)  # Increased cache size significantly
 def get_next_race_info(year):
     # This function is now stable and fetches all necessary data, including tyre stints.
     print(f"\n[get_next_race_info] Finding next race for {year}...")
@@ -1107,6 +1212,34 @@ app = dash.Dash(__name__,
                 assets_folder='assets' # Explicitly define the assets folder
                )
 server = app.server
+
+# Minimal health check endpoint for Cloud Run
+@app.server.route('/health')
+def health_check():
+    """Minimal health check endpoint that returns quickly without loading full app."""
+    return {'status': 'healthy'}, 200
+
+# --- PERFORMANCE OPTIMIZATION: Add cache headers for static assets and API responses ---
+@app.server.after_request
+def add_cache_headers(response):
+    """Add cache control headers to improve performance."""
+    from flask import request
+    
+    # Cache static assets (CSS, JS, images) for 1 hour
+    if request.path.startswith('/assets/'):
+        response.cache_control.max_age = 3600
+        response.cache_control.public = True
+        response.cache_control.immutable = True
+    # Cache Dash component requests for 5 minutes
+    elif request.path.startswith('/_dash') and request.method == 'GET':
+        response.cache_control.max_age = 300
+        response.cache_control.public = True
+    # Don't cache health checks
+    elif request.path == '/health':
+        response.cache_control.no_cache = True
+    
+    return response
+
 assets_folder = os.path.join(os.path.dirname(__file__), "assets")
 
 # --- Define the App Layout ---
@@ -1245,7 +1378,7 @@ tab_predictions_content = dbc.Card(
     dbc.CardBody([
         html.H4("Machine Learning Predictions", className="text-center mb-2"),
         dbc.Alert(
-            "This page simulates the model retraining process for each completed race of the 2025 season. As it's computationally intensive, it may take a minute to load for the first time.",
+            "The reinforcement learning simulation runs once when you first visit this page. Results are cached for instant access on subsequent visits.",
             color="info"
         ),
         html.Hr(),
@@ -1320,7 +1453,7 @@ fantasy_inputs_layout = dbc.Container([
                     html.Div([
                         # Lando Norris
                         dbc.Row([
-                            dbc.Col([html.Img(src=app.get_asset_url("images/drivers/Nor.png"), style={"width": "35px", "height": "35px", "border-radius": "50%"})], width=2),
+                            dbc.Col([html.Img(src=app.get_asset_url("images/drivers/nor.png"), style={"width": "35px", "height": "35px", "border-radius": "50%"})], width=2),
                             dbc.Col([html.Span("Lando Norris", className="fw-bold")], width=5),
                             dbc.Col([
                                 dbc.ButtonGroup([
@@ -1333,7 +1466,7 @@ fantasy_inputs_layout = dbc.Container([
                         
                         # Oscar Piastri
                         dbc.Row([
-                            dbc.Col([html.Img(src=app.get_asset_url("images/drivers/Pia.png"), style={"width": "35px", "height": "35px", "border-radius": "50%"})], width=2),
+                            dbc.Col([html.Img(src=app.get_asset_url("images/drivers/pia.png"), style={"width": "35px", "height": "35px", "border-radius": "50%"})], width=2),
                             dbc.Col([html.Span("Oscar Piastri", className="fw-bold")], width=5),
                             dbc.Col([
                                 dbc.ButtonGroup([
@@ -1346,7 +1479,7 @@ fantasy_inputs_layout = dbc.Container([
                         
                         # Max Verstappen
                         dbc.Row([
-                            dbc.Col([html.Img(src=app.get_asset_url("images/drivers/Ver.png"), style={"width": "35px", "height": "35px", "border-radius": "50%"})], width=2),
+                            dbc.Col([html.Img(src=app.get_asset_url("images/drivers/ver.png"), style={"width": "35px", "height": "35px", "border-radius": "50%"})], width=2),
                             dbc.Col([html.Span("Max Verstappen", className="fw-bold")], width=5),
                             dbc.Col([
                                 dbc.ButtonGroup([
@@ -1359,7 +1492,7 @@ fantasy_inputs_layout = dbc.Container([
                         
                         # George Russell
                         dbc.Row([
-                            dbc.Col([html.Img(src=app.get_asset_url("images/drivers/Rus.png"), style={"width": "35px", "height": "35px", "border-radius": "50%"})], width=2),
+                            dbc.Col([html.Img(src=app.get_asset_url("images/drivers/rus.png"), style={"width": "35px", "height": "35px", "border-radius": "50%"})], width=2),
                             dbc.Col([html.Span("George Russell", className="fw-bold")], width=5),
                             dbc.Col([
                                 dbc.ButtonGroup([
@@ -1372,7 +1505,7 @@ fantasy_inputs_layout = dbc.Container([
                         
                         # Lewis Hamilton
                         dbc.Row([
-                            dbc.Col([html.Img(src=app.get_asset_url("images/drivers/Ham.png"), style={"width": "35px", "height": "35px", "border-radius": "50%"})], width=2),
+                            dbc.Col([html.Img(src=app.get_asset_url("images/drivers/ham.png"), style={"width": "35px", "height": "35px", "border-radius": "50%"})], width=2),
                             dbc.Col([html.Span("Lewis Hamilton", className="fw-bold")], width=5),
                             dbc.Col([
                                 dbc.ButtonGroup([
@@ -1385,7 +1518,7 @@ fantasy_inputs_layout = dbc.Container([
                         
                         # Charles Leclerc
                         dbc.Row([
-                            dbc.Col([html.Img(src=app.get_asset_url("images/drivers/Lec.png"), style={"width": "35px", "height": "35px", "border-radius": "50%"})], width=2),
+                            dbc.Col([html.Img(src=app.get_asset_url("images/drivers/lec.png"), style={"width": "35px", "height": "35px", "border-radius": "50%"})], width=2),
                             dbc.Col([html.Span("Charles Leclerc", className="fw-bold")], width=5),
                             dbc.Col([
                                 dbc.ButtonGroup([
@@ -1398,7 +1531,7 @@ fantasy_inputs_layout = dbc.Container([
                         
                         # Kimi Antonelli
                         dbc.Row([
-                            dbc.Col([html.Img(src=app.get_asset_url("images/drivers/Ant.png"), style={"width": "35px", "height": "35px", "border-radius": "50%"})], width=2),
+                            dbc.Col([html.Img(src=app.get_asset_url("images/drivers/ant.png"), style={"width": "35px", "height": "35px", "border-radius": "50%"})], width=2),
                             dbc.Col([html.Span("Kimi Antonelli", className="fw-bold")], width=5),
                             dbc.Col([
                                 dbc.ButtonGroup([
@@ -1411,7 +1544,7 @@ fantasy_inputs_layout = dbc.Container([
                         
                         # Nico Hulkenberg
                         dbc.Row([
-                            dbc.Col([html.Img(src=app.get_asset_url("images/drivers/Hul.png"), style={"width": "35px", "height": "35px", "border-radius": "50%"})], width=2),
+                            dbc.Col([html.Img(src=app.get_asset_url("images/drivers/hul.png"), style={"width": "35px", "height": "35px", "border-radius": "50%"})], width=2),
                             dbc.Col([html.Span("Nico Hulkenberg", className="fw-bold")], width=5),
                             dbc.Col([
                                 dbc.ButtonGroup([
@@ -1424,7 +1557,7 @@ fantasy_inputs_layout = dbc.Container([
                         
                         # Alexander Albon
                         dbc.Row([
-                            dbc.Col([html.Img(src=app.get_asset_url("images/drivers/Alb.png"), style={"width": "35px", "height": "35px", "border-radius": "50%"})], width=2),
+                            dbc.Col([html.Img(src=app.get_asset_url("images/drivers/alb.png"), style={"width": "35px", "height": "35px", "border-radius": "50%"})], width=2),
                             dbc.Col([html.Span("Alexander Albon", className="fw-bold")], width=5),
                             dbc.Col([
                                 dbc.ButtonGroup([
@@ -1437,7 +1570,7 @@ fantasy_inputs_layout = dbc.Container([
                         
                         # Lance Stroll
                         dbc.Row([
-                            dbc.Col([html.Img(src=app.get_asset_url("images/drivers/Str.png"), style={"width": "35px", "height": "35px", "border-radius": "50%"})], width=2),
+                            dbc.Col([html.Img(src=app.get_asset_url("images/drivers/str.png"), style={"width": "35px", "height": "35px", "border-radius": "50%"})], width=2),
                             dbc.Col([html.Span("Lance Stroll", className="fw-bold")], width=5),
                             dbc.Col([
                                 dbc.ButtonGroup([
@@ -1455,7 +1588,7 @@ fantasy_inputs_layout = dbc.Container([
                     html.Div([
                         # Oliver Bearman
                         dbc.Row([
-                            dbc.Col([html.Img(src=app.get_asset_url("images/drivers/Bea.png"), style={"width": "35px", "height": "35px", "border-radius": "50%"})], width=2),
+                            dbc.Col([html.Img(src=app.get_asset_url("images/drivers/bea.png"), style={"width": "35px", "height": "35px", "border-radius": "50%"})], width=2),
                             dbc.Col([html.Span("Oliver Bearman", className="fw-bold")], width=5),
                             dbc.Col([
                                 dbc.ButtonGroup([
@@ -1468,7 +1601,7 @@ fantasy_inputs_layout = dbc.Container([
                         
                         # Esteban Ocon
                         dbc.Row([
-                            dbc.Col([html.Img(src=app.get_asset_url("images/drivers/Oco.png"), style={"width": "35px", "height": "35px", "border-radius": "50%"})], width=2),
+                            dbc.Col([html.Img(src=app.get_asset_url("images/drivers/oco.png"), style={"width": "35px", "height": "35px", "border-radius": "50%"})], width=2),
                             dbc.Col([html.Span("Esteban Ocon", className="fw-bold")], width=5),
                             dbc.Col([
                                 dbc.ButtonGroup([
@@ -1481,7 +1614,7 @@ fantasy_inputs_layout = dbc.Container([
                         
                         # Yuki Tsunoda
                         dbc.Row([
-                            dbc.Col([html.Img(src=app.get_asset_url("images/drivers/Tsu.png"), style={"width": "35px", "height": "35px", "border-radius": "50%"})], width=2),
+                            dbc.Col([html.Img(src=app.get_asset_url("images/drivers/tsu.png"), style={"width": "35px", "height": "35px", "border-radius": "50%"})], width=2),
                             dbc.Col([html.Span("Yuki Tsunoda", className="fw-bold")], width=5),
                             dbc.Col([
                                 dbc.ButtonGroup([
@@ -1494,7 +1627,7 @@ fantasy_inputs_layout = dbc.Container([
                         
                         # Isack Hadjar
                         dbc.Row([
-                            dbc.Col([html.Img(src=app.get_asset_url("images/drivers/Had.png"), style={"width": "35px", "height": "35px", "border-radius": "50%"})], width=2),
+                            dbc.Col([html.Img(src=app.get_asset_url("images/drivers/had.png"), style={"width": "35px", "height": "35px", "border-radius": "50%"})], width=2),
                             dbc.Col([html.Span("Isack Hadjar", className="fw-bold")], width=5),
                             dbc.Col([
                                 dbc.ButtonGroup([
@@ -1507,7 +1640,7 @@ fantasy_inputs_layout = dbc.Container([
                         
                         # Carlos Sainz
                         dbc.Row([
-                            dbc.Col([html.Img(src=app.get_asset_url("images/drivers/Sai.png"), style={"width": "35px", "height": "35px", "border-radius": "50%"})], width=2),
+                            dbc.Col([html.Img(src=app.get_asset_url("images/drivers/sai.png"), style={"width": "35px", "height": "35px", "border-radius": "50%"})], width=2),
                             dbc.Col([html.Span("Carlos Sainz", className="fw-bold")], width=5),
                             dbc.Col([
                                 dbc.ButtonGroup([
@@ -1520,7 +1653,7 @@ fantasy_inputs_layout = dbc.Container([
                         
                         # Gabriel Bortoleto
                         dbc.Row([
-                            dbc.Col([html.Img(src=app.get_asset_url("images/drivers/Bor.png"), style={"width": "35px", "height": "35px", "border-radius": "50%"})], width=2),
+                            dbc.Col([html.Img(src=app.get_asset_url("images/drivers/bor.png"), style={"width": "35px", "height": "35px", "border-radius": "50%"})], width=2),
                             dbc.Col([html.Span("Gabriel Bortoleto", className="fw-bold")], width=5),
                             dbc.Col([
                                 dbc.ButtonGroup([
@@ -1533,7 +1666,7 @@ fantasy_inputs_layout = dbc.Container([
                         
                         # Liam Lawson
                         dbc.Row([
-                            dbc.Col([html.Img(src=app.get_asset_url("images/drivers/Law.png"), style={"width": "35px", "height": "35px", "border-radius": "50%"})], width=2),
+                            dbc.Col([html.Img(src=app.get_asset_url("images/drivers/law.png"), style={"width": "35px", "height": "35px", "border-radius": "50%"})], width=2),
                             dbc.Col([html.Span("Liam Lawson", className="fw-bold")], width=5),
                             dbc.Col([
                                 dbc.ButtonGroup([
@@ -1546,7 +1679,7 @@ fantasy_inputs_layout = dbc.Container([
                         
                         # Fernando Alonso
                         dbc.Row([
-                            dbc.Col([html.Img(src=app.get_asset_url("images/drivers/Alo.png"), style={"width": "35px", "height": "35px", "border-radius": "50%"})], width=2),
+                            dbc.Col([html.Img(src=app.get_asset_url("images/drivers/alo.png"), style={"width": "35px", "height": "35px", "border-radius": "50%"})], width=2),
                             dbc.Col([html.Span("Fernando Alonso", className="fw-bold")], width=5),
                             dbc.Col([
                                 dbc.ButtonGroup([
@@ -1559,7 +1692,7 @@ fantasy_inputs_layout = dbc.Container([
                         
                         # Pierre Gasly
                         dbc.Row([
-                            dbc.Col([html.Img(src=app.get_asset_url("images/drivers/Gas.png"), style={"width": "35px", "height": "35px", "border-radius": "50%"})], width=2),
+                            dbc.Col([html.Img(src=app.get_asset_url("images/drivers/gas.png"), style={"width": "35px", "height": "35px", "border-radius": "50%"})], width=2),
                             dbc.Col([html.Span("Pierre Gasly", className="fw-bold")], width=5),
                             dbc.Col([
                                 dbc.ButtonGroup([
@@ -1572,7 +1705,7 @@ fantasy_inputs_layout = dbc.Container([
                         
                         # Franco Colapinto
                         dbc.Row([
-                            dbc.Col([html.Img(src=app.get_asset_url("images/drivers/Col.png"), style={"width": "35px", "height": "35px", "border-radius": "50%"})], width=2),
+                            dbc.Col([html.Img(src=app.get_asset_url("images/drivers/col.png"), style={"width": "35px", "height": "35px", "border-radius": "50%"})], width=2),
                             dbc.Col([html.Span("Franco Colapinto", className="fw-bold")], width=5),
                             dbc.Col([
                                 dbc.ButtonGroup([
@@ -2819,56 +2952,64 @@ def update_predictions_tab(active_tab):
     except Exception as e:
         print(f"[Predictions Tab] Error checking schedule: {e}")
     
-    # Create a simple basic model for the simulation
-    try:
-        import pandas as pd
-        import xgboost as xgb
-        from sklearn.model_selection import train_test_split
+    # Check if we have cached simulation results for this year
+    cache_key = f"simulation_{cs_year}"
+    if cache_key in GLOBAL_CACHE['simulation_results']:
+        print(f"[Predictions Tab] Using cached simulation results for {cs_year}")
+        sim_results_df = GLOBAL_CACHE['simulation_results'][cache_key]
+    else:
+        # Compute simulation (first time only, then cached)
+        print(f"[Predictions Tab] Computing simulation for {cs_year} (this may take 30-60 seconds)...")
         
-        # Load and prepare basic data
-        df = pd.read_csv('f1_historical_data.csv')
-        features = ['QualifyingPosition', 'ChampionshipStanding', 'ChampionshipPoints', 'RecentFormPoints', 'RecentQualiPos', 'RecentFinishPos']
-        X_numerical = df[features].fillna(0)
-        y = df['FinishingPosition']
-        X_categorical = pd.get_dummies(df[['DriverTeamID', 'TrackID']], columns=['DriverTeamID', 'TrackID'])
-        X = pd.concat([X_numerical, X_categorical], axis=1)
-        X.columns = [str(col) for col in X.columns]
-        
-        # Train basic model
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-        basic_model = xgb.XGBRegressor(objective='reg:squarederror', n_estimators=100, random_state=42)
-        basic_model.fit(X_train, y_train)
-        
-        # Save basic model for simulation
-        joblib.dump(basic_model, 'f1_prediction_model_basic.joblib')
-        
-        # ===== REINFORCEMENT LEARNING CONFIGURATION =====
-        # Adjust these parameters to tune the learning behavior:
-        
-        # 1. RETRAIN_FREQUENCY: How often to retrain (3 = every 3 races)
-        #   * Lower (1-2) = More responsive, but can overfit to recent races
-        #   * Medium (3-4) = Balanced approach (RECOMMENDED)
-        #   * Higher (5+) = More stable, but slower to adapt
-        RETRAIN_FREQUENCY = 3  # Recommended: 3
-        
-        # 2. USE_ENSEMBLE: Combine XGBoost + Random Forest
-        #   * False = Faster, XGBoost only (RECOMMENDED for first try)
-        #   * True = Slower, but often 0.2-0.5 positions better MAE
-        USE_ENSEMBLE = truediv_object_array  # Set to True to try ensemble approach
-        
-        sim_results_df = run_reinforcement_simulation(
-            cs_year, 
-            'f1_historical_data.csv', 
-            'f1_prediction_model_basic.joblib',
-            retrain_frequency=RETRAIN_FREQUENCY,
-            use_ensemble=USE_ENSEMBLE
-        )
-    except Exception as e:
-        print(f"Error creating simulation model: {e}")
-        import traceback
-        traceback.print_exc()
-        sim_results_df = None
-        error_msg = str(e)
+        # Create a simple basic model for the simulation
+        try:
+            import xgboost as xgb
+            from sklearn.model_selection import train_test_split
+            
+            # Load and prepare basic data (use cached version)
+            if not GLOBAL_CACHE['data'].get('historical_data', pd.DataFrame()).empty:
+                df = GLOBAL_CACHE['data']['historical_data'].copy()
+                print("[Predictions Tab] Using cached historical data")
+            else:
+                df = pd.read_csv('f1_historical_data.csv')
+            features = ['QualifyingPosition', 'ChampionshipStanding', 'ChampionshipPoints', 'RecentFormPoints', 'RecentQualiPos', 'RecentFinishPos']
+            X_numerical = df[features].fillna(0)
+            y = df['FinishingPosition']
+            X_categorical = pd.get_dummies(df[['DriverTeamID', 'TrackID']], columns=['DriverTeamID', 'TrackID'])
+            X = pd.concat([X_numerical, X_categorical], axis=1)
+            X.columns = [str(col) for col in X.columns]
+            
+            # Train basic model
+            X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+            basic_model = xgb.XGBRegressor(objective='reg:squarederror', n_estimators=100, random_state=42)
+            basic_model.fit(X_train, y_train)
+            
+            # Use cached basic model if available, otherwise save
+            if GLOBAL_CACHE['models'].get('basic_model') is None:
+                joblib.dump(basic_model, 'f1_prediction_model_basic.joblib')
+            
+            # ===== REINFORCEMENT LEARNING CONFIGURATION =====
+            RETRAIN_FREQUENCY = 3  # Recommended: 3
+            USE_ENSEMBLE = False  # Set to False for faster computation
+            
+            sim_results_df = run_reinforcement_simulation(
+                cs_year, 
+                'f1_historical_data.csv', 
+                'f1_prediction_model_basic.joblib',
+                retrain_frequency=RETRAIN_FREQUENCY,
+                use_ensemble=USE_ENSEMBLE
+            )
+            
+            # Cache the results for future use
+            if sim_results_df is not None and not sim_results_df.empty:
+                GLOBAL_CACHE['simulation_results'][cache_key] = sim_results_df
+                print(f"[Predictions Tab] ✓ Simulation results cached for {cs_year}")
+        except Exception as e:
+            print(f"Error creating simulation model: {e}")
+            import traceback
+            traceback.print_exc()
+            sim_results_df = None
+            error_msg = str(e)
 
     if sim_results_df is None or sim_results_df.empty:
         error_detail = f"Could not run prediction simulation. Check terminal for details."
@@ -3235,12 +3376,23 @@ def predict_next_race(n_clicks, selected_race_round):
     cs_year = datetime.now().year
     
     try:
-        # Try to use the enhanced model first, fallback to basic model
+        # Try to use the enhanced model first (from cache), fallback to basic model
         try:
-            # 1. Load the enhanced model and feature info
-            model = joblib.load('f1_prediction_model_enhanced.joblib')
-            feature_info = joblib.load('f1_prediction_features_enhanced.joblib')
-            historical_df = pd.read_csv('f1_historical_data.csv')
+            # 1. Load the enhanced model and feature info from cache
+            if GLOBAL_CACHE['models'].get('enhanced_model') is not None:
+                model = GLOBAL_CACHE['models']['enhanced_model']
+                feature_info = GLOBAL_CACHE['models']['enhanced_features']
+                print("[predict_next_race] Using cached enhanced model")
+            else:
+                model = joblib.load('f1_prediction_model_enhanced.joblib')
+                feature_info = joblib.load('f1_prediction_features_enhanced.joblib')
+            
+            # Use cached historical data
+            if not GLOBAL_CACHE['data'].get('historical_data', pd.DataFrame()).empty:
+                historical_df = GLOBAL_CACHE['data']['historical_data'].copy()
+                print("[predict_next_race] Using cached historical data")
+            else:
+                historical_df = pd.read_csv('f1_historical_data.csv')
             
             # 2. Get enhanced features for ALL current drivers for the upcoming race
             predict_df = get_enhanced_features_for_prediction(cs_year, selected_race_round, historical_df)
@@ -3276,10 +3428,20 @@ def predict_next_race(n_clicks, selected_race_round):
             model_type = "Enhanced"
             
         except FileNotFoundError:
-            # Fallback to basic model
+            # Fallback to basic model (from cache)
             print("Enhanced model not found, using basic model...")
-            model = joblib.load('f1_prediction_model.joblib')
-            historical_df = pd.read_csv('f1_historical_data.csv')
+            if GLOBAL_CACHE['models'].get('basic_model') is not None:
+                model = GLOBAL_CACHE['models']['basic_model']
+                print("[predict_next_race] Using cached basic model")
+            else:
+                model = joblib.load('f1_prediction_model.joblib')
+            
+            # Use cached historical data
+            if not GLOBAL_CACHE['data'].get('historical_data', pd.DataFrame()).empty:
+                historical_df = GLOBAL_CACHE['data']['historical_data'].copy()
+                print("[predict_next_race] Using cached historical data")
+            else:
+                historical_df = pd.read_csv('f1_historical_data.csv')
             
             # 2. Get features for ALL current drivers for the upcoming race
             predict_df = get_features_for_prediction(cs_year, selected_race_round, historical_df)
@@ -3676,7 +3838,37 @@ def generate_optimal_team(n_clicks, predictions, fantasy_values):
                 html.Hr(),
                 
                 html.H5("Selected Drivers (5)", className="mt-3"),
-                dbc.Table.from_dataframe(drivers_df, striped=True, bordered=True, hover=True, className="mt-2"),
+                # Create custom table with driver images
+                dbc.Table([
+                    html.Thead([
+                        html.Tr([
+                            html.Th("Driver", style={"width": "20%"}),
+                            html.Th("Image", style={"width": "15%"}),
+                            html.Th("Team", style={"width": "25%"}),
+                            html.Th("Value", style={"width": "15%"}),
+                            html.Th("Predicted Position", style={"width": "15%"}),
+                            html.Th("", style={"width": "10%"})  # Turbo indicator
+                        ])
+                    ]),
+                    html.Tbody([
+                        html.Tr([
+                            html.Td(html.Strong(d['Driver'].replace(' 🚀', ''))),
+                            html.Td([
+                                html.Img(
+                                    src=app.get_asset_url(f"images/drivers/{d['Driver'].replace(' 🚀', '').strip().lower()}.png")
+                                    if os.path.exists(os.path.join(assets_folder, f"images/drivers/{d['Driver'].replace(' 🚀', '').strip().lower()}.png"))
+                                    else app.get_asset_url("images/driver_default.png"),
+                                    style={"width": "50px", "height": "50px", "border-radius": "50%", "object-fit": "cover"}
+                                )
+                            ]),
+                            html.Td(d['Team']),
+                            html.Td(html.Strong(d['Value'])),
+                            html.Td(f"P{d['Predicted Position']}"),
+                            html.Td("🚀" if "🚀" in d['Driver'] else "")
+                        ], style={"backgroundColor": "#f8f9fa" if i % 2 == 0 else "white"})
+                        for i, d in enumerate(drivers_display)
+                    ])
+                ], striped=True, bordered=True, hover=True, className="mt-2"),
                 html.Small("🚀 = Turbo Driver (earns 2x points)", className="text-muted"),
                 
                 html.H5("Selected Constructors (2)", className="mt-4"),

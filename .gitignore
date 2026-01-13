@@ -4,7 +4,17 @@ cache/
 # Python Virtual Environment
 venv/
 __pycache__/
+*.pyc
+*.pyo
+*.pyd
 
 # macOS specific
 .DS_Store
 .env
+
+# IDE
+.vscode/
+.idea/
+
+# Google Cloud specific (not needed for Vercel)
+# Keeping for reference but can be removed if desired
